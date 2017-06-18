@@ -1,23 +1,24 @@
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, qApp
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtWidgets import QTextEdit
-from PyQt5.QtWidgets import QPushButton, QMainWindow
-from PyQt5.QtCore import QCoreApplication
-import cv2
-import matplotlib.pyplot as plt
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
+from src.GuiDisplayWindow import GuiDisplayWindow
+
 
 class GuiMainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, display_window):
         super().__init__()
+        self.display_window_ = display_window
         self.initUI()
 
+
+
     def initUI(self):
+        display_window_ = GuiDisplayWindow()
+        display_window_.show()
         self.textEdit = QTextEdit()
         self.statusBar()
         self.statusBar().showMessage('Ready')
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
-        exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(qApp.quit)
         menubar = self.menuBar()
@@ -32,7 +33,7 @@ class GuiMainWindow(QMainWindow):
 
         fileMenu.addAction(openFile)
 
-        self.setGeometry(300, 300, 350, 300)
+        self.setGeometry(300, 300, 1980, 1080)
         self.setWindowTitle('zolver')
         self.show()
 
@@ -40,16 +41,7 @@ class GuiMainWindow(QMainWindow):
         fname = QFileDialog.\
             getOpenFileName(self, 'Open file', '',"Image files (*.jpg *.png *.jpeg *.bmp)")
         if fname[0]:
-            self.showimage(fname[0])
+            self.display_window_.display(str(fname[0]))
+            self.display_window_.show()
 
-    def showimage(self, path):
-        print(str(path))
-        img = cv2.imread(str(path), 0)
-        edge = cv2.Canny(img, 100, 200)
-        plt.imshow(edge, cmap='gray')
-        plt.show()
-
-        #cv2.imshow('image', edge)
-        #k = cv2.waitKey(0)
-        #if k == 27:  # wait for ESC key to exit
-            #cv2.destroyAllWindows()
+    display_window_ = None
