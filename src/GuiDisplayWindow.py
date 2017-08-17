@@ -15,7 +15,6 @@ class GuiDisplayWindow(QLabel):
         self.setGeometry(300, 300, 350, 100)
 
     def display(self, path):
-        print(path)
         myPixmap = QPixmap(str(path))
         pixmap_resized = myPixmap.scaled(1080, 720, Qt.KeepAspectRatio)
         self.setPixmap(pixmap_resized)
