@@ -124,7 +124,7 @@ def findContourTest1(initial_img):
         cv2.drawContours(initial_img, [approx], -1, (0, 255, 0), 2)
     cv2.imshow("Output", initial_img)
 
-def export_contours(img, contours, path):
+def export_contours(img, contours, path, modulo):
     list_img = []
     for cnt in contours:
         x,y,w,h = cv2.boundingRect(cnt)
@@ -132,8 +132,14 @@ def export_contours(img, contours, path):
 
     max_height = max([x.shape[0] for x in list_img])
     max_width = max([x.shape[1] for x in list_img])
-    pieces_img = np.zeros([max_height, max_width * len(list_img)], dtype=np.uint8)
+    pieces_img = np.zeros([max_height * (int(len(list_img) / modulo) + 1), max_width * modulo], dtype=np.uint8)
     for index, image in enumerate(list_img):
-        pieces_img[:image.shape[0],(max_width * index):(max_width * index + image.shape[1])] = image
+        pieces_img[(max_height * int(index / modulo)):(max_height * int(index / modulo) + image.shape[0]),(max_width * (index % modulo)):(max_width * (index % modulo) + image.shape[1])] = image
 
     cv2.imwrite(path, pieces_img)
+
+def get_fourier(img):
+    f = np.fft.fft2(img)
+    fshift = np.fft.fftshift(f)
+    magnitude = 20 * np.log(np.abs(fshift))
+    return fshift, magnitude
