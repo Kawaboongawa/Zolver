@@ -9,7 +9,6 @@ class GuiDisplayWindow(QLabel):
         super(GuiDisplayWindow, self).__init__()
         self.initUI()
 
-
     def initUI(self):
         self.setWindowTitle('image')
         self.setGeometry(300, 300, 350, 100)
