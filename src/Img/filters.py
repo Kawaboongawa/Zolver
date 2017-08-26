@@ -123,3 +123,17 @@ def findContourTest1(initial_img):
         approx = cv2.approxPolyDP(c, 0.02 * peri, True)
         cv2.drawContours(initial_img, [approx], -1, (0, 255, 0), 2)
     cv2.imshow("Output", initial_img)
+
+def export_contours(img, contours, path):
+    list_img = []
+    for cnt in contours:
+        x,y,w,h = cv2.boundingRect(cnt)
+        list_img.append(img[y:y+h,x:x+w])
+
+    max_height = max([x.shape[0] for x in list_img])
+    max_width = max([x.shape[1] for x in list_img])
+    pieces_img = np.zeros([max_height, max_width * len(list_img)], dtype=np.uint8)
+    for index, image in enumerate(list_img):
+        pieces_img[:image.shape[0],(max_width * index):(max_width * index + image.shape[1])] = image
+
+    cv2.imwrite(path, pieces_img)

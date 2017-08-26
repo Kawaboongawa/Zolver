@@ -63,10 +63,9 @@ class GuiMainWindow(QMainWindow):
             img = cv2.dilate(img, kernel, iterations=1)
             img = cv2.erode(img, kernel, iterations=1)
             img, contours, hier = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-            puzzlepiece = Puzzle(contours)
 
-            res = img
-            cv2.imwrite("/tmp/yolo.png", res)
+            export_contours(img, contours, "/tmp/yolo.png")
+
             self.display_window_.display("/tmp/yolo.png")
             self.display_window_.show()
 

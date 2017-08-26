@@ -5,7 +5,7 @@ class Puzzle():
         self.n_pieces_ = len(contours)
         for e in contours:
             self.pieces_.append(PuzzlePiece(e))
-            print(len(e))
+            # print(len(e))
         print(self.n_pieces_)
 
     pieces_ = []

@@ -18,7 +18,7 @@ class PuzzlePiece():
     def __init__(self, edges):
         self.edges_ = edges
         self.pol_edges = []
-        print(edges)
+        # print(edges)
         for e in self.edges_:
             # Checker x, y et ou y, x !
             # NE MARCHE PAAAAAAAAAAAAAAS
