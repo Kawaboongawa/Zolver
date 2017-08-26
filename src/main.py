@@ -1,8 +1,8 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget
 
-from src.GuiDisplayWindow import GuiDisplayWindow
-from src.GuiMainWindow import GuiMainWindow
+from GUI.GuiDisplayWindow import GuiDisplayWindow
+from GUI.GuiMainWindow import GuiMainWindow
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

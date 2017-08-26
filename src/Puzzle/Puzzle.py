@@ -1,4 +1,4 @@
-from src.PuzzlePiece import *
+from Puzzle.PuzzlePiece import *
 
 class Puzzle():
     def __init__(self, contours):

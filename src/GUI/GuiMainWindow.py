@@ -4,16 +4,14 @@ from PyQt5.QtWidgets import *
 from scipy.signal import savgol_filter
 
 import numpy as np
-from src.GuiDisplayWindow import GuiDisplayWindow
-from src.Puzzle import *
+from GUI.GuiDisplayWindow import GuiDisplayWindow
+from Puzzle.Puzzle import *
 
 class GuiMainWindow(QMainWindow):
     def __init__(self, display_window):
         super().__init__()
         self.display_window_ = display_window
         self.initUI()
-
-
 
     def initUI(self):
         display_window_ = GuiDisplayWindow()
