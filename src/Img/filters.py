@@ -141,8 +141,8 @@ def find_corners_mser(img):
     img = cv2.polylines(img, hulls, 1, (0, 255, 0))
     return img
 
-def my_dist(x,y):
-    return np.sqrt(np.sum((x-y)**2))
+def my_dist(x, y):
+    return np.sqrt(np.sum((x-y)**2, axis=1))
 
 # Point farthest election
 def my_find_corners(img, cnt):
@@ -151,10 +151,8 @@ def my_find_corners(img, cnt):
         elect.append(0)
 
     for p in cnt:
-        l = [x[0] for x in cnt]
-        res = []
-        for p2 in l:
-            res.append(my_dist(p2, p[0]))
+        l = np.array([x[0] for x in cnt])
+        res = my_dist(l, p)
         ind = np.argmax(res)
         elect[ind] += 1
 
@@ -162,7 +160,6 @@ def my_find_corners(img, cnt):
         ind = np.argmax(elect)
         value = cnt[ind][0]
         elect[max(ind-10, 0):min(ind+10, len(elect))] = [0] * (min(ind+10, len(elect)) - max(ind-10, 0))
-        print(tuple(value))
         cv2.circle(img, tuple(value), 10, 255, -1)
 
 def export_contours(img, contours, path, modulo):
