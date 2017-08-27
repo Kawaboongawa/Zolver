@@ -1,3 +1,5 @@
+from cv2 import cv2
+
 import numpy as np
 from Img.filters import *
 
@@ -30,9 +32,8 @@ class Extractor():
 
         # img = cv2.dilate(img, kernel, iterations=1)
         # img = cv2.erode(img, kernel, iterations=1)
-
         img, contours, hier = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
+        print(contours)
         export_contours(img, contours, "/tmp/contours.png", 5)
         self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
 

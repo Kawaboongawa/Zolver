@@ -1,12 +1,11 @@
 from Puzzle.PuzzlePiece import *
 
-class Puzzle():
-    def __init__(self, contours):
-        self.n_pieces_ = len(contours)
-        for e in contours:
-            self.pieces_.append(PuzzlePiece(e))
-            # print(len(e))
-        print(self.n_pieces_)
+from src.Puzzle.Extractor import Extractor
 
-    pieces_ = []
+
+class Puzzle():
+    def __init__(self, path, pixmapWidget):
+        self.extract = Extractor(path, pixmapWidget)
+        self.extract.extract()
+
     n_pieces_ = 0
