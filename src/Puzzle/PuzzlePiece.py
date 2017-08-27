@@ -15,7 +15,8 @@ def pol2cart(rho, phi):
 
 
 class PuzzlePiece():
-    def __init__(self, edges):
+    def __init__(self, edges, corners):
+        self.corners = corners
         self.edges_ = edges
         self.pol_edges = []
         # print(edges)

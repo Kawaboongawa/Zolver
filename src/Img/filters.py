@@ -3,6 +3,9 @@ from scipy.signal import savgol_filter
 import numpy as np
 from scipy.spatial import distance
 
+from src.Puzzle.PuzzlePiece import PuzzlePiece
+
+
 def auto_canny(img, sigma=0.33):
     # compute the median of the single channel pixel intensities
     v = np.median(img)
@@ -146,6 +149,7 @@ def my_dist(x, y):
 
 # Point farthest election
 def my_find_corners(img, cnt):
+    corners = []
     elect = [0] * len(cnt)
     for p in cnt:
         l = np.array([x[0] for x in cnt])
@@ -157,12 +161,17 @@ def my_find_corners(img, cnt):
         ind = np.argmax(elect)
         value = cnt[ind][0]
         elect[max(ind-10, 0):min(ind+10, len(elect))] = [0] * (min(ind+10, len(elect)) - max(ind-10, 0))
-        cv2.circle(img, tuple(value), 10, 255, -1)
+        cv2.circle(img, tuple(value), 50, 255, -1)
+        corners.append(value)
+
+    return corners
 
 def export_contours(img, contours, path, modulo):
+    puzzle_pieces = []
     list_img = []
     for idx, cnt in enumerate(contours):
-        my_find_corners(img, cnt)
+        corners = my_find_corners(img, cnt)
+        puzzle_pieces.append(PuzzlePiece(cnt, corners))
         mask = np.zeros_like(img)
         cv2.drawContours(mask, contours, idx, 255, -1)
         out = np.zeros_like(img)
@@ -178,6 +187,7 @@ def export_contours(img, contours, path, modulo):
         pieces_img[(max_height * int(index / modulo)):(max_height * int(index / modulo) + image.shape[0]),(max_width * (index % modulo)):(max_width * (index % modulo) + image.shape[1])] = image
 
     cv2.imwrite(path, pieces_img)
+    return puzzle_pieces
 
 def get_fourier(img):
     f = np.fft.fft2(img)
