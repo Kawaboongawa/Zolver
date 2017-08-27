@@ -2,6 +2,8 @@ import cv2
 from scipy.signal import savgol_filter
 import numpy as np
 from scipy.spatial import distance
+import imutils
+import random
 
 from src.Puzzle.PuzzlePiece import PuzzlePiece
 
@@ -157,28 +159,72 @@ def my_find_corners(img, cnt):
         ind = np.argmax(res)
         elect[ind] += 1
 
+    corners = []
+    edges = []
+    indices = []
     for i in range(4):
         ind = np.argmax(elect)
         value = cnt[ind][0]
+        corners.append(value)
+        indices.append(ind)
         elect[max(ind-10, 0):min(ind+10, len(elect))] = [0] * (min(ind+10, len(elect)) - max(ind-10, 0))
         cv2.circle(img, tuple(value), 50, 255, -1)
         corners.append(value)
 
     return corners
 
+    indices.sort()
+
+    for i in range(3):
+        edges.append(cnt[indices[i]:indices[i + 1]])
+    edges.append(np.concatenate((cnt[indices[3]:], cnt[:indices[0]]), axis=0))
+
+    return corners, edges
+
+def unit_vector(vector):
+    return vector / np.linalg.norm(vector)
+
+def angle_between(v1, v2):
+    v1_u = unit_vector(v1)
+    v2_u = unit_vector(v2)
+    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+
 def export_contours(img, contours, path, modulo):
     puzzle_pieces = []
     list_img = []
     for idx, cnt in enumerate(contours):
-        corners = my_find_corners(img, cnt)
+        corners, edges = my_find_corners(img, cnt)
         puzzle_pieces.append(PuzzlePiece(cnt, corners))
         mask = np.zeros_like(img)
-        cv2.drawContours(mask, contours, idx, 255, -1)
+
+        # cv2.drawContours(mask, contours, idx, 255, -1)
+        cv2.drawContours(mask, edges, 0, 255, -1)
+
         out = np.zeros_like(img)
         out[mask == 255] = img[mask == 255]
 
         x,y,w,h = cv2.boundingRect(cnt)
-        list_img.append((out[y:y+h,x:x+w]))
+        out2 = out[y:y+h,x:x+w]
+
+        # NEED COMPUTE CENTER FROM 4 CORNERS (barycentre)
+        # centerX = np.sum([x2[0] - x for x2 in corners]) / len(corners)
+        # centerY = np.sum([x2[1] - y for x2 in corners]) / len(corners)
+        # cv2.circle(out2, tuple((int(centerX), int(centerY))), 10, 255, -1)
+
+        # /!\ /!\ TESTING PURPOSE ROTATE RANDOM AMOUNT /!\ /!\
+        # out2 = imutils.rotate_bound(out2, random.randint(0, 360))
+
+        # cv2.circle(out2, (int(w / 2), int(h / 2)), 10, 255, -1)
+
+        # cv2.line(out2, tuple((int(centerX) - 1000, int(centerY) - 1000)), tuple((int(centerX) + 1000, int(centerY) + 1000)), 255, 5)
+        # cv2.line(out2, tuple((corners[0][0] - x, corners[0][1] - y)), tuple((int(centerX), int(centerY))), 255, 5)
+
+        # angle = np.degrees(angle_between((-1, 1, 0), (corners[0][0] - x - centerX, corners[0][1] - y - centerY, 0)))
+
+        # print((h, h, 0), (corners[0][0] - x - centerX, corners[0][1] - y - centerY, 0), angle)
+
+        # rotated = imutils.rotate_bound(out2, angle)
+        list_img.append(out2)
 
     max_height = max([x.shape[0] for x in list_img])
     max_width = max([x.shape[1] for x in list_img])
