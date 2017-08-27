@@ -8,31 +8,33 @@ class Extractor():
 
     def extract(self):
         kernel = np.ones((3, 3), np.uint8)
-        initial_img = cv2.imread(self.path, 1)
-        rsz_img = cv2.resize(initial_img, None, fx=0.5, fy=0.5)
+        img = cv2.imread(self.path, 1)
+        # img = cv2.resize(initial_img, None, fx=0.5, fy=0.5)
 
-        cv2.imwrite("/tmp/yolo.png", initial_img)
+        cv2.imwrite("/tmp/yolo.png", img)
         self.pixmapWidget.add_image_widget("/tmp/yolo.png", 0, 0)
 
-        # fgmask = self.fgbg.apply(rsz_img)
-        # cv2.imshow('frame', fgmask)
-        # fgmask2 = self.fgbg2.apply(rsz_img)
-        # cv2.imshow('frame2', fgmask2)
-        # fgmask3 = self.fgbg3.apply(rsz_img)
-        # cv2.imshow('frame3', fgmask3)
+        # img = cv2.GaussianBlur(img, (3, 3), 0)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        ret, img = cv2.threshold(img, 240, 255, 0)
 
-        # self.findContourTest1(initial_img)
+        # Dilate because color inverse
+        img = cv2.dilate(img, kernel, iterations=2)
 
-        # self.findContourTest2(initial_img)
+        cv2.imwrite("/tmp/yolo.png", img)
+        self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 1)
 
-        img = cv2.GaussianBlur(rsz_img, (3, 3), 0)
-        img = auto_canny(img)
-        img = cv2.dilate(img, kernel, iterations=1)
-        img = cv2.erode(img, kernel, iterations=1)
+        img = cv2.morphologyEx(img, cv2.MORPH_GRADIENT, kernel)
+
+        # img = auto_canny(img)
+
+        # img = cv2.dilate(img, kernel, iterations=1)
+        # img = cv2.erode(img, kernel, iterations=1)
+
         img, contours, hier = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-        export_contours(img, contours, "/tmp/yolo.png", 5)
-        self.pixmapWidget.add_image_widget("/tmp/yolo.png", 0, 1)
+        export_contours(img, contours, "/tmp/contours.png", 5)
+        self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
 
         fshift, magnitude = get_fourier(img)
         cv2.imwrite("/tmp/yolo.png", magnitude)

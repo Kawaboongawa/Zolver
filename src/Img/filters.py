@@ -1,6 +1,7 @@
 import cv2
 from scipy.signal import savgol_filter
 import numpy as np
+from scipy.spatial import distance
 
 def auto_canny(img, sigma=0.33):
     # compute the median of the single channel pixel intensities
@@ -124,11 +125,57 @@ def findContourTest1(initial_img):
         cv2.drawContours(initial_img, [approx], -1, (0, 255, 0), 2)
     cv2.imshow("Output", initial_img)
 
+def find_corners(img):
+    corners = cv2.goodFeaturesToTrack(img, 10, 0.001, 20, blockSize=20)
+    corners = np.int0(corners)
+    for i in corners:
+        x,y = i.ravel()
+        cv2.circle(img, (x,y), 10, 255, -1)
+    return img
+
+# Not working at all
+def find_corners_mser(img):
+    mser = cv2.MSER_create()
+    regions, _ = mser.detectRegions(img)
+    hulls = [cv2.convexHull(p.reshape(-1, 1, 2)) for p in regions]
+    img = cv2.polylines(img, hulls, 1, (0, 255, 0))
+    return img
+
+def my_dist(x,y):
+    return np.sqrt(np.sum((x-y)**2))
+
+# Point farthest election
+def my_find_corners(img, cnt):
+    elect = []
+    for p in cnt:
+        elect.append(0)
+
+    for p in cnt:
+        l = [x[0] for x in cnt]
+        res = []
+        for p2 in l:
+            res.append(my_dist(p2, p[0]))
+        ind = np.argmax(res)
+        elect[ind] += 1
+
+    for i in range(4):
+        ind = np.argmax(elect)
+        value = cnt[ind][0]
+        elect[max(ind-10, 0):min(ind+10, len(elect))] = [0] * (min(ind+10, len(elect)) - max(ind-10, 0))
+        print(tuple(value))
+        cv2.circle(img, tuple(value), 10, 255, -1)
+
 def export_contours(img, contours, path, modulo):
     list_img = []
-    for cnt in contours:
+    for idx, cnt in enumerate(contours):
+        my_find_corners(img, cnt)
+        mask = np.zeros_like(img)
+        cv2.drawContours(mask, contours, idx, 255, -1)
+        out = np.zeros_like(img)
+        out[mask == 255] = img[mask == 255]
+
         x,y,w,h = cv2.boundingRect(cnt)
-        list_img.append(img[y:y+h,x:x+w])
+        list_img.append((out[y:y+h,x:x+w]))
 
     max_height = max([x.shape[0] for x in list_img])
     max_width = max([x.shape[1] for x in list_img])
