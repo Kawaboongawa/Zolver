@@ -146,10 +146,7 @@ def my_dist(x, y):
 
 # Point farthest election
 def my_find_corners(img, cnt):
-    elect = []
-    for p in cnt:
-        elect.append(0)
-
+    elect = [0] * len(cnt)
     for p in cnt:
         l = np.array([x[0] for x in cnt])
         res = my_dist(l, p)
