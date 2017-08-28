@@ -22,7 +22,6 @@ class PuzzlePiece():
         for e in edges:
             norm_e = self.normalize_edges(e, 256)
             self.fourier_descriptors_.append(FourierDescriptor(norm_e, 256))
-        print(self.fourier_descriptors_)
 
     def normalize_edges(self, edge, n):
         point_dist = float(len(edge)) / float(n)

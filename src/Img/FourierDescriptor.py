@@ -7,10 +7,8 @@ class FourierDescriptor():
         self.size_ = size
         self.centroid_ = (0.0, 0.0)
         self.compute_centroid()
-        descriptors = self.compute_centroid_distance()
-        print(descriptors)
-        self.compute_descriptors(descriptors)
-        print(descriptors)
+        self.descriptors_ = self.compute_centroid_distance()
+        self.compute_descriptors()
 
     def compute_centroid(self):
         for i in range(0, self.size_):
@@ -24,19 +22,17 @@ class FourierDescriptor():
             dst.append((float(self.shape_[i][0]) - self.centroid_[0], float(self.shape_[i][1]) - self.centroid_[1]))
         return dst
 
-    def compute_magnitude(self, src):
-        for e in src:
-            modulus = math.sqrt(e[0] * e[0] + e[1] * e[1])
-            e = (modulus, 0.0)
-        return src
+    def compute_magnitude(self):
+        for i, e in enumerate(self.descriptors_):
+            self.descriptors_[i] = math.sqrt(e[0] * e[0] + e[1] * e[1])
 
-    def compute_signature_centroid(self, src, centroid):
-        for e in src:
-            print(centroid)
-            #e = (e[0] / centroid[0])
-        return src
+    def compute_centroid_signature(self, centroid):
+        for i in range(1, int(len(self.descriptors_) / 2)):
+            self.descriptors_[i - 1] = self.descriptors_[i] / centroid
+        self.descriptors_.pop()
 
-    def compute_descriptors(self, src):
-        np.fft.fft(src)
-        self.compute_magnitude(src)
-        self.compute_signature_centroid(src[1:], src[0])
+    def compute_descriptors(self):
+        np.fft.fft(self.descriptors_)
+        self.compute_magnitude()
+        self.compute_centroid_signature(self.descriptors_[0])
+
