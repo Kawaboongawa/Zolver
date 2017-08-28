@@ -171,8 +171,6 @@ def my_find_corners(img, cnt):
         cv2.circle(img, tuple(value), 50, 255, -1)
         corners.append(value)
 
-    return corners
-
     indices.sort()
 
     for i in range(3):
@@ -194,7 +192,7 @@ def export_contours(img, contours, path, modulo):
     list_img = []
     for idx, cnt in enumerate(contours):
         corners, edges = my_find_corners(img, cnt)
-        puzzle_pieces.append(PuzzlePiece(cnt, corners))
+        puzzle_pieces.append(PuzzlePiece(edges))
         mask = np.zeros_like(img)
 
         # cv2.drawContours(mask, contours, idx, 255, -1)

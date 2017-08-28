@@ -1,5 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
+from src.Img.FourierDescriptor import FourierDescriptor
 
 
 def cart2pol(x, y):
@@ -15,19 +16,21 @@ def pol2cart(rho, phi):
 
 
 class PuzzlePiece():
-    def __init__(self, edges, corners):
-        self.corners = corners
+    def __init__(self, edges):
         self.edges_ = edges
+        self.fourier_descriptors_ = []
+        for e in edges:
+            norm_e = self.normalize_edges(e, 256)
+            self.fourier_descriptors_.append(FourierDescriptor(norm_e, 256))
+        print(self.fourier_descriptors_)
 
-    def normalize_edges(self, n, edge):
+    def normalize_edges(self, edge, n):
         point_dist = float(len(edge)) / float(n)
         index = float(0)
-        dst = [tuple(0, 0)] * n
+        dst = []
         for i in range(0, n):
-            dst[i] = edge[int(index)]
+            #TODO: fix triple array
+            dst.append((edge[int(index)][0][0], edge[int(index)][0][1]))
             index += point_dist
         return dst
 
-    edges_ = None
-    n_corners = 0
-    pol_edges = None
