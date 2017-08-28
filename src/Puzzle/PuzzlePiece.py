@@ -29,8 +29,8 @@ class PuzzlePiece():
         self.border = []
         self.fourier_descriptors_ = []
         for e in edges:
-            norm_e = self.normalize_edges(e, 256)
-            self.fourier_descriptors_.append(FourierDescriptor(norm_e, 256))
+            norm_e = self.normalize_edges(e, 128)
+            self.fourier_descriptors_.append(FourierDescriptor(norm_e, 128))
             self.border.append(is_border(e, 10))
 
     def normalize_edges(self, edge, n):

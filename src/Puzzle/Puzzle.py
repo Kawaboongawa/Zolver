@@ -35,3 +35,4 @@ class Puzzle():
 
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
         cv2.imwrite(path, tests_img)
+
