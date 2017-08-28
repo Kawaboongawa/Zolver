@@ -4,6 +4,13 @@ from Puzzle.Extractor import Extractor
 from Puzzle.Mover import *
 from cv2 import cv2
 
+def is_match_edges(e1, e2, threshold):
+    diff = 0
+    for i, p in enumerate(e1):
+        if i < len(e2):
+            diff += np.linalg.norm(p[0] - e2[i][0])
+    return diff < threshold
+
 class Puzzle():
     def __init__(self, path, pixmapWidget):
         self.extract = Extractor(path, pixmapWidget)
