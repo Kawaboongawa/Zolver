@@ -18,15 +18,15 @@ class PuzzlePiece():
     def __init__(self, edges, corners):
         self.corners = corners
         self.edges_ = edges
-        self.pol_edges = []
-        # print(edges)
-        for e in self.edges_:
-            # Checker x, y et ou y, x !
-            # NE MARCHE PAAAAAAAAAAAAAAS
-            self.pol_edges.append(cart2pol(e.item(0), e.item(1)))
-        # print(self.pol_edges)
-        # plt.imshow(self.pol_edges)
-        # plt.show()
+
+    def normalize_edges(self, n, edge):
+        point_dist = float(len(edge)) / float(n)
+        index = float(0)
+        dst = [tuple(0, 0)] * n
+        for i in range(0, n):
+            dst[i] = edge[int(index)]
+            index += point_dist
+        return dst
 
     edges_ = None
     n_corners = 0
