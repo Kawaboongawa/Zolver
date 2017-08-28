@@ -123,7 +123,7 @@ def findContourTest1(initial_img):
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     cv2.imshow("Closed", closed)
     # finding_contours
-    (cnts, _) = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    (cnts, _) = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     for c in cnts:
         peri = cv2.arcLength(c, True)
         approx = cv2.approxPolyDP(c, 0.02 * peri, True)

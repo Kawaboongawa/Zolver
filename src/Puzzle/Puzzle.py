@@ -7,6 +7,4 @@ class Puzzle():
     def __init__(self, path, pixmapWidget):
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
-
-    
-    n_pieces_ = 0
+        print(self.pieces_[0].fourier_descriptors_[0].match_descriptors(self.pieces_[1].fourier_descriptors_[1]))

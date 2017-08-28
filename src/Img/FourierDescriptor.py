@@ -36,3 +36,10 @@ class FourierDescriptor():
         self.compute_magnitude()
         self.compute_centroid_signature(self.descriptors_[0])
 
+    def match_descriptors(self, d2):
+        res = 0.0
+        size = min(len(self.shape_), len(d2.descriptors_))
+        for i in range(0, size):
+            mod = math.fabs(self.descriptors_[i] - d2.descriptors_[i])
+            res += mod * mod
+        return math.sqrt(res)
