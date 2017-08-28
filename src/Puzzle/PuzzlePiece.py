@@ -14,15 +14,24 @@ def pol2cart(rho, phi):
     y = rho * np.sin(phi)
     return x, y
 
+def dist_to_line(p1, p2, p3):
+    return np.linalg.norm(np.cross(p2 - p1, p1 - p3)) / np.linalg.norm(p2 - p1)
+
+def is_border(edge, threshold):
+    total_dist = 0
+    for p in edge:
+        total_dist += dist_to_line(edge[0][0], edge[-1][0], p[0])
+    return total_dist < threshold
 
 class PuzzlePiece():
     def __init__(self, edges):
         self.edges_ = edges
+        self.border = []
         self.fourier_descriptors_ = []
         for e in edges:
             norm_e = self.normalize_edges(e, 256)
             self.fourier_descriptors_.append(FourierDescriptor(norm_e, 256))
-
+            self.border.append(is_border(e, 10))
 
     def normalize_edges(self, edge, n):
         point_dist = float(len(edge)) / float(n)

@@ -8,21 +8,11 @@ class Puzzle():
     def __init__(self, path, pixmapWidget):
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
-        print(self.pieces_[0].fourier_descriptors_[0].match_descriptors(self.pieces_[1].fourier_descriptors_[1]))
-
-        tests_img = np.zeros_like(self.extract.img)
 
         self.stick_best(self.pieces_[0], 3)
         self.stick_best(self.pieces_[0], 2)
 
-        for piece in self.pieces_:
-            for i in range(4):
-                for p in piece.edges_[i]:
-                    if p[0][0] < self.extract.img.shape[1] and p[0][1] < self.extract.img.shape[0]:
-                        tests_img[p[0][1], p[0][0]] = 255
-
-        # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
-        cv2.imwrite("/tmp/test_stick.png", tests_img)
+        self.export_pieces("/tmp/test_stick.png")
 
     def stick_best(self, cur_piece, edge_cur_piece):
         tests = []
@@ -33,3 +23,15 @@ class Puzzle():
 
         l = sorted(tests, key=lambda x: x[2])
         stick_pieces(cur_piece, edge_cur_piece, self.pieces_[l[0][0]], l[0][1])
+
+    def export_pieces(self, path):
+        tests_img = np.zeros_like(self.extract.img)
+
+        for piece in self.pieces_:
+            for i in range(4):
+                for p in piece.edges_[i]:
+                    if not piece.border[i] and p[0][0] < self.extract.img.shape[1] and p[0][1] < self.extract.img.shape[0]:
+                        tests_img[p[0][1], p[0][0]] = 255
+
+        # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
+        cv2.imwrite(path, tests_img)
