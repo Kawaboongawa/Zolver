@@ -2,58 +2,45 @@ from cv2 import cv2
 
 import numpy as np
 from Img.filters import *
-from Puzzle.Mover import *
 
 class Extractor():
     def __init__(self, path, pixmapWidget):
         self.path = path
+        self.img = cv2.imread(self.path, 1)
         self.pixmapWidget = pixmapWidget
 
     def extract(self):
         kernel = np.ones((3, 3), np.uint8)
-        img = cv2.imread(self.path, 1)
         # img = cv2.resize(initial_img, None, fx=0.5, fy=0.5)
 
-        cv2.imwrite("/tmp/yolo.png", img)
+        cv2.imwrite("/tmp/yolo.png", self.img)
         self.pixmapWidget.add_image_widget("/tmp/yolo.png", 0, 0)
 
-        # img = cv2.GaussianBlur(img, (3, 3), 0)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ret, img = cv2.threshold(img, 240, 255, 0)
+        # img = cv2.GaussianBlur(self.img, (3, 3), 0)
+        self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+        ret, self.img = cv2.threshold(self.img, 240, 255, 0)
 
         # Dilate because color inverse
-        img = cv2.dilate(img, kernel, iterations=2)
+        self.img = cv2.dilate(self.img, kernel, iterations=2)
 
-        cv2.imwrite("/tmp/yolo.png", img)
+        cv2.imwrite("/tmp/yolo.png", self.img)
         self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 1)
 
-        img = cv2.morphologyEx(img, cv2.MORPH_GRADIENT, kernel)
+        self.img = cv2.morphologyEx(self.img, cv2.MORPH_GRADIENT, kernel)
 
-        # img = auto_canny(img)
+        # self.img = auto_canny(self.img)
 
-        # img = cv2.dilate(img, kernel, iterations=1)
-        # img = cv2.erode(img, kernel, iterations=1)
-        img, contours, hier = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        puzzle_pieces = export_contours(img, contours, "/tmp/contours.png", 5)
+        # self.img = cv2.dilate(self.img, kernel, iterations=1)
+        # self.img = cv2.erode(self.img, kernel, iterations=1)
+        self.img, contours, hier = cv2.findContours(self.img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        puzzle_pieces = export_contours(self.img, contours, "/tmp/contours.png", 5)
         self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
 
-        tests_img = np.zeros_like(img)
-        stick_pieces(puzzle_pieces[1], 0, puzzle_pieces[2], 2)
-
-        for piece in puzzle_pieces:
-            for i in range(4):
-                for p in piece.edges_[i]:
-                    if p[0][0] < img.shape[1] and p[0][1] < img.shape[0]:
-                        tests_img[p[0][1], p[0][0]] = 255
-
-        # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
-        cv2.imwrite("/tmp/test_stick.png", tests_img)
-
-        fshift, magnitude = get_fourier(img)
+        fshift, magnitude = get_fourier(self.img)
         cv2.imwrite("/tmp/yolo.png", magnitude)
         self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 0)
 
-        rows, cols = img.shape
+        rows, cols = self.img.shape
         crow, ccol = int(rows/2) , int(cols/2)
         fshift[crow-30:crow+30, ccol-30:ccol+30] = 0
         f_ishift = np.fft.ifftshift(fshift)
