@@ -1,6 +1,6 @@
 from Puzzle.PuzzlePiece import *
 
-from src.Puzzle.Extractor import Extractor
+from Puzzle.Extractor import Extractor
 
 
 class Puzzle():

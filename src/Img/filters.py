@@ -5,7 +5,7 @@ from scipy.spatial import distance
 import imutils
 import random
 
-from src.Puzzle.PuzzlePiece import PuzzlePiece
+from Puzzle.PuzzlePiece import PuzzlePiece
 
 
 def auto_canny(img, sigma=0.33):
@@ -169,7 +169,6 @@ def my_find_corners(img, cnt):
         indices.append(ind)
         elect[max(ind-10, 0):min(ind+10, len(elect))] = [0] * (min(ind+10, len(elect)) - max(ind-10, 0))
         cv2.circle(img, tuple(value), 50, 255, -1)
-        corners.append(value)
 
     indices.sort()
 
@@ -187,9 +186,13 @@ def angle_between(v1, v2):
     v2_u = unit_vector(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
+# Return puzzle Piece array
 def export_contours(img, contours, path, modulo):
     puzzle_pieces = []
     list_img = []
+
+    tests_img = np.zeros_like(img)
+
     for idx, cnt in enumerate(contours):
         corners, edges = my_find_corners(img, cnt)
         puzzle_pieces.append(PuzzlePiece(edges))
@@ -197,6 +200,8 @@ def export_contours(img, contours, path, modulo):
 
         # cv2.drawContours(mask, contours, idx, 255, -1)
         cv2.drawContours(mask, edges, 0, 255, -1)
+        for i in range(4):
+            cv2.drawContours(tests_img, edges, i, 255, -1)
 
         out = np.zeros_like(img)
         out[mask == 255] = img[mask == 255]
@@ -230,6 +235,7 @@ def export_contours(img, contours, path, modulo):
     for index, image in enumerate(list_img):
         pieces_img[(max_height * int(index / modulo)):(max_height * int(index / modulo) + image.shape[0]),(max_width * (index % modulo)):(max_width * (index % modulo) + image.shape[1])] = image
 
+    cv2.imwrite("/tmp/test.png", tests_img)
     cv2.imwrite(path, pieces_img)
     return puzzle_pieces
 

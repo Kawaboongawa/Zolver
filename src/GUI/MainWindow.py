@@ -4,9 +4,9 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, qApp
 from PyQt5.QtWidgets import QFileDialog
 
-from src.GUI.PixmapWidget import PixmapWidget, QMainWindow
-from src.Puzzle.Extractor import Extractor
-from src.Puzzle.Puzzle import Puzzle
+from GUI.PixmapWidget import PixmapWidget, QMainWindow
+from Puzzle.Extractor import Extractor
+from Puzzle.Puzzle import Puzzle
 
 
 class MainWindow(QMainWindow):
@@ -37,4 +37,3 @@ class MainWindow(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, 'Open file', '',"Image files (*.jpg *.png *.jpeg *.bmp)")
         if (fname[0]):
             p = Puzzle(fname[0], self.widget)
-

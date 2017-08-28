@@ -1,7 +1,7 @@
 from cv2 import cv2
 
 import numpy as np
-from src.Img.filters import *
+from Img.filters import *
 
 class Extractor():
     def __init__(self, path, pixmapWidget):
