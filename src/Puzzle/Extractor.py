@@ -2,6 +2,7 @@ from cv2 import cv2
 
 import numpy as np
 from Img.filters import *
+from Puzzle.Mover import *
 
 class Extractor():
     def __init__(self, path, pixmapWidget):
@@ -35,6 +36,18 @@ class Extractor():
         img, contours, hier = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         puzzle_pieces = export_contours(img, contours, "/tmp/contours.png", 5)
         self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
+
+        tests_img = np.zeros_like(img)
+        stick_pieces(puzzle_pieces[1], 0, puzzle_pieces[2], 2)
+
+        for piece in puzzle_pieces:
+            for i in range(4):
+                for p in piece.edges_[i]:
+                    if p[0][0] < img.shape[1] and p[0][1] < img.shape[0]:
+                        tests_img[p[0][1], p[0][0]] = 255
+
+        # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
+        cv2.imwrite("/tmp/test_stick.png", tests_img)
 
         fshift, magnitude = get_fourier(img)
         cv2.imwrite("/tmp/yolo.png", magnitude)
