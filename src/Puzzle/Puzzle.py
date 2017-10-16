@@ -7,6 +7,7 @@ from cv2 import cv2
 from Puzzle.Enums import Directions
 import sys
 
+# Match edges by performing a simple norm on each points
 def diff_match_edges(e1, e2):
     diff = 0
     for i, p in enumerate(e1):
@@ -16,9 +17,11 @@ def diff_match_edges(e1, e2):
             break
     return diff
 
+# Return opposite direction of dir
 def neg_dir(dir):
     return Directions((-dir.value[0], -dir.value[1]))
 
+# Helper function to add two tuples
 def add_tuples(tuple1, tuple2):
     return tuple(map(lambda x, y: x + y, tuple1, tuple2))
 
@@ -27,23 +30,54 @@ class Puzzle():
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
 
+        # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
+        # The first piece has an orientation lihe that:
+        #         N          edges:    0
+        #      W     E              3     1
+        #         S                    2
+        #
+        # Pieces are placed on a grid like that (X is the first piece at position (0, 0)):
+        # +--+--+--+
+        # |  |  |  |
+        # +--+--+--+
+        # |  | X|  |
+        # +--+--+--+
+        # |  |  |  |
+        # +--+--+--+
+        #
+        # Then if we test the NORTH edge:
+        # +--+--+--+
+        # |  | X|  |
+        # +--+--+--+
+        # |  | X|  |
+        # +--+--+--+
+        # |  |  |  |
+        # +--+--+--+
+        # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
         connected_pieces = [self.pieces_[0]]
         left_pieces = self.pieces_[1:]
 
+        # while there are still pieces to connect...
         while len(left_pieces) > 0:
             to_break = False
             for ip, p in enumerate(connected_pieces):
                 for ie, e in enumerate(p.edges_):
+                    # for each connected_pieces, for each edges, if the edges is not connected we need
+                    # to find the correct piece/edge to connect the piece to
                     if not p.connected_[ie]:
                         print("<--- New match --->")
                         print("connected: {}".format(p.connected_))
+                        # Stick best get a list of pieces to test and return the index of the best match (piece/edge)
                         tmp_ip, tmp_ie = self.stick_best(connected_pieces[ip], ie, left_pieces)
 
                         print("orientation {}, position {}".format(p.orientation[ie].value, p.position))
+                        # The position of the piece to connect is the position of the connected piece + orientation on the grid
                         left_pieces[tmp_ip].position = add_tuples(p.position, p.orientation[ie].value)
                         left_pieces[tmp_ip].orientation[(ie + 2) % 4] = neg_dir(connected_pieces[ip].orientation[ie])
                         print("orientation {}, position {}".format(left_pieces[tmp_ip].orientation[(ie + 2) % 4].value, left_pieces[tmp_ip].position))
 
+                        # We need to fill the new orientation of the new piece because a piece can be rotated
+                        # Quick and dirty sorry
                         for i_tmp in range(1, 3):
                             o_pos = (ie + 2 + i_tmp - 1) % 4
                             n_pos = (o_pos + 1) % 4
@@ -56,6 +90,18 @@ class Puzzle():
                             elif left_pieces[tmp_ip].orientation[o_pos] == Directions.W:
                                 left_pieces[tmp_ip].orientation[n_pos] = Directions.N
 
+                        # Then we need to search the other pieces already in the puzzle that are going to be also connected:
+                        # +--+--+--+
+                        # |  | X| O|
+                        # +--+--+--+
+                        # |  | X| X|
+                        # +--+--+--+
+                        # |  |  |  |
+                        # +--+--+--+
+                        #
+                        # For example if I am going to put a piece at the marker 'O' only one edge will be connected to the piece
+                        # therefore we need to search the adjacent pieces and connect them properly
+                        # Again quick and dirty feel free to change it
                         for ip2, p2 in enumerate(connected_pieces):
                             if p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.N.value):
                                 connected_pieces[ip2].connected_[p2.orientation.index(Directions.S)] = True
@@ -70,9 +116,7 @@ class Puzzle():
                                 connected_pieces[ip2].connected_[p2.orientation.index(Directions.W)] = True
                                 left_pieces[tmp_ip].connected_[left_pieces[tmp_ip].orientation.index(Directions.E)] = True
 
-                        #connected_pieces[ip].connected_[ie] = True
-                        #left_pieces[tmp_ip].connected_[tmp_ie] = True
-
+                        # We are adding pieces to connected_pieces while looping into it so I break
                         connected_pieces.append(left_pieces[tmp_ip])
                         del left_pieces[tmp_ip]
                         to_break = True
@@ -91,29 +135,19 @@ class Puzzle():
                         minX = p[0][0]
                     if p[0][1] < minY:
                         minY = p[0][1]
-        print(minX, minY)
+
         for ip, p in enumerate(self.pieces_):
             for ie, e in enumerate(p.edges_):
                 for i, p in enumerate(e):
                     self.pieces_[ip].edges_[ie][i] += (-minX, -minY)
 
-
-        # stick_pieces(self.pieces_[1], 3, self.pieces_[8], 1)
-        #self.stick_best(self.pieces_[1], 2)
-        #self.stick_best(self.pieces_[1], 3)
-        #self.stick_best(self.pieces_[4], 3)
-        #self.stick_best(self.pieces_[4], 2)
-        #self.stick_best(self.pieces_[8], 3)
-        #self.stick_best(self.pieces_[6], 3)
-
-        #self.stick_best(self.pieces_[0], 0)
-        #self.stick_best(self.pieces_[3], 3)
         self.export_pieces("/tmp/test_stick.png")
 
     def stick_best(self, cur_piece, edge_cur_piece, pieces):
         if cur_piece.connected_[edge_cur_piece]:
             return
 
+        # Fourier descriptor... Not used I think
         tests = []
         for index_piece, piece in enumerate(pieces):
             if piece != cur_piece:
@@ -151,7 +185,6 @@ class Puzzle():
         for piece in self.pieces_:
             for i in range(4):
                 for p in piece.edges_[i]:
-                    # if not piece.border[i] and p[0][0] < self.extract.img.shape[1] and p[0][1] < self.extract.img.shape[0]:
                     if p[0][0] < self.extract.img.shape[1] and p[0][1] < self.extract.img.shape[0]:
                         tests_img[p[0][1], p[0][0]] = 255
 
