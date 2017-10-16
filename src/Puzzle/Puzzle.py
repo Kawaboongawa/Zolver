@@ -5,6 +5,7 @@ from Puzzle.Mover import *
 from cv2 import cv2
 
 from Puzzle.Enums import Directions
+import sys
 
 def diff_match_edges(e1, e2):
     diff = 0
@@ -80,6 +81,22 @@ class Puzzle():
                     break
 
         self.pieces_ = connected_pieces
+
+        minX = sys.maxsize
+        minY = sys.maxsize
+        for p in self.pieces_:
+            for e in p.edges_:
+                for p in e:
+                    if p[0][0] < minX:
+                        minX = p[0][0]
+                    if p[0][1] < minY:
+                        minY = p[0][1]
+        print(minX, minY)
+        for ip, p in enumerate(self.pieces_):
+            for ie, e in enumerate(p.edges_):
+                for i, p in enumerate(e):
+                    self.pieces_[ip].edges_[ie][i] += (-minX, -minY)
+
 
         # stick_pieces(self.pieces_[1], 3, self.pieces_[8], 1)
         #self.stick_best(self.pieces_[1], 2)
