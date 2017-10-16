@@ -1,7 +1,7 @@
 import numpy as np
 
 from Img.FourierDescriptor import FourierDescriptor
-
+from Puzzle.Enums import Directions
 
 def cart2pol(x, y):
     rho = np.sqrt(x ** 2 + y ** 2)
@@ -25,13 +25,20 @@ def is_border(edge, threshold):
 
 class PuzzlePiece():
     def __init__(self, edges):
+        self.position = (0, 0)
+        # Keep orientations in an array (Correct only for first piece then the
+        # values will be ovewritten)
+        self.orientation = [Directions.N, Directions.E, Directions.S, Directions.W]
         self.edges_ = edges
-        self.border = []
+
+        # Keep informations if the edge is a connected
+        self.connected_ = []
+
         self.fourier_descriptors_ = []
         for e in edges:
             norm_e = self.normalize_edges(e, 128)
             self.fourier_descriptors_.append(FourierDescriptor(norm_e, 128))
-            self.border.append(is_border(e, 10))
+            self.connected_.append(is_border(e, 1000))
 
     def normalize_edges(self, edge, n):
         point_dist = float(len(edge)) / float(n)

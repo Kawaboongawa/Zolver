@@ -8,6 +8,9 @@ def rotate(origin, point, angle):
 
     qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
     qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    if qx != qx or qy != qy:
+        print("NAN DETECTED: {} {} {} {} {}".format(ox, oy, px, py, qx, qy, angle))
+
     return qx, qy
 
 def stick_pieces(bloc, bloc_index_edge, piece, piece_index_edge):

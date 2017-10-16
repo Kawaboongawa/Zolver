@@ -180,6 +180,8 @@ def my_find_corners(img, cnt):
     return corners, edges
 
 def angle_between(v1, v2):
+    if v1 == v2:
+        return 0
     return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
 # Return puzzle Piece array
