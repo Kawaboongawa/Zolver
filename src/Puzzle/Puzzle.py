@@ -35,7 +35,7 @@ class Puzzle():
         self.pieces_ = self.extract.extract()
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
-        # The first piece has an orientation lihe that:
+        # The first piece has an orientation like that:
         #         N          edges:    0
         #      W     E              3     1
         #         S                    2
@@ -135,6 +135,7 @@ class Puzzle():
 
         self.pieces_ = connected_pieces
 
+        # Translate all pieces to the top left corner to be sure the puzzle is in the image
         minX = sys.maxsize
         minY = sys.maxsize
         for p in self.pieces_:
