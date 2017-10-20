@@ -18,20 +18,12 @@ class Extractor():
 
         # img = cv2.GaussianBlur(self.img, (3, 3), 0)
         self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-        ret, self.img = cv2.threshold(self.img, 240, 255, 0)
+        ret, self.img = cv2.threshold(self.img, 240, 255,  cv2.THRESH_BINARY_INV)
 
-        # Dilate because color inverse
-        self.img = cv2.dilate(self.img, kernel, iterations=2)
 
         cv2.imwrite("/tmp/yolo.png", self.img)
         self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 1)
 
-        self.img = cv2.morphologyEx(self.img, cv2.MORPH_GRADIENT, kernel)
-
-        # self.img = auto_canny(self.img)
-
-        # self.img = cv2.dilate(self.img, kernel, iterations=1)
-        # self.img = cv2.erode(self.img, kernel, iterations=1)
         self.img, contours, hier = cv2.findContours(self.img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         puzzle_pieces = export_contours(self.img, contours, "/tmp/contours.png", 5)
         self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
