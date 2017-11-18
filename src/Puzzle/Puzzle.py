@@ -7,6 +7,7 @@ from cv2 import cv2
 from Puzzle.Enums import Directions
 import sys
 
+
 # Match edges by performing a simple norm on each points
 def diff_match_edges(e1, e2):
     diff = 0
@@ -17,13 +18,16 @@ def diff_match_edges(e1, e2):
             break
     return diff
 
+
 # Return opposite direction of dir
 def neg_dir(dir):
     return Directions((-dir.value[0], -dir.value[1]))
 
+
 # Helper function to add two tuples
 def add_tuples(tuple1, tuple2):
     return tuple(map(lambda x, y: x + y, tuple1, tuple2))
+
 
 class Puzzle():
     def __init__(self, path, pixmapWidget):
@@ -74,7 +78,8 @@ class Puzzle():
                         # The position of the piece to connect is the position of the connected piece + orientation on the grid
                         left_pieces[tmp_ip].position = add_tuples(p.position, p.orientation[ie].value)
                         left_pieces[tmp_ip].orientation[(ie + 2) % 4] = neg_dir(connected_pieces[ip].orientation[ie])
-                        print("orientation {}, position {}".format(left_pieces[tmp_ip].orientation[(ie + 2) % 4].value, left_pieces[tmp_ip].position))
+                        print("orientation {}, position {}".format(left_pieces[tmp_ip].orientation[(ie + 2) % 4].value,
+                                                                   left_pieces[tmp_ip].position))
 
                         # We need to fill the new orientation of the new piece because a piece can be rotated
                         # Quick and dirty sorry
@@ -105,16 +110,20 @@ class Puzzle():
                         for ip2, p2 in enumerate(connected_pieces):
                             if p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.N.value):
                                 connected_pieces[ip2].connected_[p2.orientation.index(Directions.S)] = True
-                                left_pieces[tmp_ip].connected_[left_pieces[tmp_ip].orientation.index(Directions.N)] = True
+                                left_pieces[tmp_ip].connected_[
+                                    left_pieces[tmp_ip].orientation.index(Directions.N)] = True
                             elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.S.value):
                                 connected_pieces[ip2].connected_[p2.orientation.index(Directions.N)] = True
-                                left_pieces[tmp_ip].connected_[left_pieces[tmp_ip].orientation.index(Directions.S)] = True
+                                left_pieces[tmp_ip].connected_[
+                                    left_pieces[tmp_ip].orientation.index(Directions.S)] = True
                             elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.W.value):
                                 connected_pieces[ip2].connected_[p2.orientation.index(Directions.E)] = True
-                                left_pieces[tmp_ip].connected_[left_pieces[tmp_ip].orientation.index(Directions.W)] = True
+                                left_pieces[tmp_ip].connected_[
+                                    left_pieces[tmp_ip].orientation.index(Directions.W)] = True
                             elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.E.value):
                                 connected_pieces[ip2].connected_[p2.orientation.index(Directions.W)] = True
-                                left_pieces[tmp_ip].connected_[left_pieces[tmp_ip].orientation.index(Directions.E)] = True
+                                left_pieces[tmp_ip].connected_[
+                                    left_pieces[tmp_ip].orientation.index(Directions.E)] = True
 
                         # We are adding pieces to connected_pieces while looping into it so I break
                         connected_pieces.append(left_pieces[tmp_ip])
@@ -152,7 +161,8 @@ class Puzzle():
         for index_piece, piece in enumerate(pieces):
             if piece != cur_piece:
                 for index_edge, edge in enumerate(piece.edges_):
-                    tests.append((index_piece, index_edge, piece.fourier_descriptors_[index_edge].match_descriptors(cur_piece.fourier_descriptors_[edge_cur_piece])))
+                    tests.append((index_piece, index_edge, piece.fourier_descriptors_[index_edge].match_descriptors(
+                        cur_piece.fourier_descriptors_[edge_cur_piece])))
 
         l = sorted(tests, key=lambda x: x[2])
         diff = []

@@ -34,6 +34,6 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(openFile)
 
     def showDialog(self):
-        fname = QFileDialog.getOpenFileName(self, 'Open file', '',"Image files (*.jpg *.png *.jpeg *.bmp)")
+        fname = QFileDialog.getOpenFileName(self, 'Open file', '', "Image files (*.jpg *.png *.jpeg *.bmp)")
         if (fname[0]):
             p = Puzzle(fname[0], self.widget)

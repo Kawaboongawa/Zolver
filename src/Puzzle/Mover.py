@@ -2,6 +2,7 @@ from Puzzle.PuzzlePiece import *
 from Img.filters import angle_between
 import math
 
+
 def rotate(origin, point, angle):
     ox, oy = origin
     px, py = point
@@ -12,6 +13,7 @@ def rotate(origin, point, angle):
         print("NAN DETECTED: {} {} {} {} {}".format(ox, oy, px, py, qx, qy, angle))
 
     return qx, qy
+
 
 def stick_pieces(bloc, bloc_index_edge, piece, piece_index_edge):
     vec_bloc = bloc.edges_[bloc_index_edge][0][0] - bloc.edges_[bloc_index_edge][-1][0]
