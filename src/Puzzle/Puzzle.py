@@ -30,7 +30,7 @@ def add_tuples(tuple1, tuple2):
 
 
 class Puzzle():
-    def __init__(self, path, pixmapWidget):
+    def __init__(self, path, pixmapWidget=None):
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
 

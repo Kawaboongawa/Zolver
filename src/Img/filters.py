@@ -20,6 +20,7 @@ def auto_canny(img, sigma=0.33):
     # return the edged image
     return edges
 
+
 # fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
 # fgbg2 = cv2.createBackgroundSubtractorMOG2()
 # fgbg3 = cv2.bgsegm.createBackgroundSubtractorGMG()
@@ -32,6 +33,7 @@ def edgedetect(channel):
     sobel[sobel > 255] = 255
     return sobel
     # Some values seem to go above 255. However RGB channels has to be within 0-255
+
 
 def findSignificantContours(img, edgeImg):
     image, contours, heirarchy = cv2.findContours(edgeImg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -59,6 +61,7 @@ def findSignificantContours(img, edgeImg):
     significant.sort(key=lambda x: x[1])
     # print ([x[1] for x in significant]);
     return [x[0] for x in significant]
+
 
 def findContourTest2(initial_img):
     blurred = cv2.GaussianBlur(initial_img, (5, 5), 0)  # Remove noise
@@ -104,7 +107,10 @@ def findContourTest2(initial_img):
     contour = approx
     self.printImgContour(initial_img, contour)
 
+
 imgNumber = 0
+
+
 def printImgContour(initial_img, contours):
     tmpimage = initial_img.copy()
     for c in contours:
@@ -115,6 +121,7 @@ def printImgContour(initial_img, contours):
     print(str(self.imgNumber))
     cv2.imshow("imgContour" + str(self.imgNumber), tmpimage)
     cv2.waitKey(0)
+
 
 def findContourTest1(initial_img):
     edged = cv2.Canny(initial_img, 10, 250)
@@ -131,13 +138,15 @@ def findContourTest1(initial_img):
         cv2.drawContours(initial_img, [approx], -1, (0, 255, 0), 2)
     cv2.imshow("Output", initial_img)
 
+
 def find_corners(img):
     corners = cv2.goodFeaturesToTrack(img, 10, 0.001, 20, blockSize=20)
     corners = np.int0(corners)
     for i in corners:
-        x,y = i.ravel()
-        cv2.circle(img, (x,y), 10, 255, -1)
+        x, y = i.ravel()
+        cv2.circle(img, (x, y), 10, 255, -1)
     return img
+
 
 # Not working at all
 def find_corners_mser(img):
@@ -147,8 +156,10 @@ def find_corners_mser(img):
     img = cv2.polylines(img, hulls, 1, (0, 255, 0))
     return img
 
+
 def my_dist(x, y):
-    return np.sqrt(np.sum((x-y)**2, axis=1))
+    return np.sqrt(np.sum((x - y) ** 2, axis=1))
+
 
 # Point farthest election
 def my_find_corners(img, cnt):
@@ -168,7 +179,7 @@ def my_find_corners(img, cnt):
         value = cnt[ind][0]
         corners.append(value)
         indices.append(ind)
-        elect[max(ind-10, 0):min(ind+10, len(elect))] = [0] * (min(ind+10, len(elect)) - max(ind-10, 0))
+        elect[max(ind - 10, 0):min(ind + 10, len(elect))] = [0] * (min(ind + 10, len(elect)) - max(ind - 10, 0))
         # cv2.circle(img, tuple(value), 50, 255, -1)
 
     indices.sort()
@@ -179,10 +190,12 @@ def my_find_corners(img, cnt):
 
     return corners, edges
 
+
 def angle_between(v1, v2):
     if v1 == v2:
         return 0
     return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+
 
 # Return puzzle Piece array
 def export_contours(img, contours, path, modulo):
@@ -201,8 +214,8 @@ def export_contours(img, contours, path, modulo):
         out = np.zeros_like(img)
         out[mask == 255] = img[mask == 255]
 
-        x,y,w,h = cv2.boundingRect(cnt)
-        out2 = out[y:y+h,x:x+w]
+        x, y, w, h = cv2.boundingRect(cnt)
+        out2 = out[y:y + h, x:x + w]
 
         # NEED COMPUTE CENTER FROM 4 CORNERS (barycentre)
         # centerX = np.sum([x2[0] - x for x2 in corners]) / len(corners)
@@ -228,10 +241,12 @@ def export_contours(img, contours, path, modulo):
     max_width = max([x.shape[1] for x in list_img])
     pieces_img = np.zeros([max_height * (int(len(list_img) / modulo) + 1), max_width * modulo], dtype=np.uint8)
     for index, image in enumerate(list_img):
-        pieces_img[(max_height * int(index / modulo)):(max_height * int(index / modulo) + image.shape[0]),(max_width * (index % modulo)):(max_width * (index % modulo) + image.shape[1])] = image
+        pieces_img[(max_height * int(index / modulo)):(max_height * int(index / modulo) + image.shape[0]),
+        (max_width * (index % modulo)):(max_width * (index % modulo) + image.shape[1])] = image
 
     cv2.imwrite(path, pieces_img)
     return puzzle_pieces
+
 
 def get_fourier(img):
     f = np.fft.fft2(img)

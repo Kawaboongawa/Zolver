@@ -5,7 +5,7 @@ from Img.filters import *
 
 
 class Extractor():
-    def __init__(self, path, pixmapWidget):
+    def __init__(self, path, pixmapWidget=None):
         self.path = path
         self.img = cv2.imread(self.path, 1)
         self.pixmapWidget = pixmapWidget
@@ -15,22 +15,26 @@ class Extractor():
         # img = cv2.resize(initial_img, None, fx=0.5, fy=0.5)
 
         cv2.imwrite("/tmp/yolo.png", self.img)
-        self.pixmapWidget.add_image_widget("/tmp/yolo.png", 0, 0)
+        if self.pixmapWidget is not None:
+            self.pixmapWidget.add_image_widget("/tmp/yolo.png", 0, 0)
 
         # img = cv2.GaussianBlur(self.img, (3, 3), 0)
         self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
         ret, self.img = cv2.threshold(self.img, 240, 255, cv2.THRESH_BINARY_INV)
 
         cv2.imwrite("/tmp/yolo.png", self.img)
-        self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 1)
+        if self.pixmapWidget is not None:
+            self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 1)
 
         self.img, contours, hier = cv2.findContours(self.img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         puzzle_pieces = export_contours(self.img, contours, "/tmp/contours.png", 5)
-        self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
+        if self.pixmapWidget is not None:
+            self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
 
         fshift, magnitude = get_fourier(self.img)
         cv2.imwrite("/tmp/yolo.png", magnitude)
-        self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 0)
+        if self.pixmapWidget is not None:
+            self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 0)
 
         rows, cols = self.img.shape
         crow, ccol = int(rows / 2), int(cols / 2)
