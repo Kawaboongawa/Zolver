@@ -190,12 +190,12 @@ class Puzzle():
         return l[m][0], l[m][1]
 
     def export_pieces(self, path):
-        tests_img = np.zeros_like(self.extract.img)
+        tests_img = np.zeros_like(self.extract.img_bw)
 
         for piece in self.pieces_:
             for i in range(4):
                 for p in piece.edges_[i]:
-                    if p[0][0] < self.extract.img.shape[1] and p[0][1] < self.extract.img.shape[0]:
+                    if p[0][0] < self.extract.img_bw.shape[1] and p[0][1] < self.extract.img_bw.shape[0]:
                         tests_img[p[0][1], p[0][0]] = 255
 
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)

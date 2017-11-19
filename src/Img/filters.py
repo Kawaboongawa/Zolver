@@ -198,24 +198,39 @@ def angle_between(v1, v2):
 
 
 # Return puzzle Piece array
-def export_contours(img, contours, path, modulo):
+def export_contours(img, img_bw, contours, path, modulo):
     puzzle_pieces = []
     list_img = []
 
     for idx, cnt in enumerate(contours):
-        corners, edges = my_find_corners(img, cnt)
-        puzzle_pieces.append(PuzzlePiece(edges))
-        mask = np.zeros_like(img)
+        corners, edges = my_find_corners(img_bw, cnt)
+        mask_border = np.zeros_like(img_bw)
+        mask_full = np.zeros_like(img_bw)
+        mask_full = cv2.drawContours(mask_full, contours, idx, 255, -1)
+
+        img_piece = np.zeros_like(img)
+        img_piece[mask_full == 255] = img[mask_full == 255]
+
+        x, y, w, h = cv2.boundingRect(cnt)
+        img_piece_crop = img_piece[y:y + h, x:x + w]
+        puzzle_pieces.append(PuzzlePiece(edges, img_piece_crop))
+
+
+
+        # cv2.imshow('image', img_piece_crop)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         for i in range(4):
             for p in edges[i]:
-                mask[p[0][1], p[0][0]] = 255
+                mask_border[p[0][1], p[0][0]] = 255
 
-        out = np.zeros_like(img)
-        out[mask == 255] = img[mask == 255]
+        out = np.zeros_like(img_bw)
+        out[mask_border == 255] = img_bw[mask_border == 255]
 
         x, y, w, h = cv2.boundingRect(cnt)
         out2 = out[y:y + h, x:x + w]
+
 
         # NEED COMPUTE CENTER FROM 4 CORNERS (barycentre)
         # centerX = np.sum([x2[0] - x for x2 in corners]) / len(corners)
