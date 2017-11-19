@@ -34,7 +34,7 @@ class PuzzlePiece():
         # values will be ovewritten)
         self.orientation = [Directions.N, Directions.E, Directions.S, Directions.W]
         self.edges_ = edges
-        self.img_piece = img_piece
+        self.img_piece_ = img_piece  # List of Pixels
 
         # Keep informations if the edge is a connected
         self.connected_ = []

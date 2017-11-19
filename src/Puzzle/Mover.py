@@ -15,7 +15,7 @@ def rotate(origin, point, angle):
     return qx, qy
 
 
-def stick_pieces(bloc, bloc_index_edge, piece, piece_index_edge):
+def stick_pieces(bloc, bloc_index_edge, piece, piece_index_edge, final_stick=False):
     vec_bloc = bloc.edges_[bloc_index_edge][0][0] - bloc.edges_[bloc_index_edge][-1][0]
     vec_piece = piece.edges_[piece_index_edge][0][0] - piece.edges_[piece_index_edge][-1][0]
     translation = bloc.edges_[bloc_index_edge][0][0] - piece.edges_[piece_index_edge][-1][0]
@@ -24,6 +24,10 @@ def stick_pieces(bloc, bloc_index_edge, piece, piece_index_edge):
     # First move the first corner of piece to the corner of bloc edge
     for index, edge in enumerate(piece.edges_):
         piece.edges_[index] += translation
+
+    if final_stick:
+        for p in piece.img_piece_:
+            p.translate(translation[1], translation[0])
 
     # Then rotate piece of `angle` degrees centered on the corner
     for index_edge, edge in enumerate(piece.edges_):

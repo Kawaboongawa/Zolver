@@ -150,7 +150,7 @@ class Puzzle():
                 for i, p in enumerate(e):
                     self.pieces_[ip].edges_[ie][i] += (-minX, -minY)
 
-        self.export_pieces("/tmp/test_stick.png")
+        self.export_pieces("/tmp/test_stick.png", "/tmp/colored.png")
 
     def stick_best(self, cur_piece, edge_cur_piece, pieces):
         if cur_piece.connected_[edge_cur_piece]:
@@ -186,17 +186,22 @@ class Puzzle():
         print(l[m][0], l[m][1])
 
         # Stick the best piece found
-        stick_pieces(cur_piece, edge_cur_piece, pieces[l[m][0]], l[m][1])
+        stick_pieces(cur_piece, edge_cur_piece, pieces[l[m][0]], l[m][1], final_stick=True)
         return l[m][0], l[m][1]
 
-    def export_pieces(self, path):
+    def export_pieces(self, path_contour, path_colored):
         tests_img = np.zeros_like(self.extract.img_bw)
+        colored_img = np.zeros_like(self.extract.img)
 
         for piece in self.pieces_:
+            for p in piece.img_piece_:
+                p.apply(colored_img)
+            # Contours
             for i in range(4):
                 for p in piece.edges_[i]:
                     if p[0][0] < self.extract.img_bw.shape[1] and p[0][1] < self.extract.img_bw.shape[0]:
                         tests_img[p[0][1], p[0][0]] = 255
 
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
-        cv2.imwrite(path, tests_img)
+        cv2.imwrite(path_contour, tests_img)
+        cv2.imwrite(path_colored, colored_img)

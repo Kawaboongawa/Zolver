@@ -6,6 +6,7 @@ import imutils
 import random
 import math
 
+from Img.Pixel import Pixel
 from Puzzle.PuzzlePiece import PuzzlePiece
 
 
@@ -210,10 +211,12 @@ def export_contours(img, img_bw, contours, path, modulo):
 
         img_piece = np.zeros_like(img)
         img_piece[mask_full == 255] = img[mask_full == 255]
+        print('Contour', idx, '/',  len(contours))
+        pixels = []
+        for x, y in tuple(zip(*np.where(mask_full == 255))):
+            pixels.append(Pixel((x, y), img_piece[x, y]))
 
-        x, y, w, h = cv2.boundingRect(cnt)
-        img_piece_crop = img_piece[y:y + h, x:x + w]
-        puzzle_pieces.append(PuzzlePiece(edges, img_piece_crop))
+        puzzle_pieces.append(PuzzlePiece(edges, pixels))
 
 
 
