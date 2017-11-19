@@ -25,11 +25,12 @@ def stick_pieces(bloc, bloc_index_edge, piece, piece_index_edge, final_stick=Fal
     for index, edge in enumerate(piece.edges_):
         piece.edges_[index] += translation
 
-    if final_stick:
-        for p in piece.img_piece_:
-            p.translate(translation[1], translation[0])
-
     # Then rotate piece of `angle` degrees centered on the corner
     for index_edge, edge in enumerate(piece.edges_):
         for index_point, p in enumerate(edge):
             piece.edges_[index_edge][index_point][0] = rotate(bloc.edges_[bloc_index_edge][0][0], p[0], -angle)
+
+    if final_stick:
+        for p in piece.img_piece_:
+            p.translate(translation[1], translation[0])
+            p.rotate(bloc.edges_[bloc_index_edge][0][0], -angle)

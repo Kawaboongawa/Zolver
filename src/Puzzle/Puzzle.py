@@ -132,6 +132,7 @@ class Puzzle():
                         break
                 if to_break:
                     break
+            self.export_pieces("/tmp/test_stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
 
         self.pieces_ = connected_pieces
 
@@ -150,6 +151,10 @@ class Puzzle():
             for ie, e in enumerate(p.edges_):
                 for i, p in enumerate(e):
                     self.pieces_[ip].edges_[ie][i] += (-minX, -minY)
+
+        for piece in self.pieces_:
+            for p in piece.img_piece_:
+                p.translate(minX, minY)
 
         self.export_pieces("/tmp/test_stick.png", "/tmp/colored.png")
 
@@ -188,6 +193,7 @@ class Puzzle():
 
         # Stick the best piece found
         stick_pieces(cur_piece, edge_cur_piece, pieces[l[m][0]], l[m][1], final_stick=True)
+
         return l[m][0], l[m][1]
 
     def export_pieces(self, path_contour, path_colored):
