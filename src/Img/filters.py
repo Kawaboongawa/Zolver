@@ -161,6 +161,25 @@ def find_corners_mser(img):
 def my_dist(x, y):
     return np.sqrt(np.sum((x - y) ** 2, axis=1))
 
+def get_relative_angles(cnt):
+    angles = []
+    last = np.pi
+    print(len(cnt))
+    for i in range(0, len(cnt) - 1):
+        print(cnt)
+        print(cnt[1])
+        dir = (cnt[i + 1][0] - cnt[i][0], cnt[i + 1][1] - cnt[i][1])
+        print(dir)
+        angle = math.atan2(-dir[1], dir[0])
+        while (angle < last - np.pi):
+            angle += 2 * np.pi
+        while (angle > last + np.pi):
+            angle -= 2 * np.pi
+        angles.append(angle)
+        last = angle
+    plt.plot(angles)
+    plt.show()
+    return angles
 
 # Point farthest election
 def my_find_corners(img, cnt):
