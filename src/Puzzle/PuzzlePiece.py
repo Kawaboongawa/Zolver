@@ -28,12 +28,13 @@ def is_border(edge, threshold):
 
 
 class PuzzlePiece():
-    def __init__(self, edges, img_piece):
+    def __init__(self, edges, color_vect, img_piece):
         self.position = (0, 0)
         # Keep orientations in an array (Correct only for first piece then the
         # values will be ovewritten)
         self.orientation = [Directions.N, Directions.E, Directions.S, Directions.W]
         self.edges_ = edges
+        self.color_vect = color_vect
         self.img_piece_ = img_piece  # List of Pixels
 
         # Keep informations if the edge is a connected

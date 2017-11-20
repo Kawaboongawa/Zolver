@@ -1,4 +1,6 @@
 import math
+import numpy as np
+
 
 class Pixel:
     def __init__(self, pos, color):
@@ -22,3 +24,11 @@ class Pixel:
             print("NAN DETECTED: {} {} {} {} {}".format(ox, oy, px, py, qx, qy, angle))
 
         self.pos = (int(qy), int(qx))
+
+def flatten_colors(pixels):
+    colors = np.array(pixels)
+    return np.median(colors, axis=0)
+
+def compare_colors(c1, c2):
+    diff = np.abs(c1 - c2)
+    return np.sum(diff)
