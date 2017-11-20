@@ -204,20 +204,17 @@ def export_contours(img, img_bw, contours, path, modulo):
     list_img = []
 
     for idx, cnt in enumerate(contours):
+        print('Contour', idx + 1, '/',  len(contours))
         corners, edges = my_find_corners(img_bw, cnt)
-
-        x_bound, y_bound, w_bound, h_bound = cv2.boundingRect(cnt)
 
         mask_border = np.zeros_like(img_bw)
         mask_full = np.zeros_like(img_bw)
         mask_full = cv2.drawContours(mask_full, contours, idx, 255, -1)
         mask_border = cv2.drawContours(mask_border, contours, idx, 255, 1)
-        # mask_full = mask_full[y:y + h, x:x + w]
 
         img_piece = np.zeros_like(img)
         img_piece[mask_full == 255] = img[mask_full == 255]
 
-        print('Contour', idx, '/',  len(contours) - 1)
         pixels = []
         for x, y in tuple(zip(*np.where(mask_full == 255))):
             pixels.append(Pixel((x, y), img_piece[x, y]))
@@ -225,6 +222,7 @@ def export_contours(img, img_bw, contours, path, modulo):
         color_vect = []
 
         # go faster, use only a subset of the img with the piece
+        x_bound, y_bound, w_bound, h_bound = cv2.boundingRect(cnt)
         img_piece_tiny = img_piece[y_bound:y_bound + h_bound, x_bound:x_bound + w_bound]
         mask_border_tiny = mask_border[y_bound:y_bound + h_bound, x_bound:x_bound + w_bound]
         mask_full_tiny = mask_full[y_bound:y_bound + h_bound, x_bound:x_bound + w_bound]
@@ -249,7 +247,6 @@ def export_contours(img, img_bw, contours, path, modulo):
                     neighbors_color.append(img_piece_tiny[y, x])
                 color_vect.append(flatten_colors(neighbors_color))
                 out_color[p[1], p[0]] = color_vect[-1]
-
 
         puzzle_pieces.append(PuzzlePiece(edges, color_vect, pixels))
 

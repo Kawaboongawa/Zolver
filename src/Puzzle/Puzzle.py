@@ -132,7 +132,7 @@ class Puzzle():
                         break
                 if to_break:
                     break
-            self.export_pieces("/tmp/test_stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
+            # self.export_pieces("/tmp/test_stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
 
         self.pieces_ = connected_pieces
 
@@ -156,7 +156,7 @@ class Puzzle():
             for p in piece.img_piece_:
                 p.translate(minX, minY)
 
-        self.export_pieces("/tmp/test_stick.png", "/tmp/colored.png")
+        self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
 
     def stick_best(self, cur_piece, edge_cur_piece, pieces):
         if cur_piece.connected_[edge_cur_piece]:
@@ -200,8 +200,16 @@ class Puzzle():
         tests_img = np.zeros_like(self.extract.img_bw)
         colored_img = np.zeros_like(self.extract.img)
 
+        print('Build final images')
+        minX, minY = float('inf'), float('inf')
         for piece in self.pieces_:
             for p in piece.img_piece_:
+                x, y = p.pos
+                minX, minY = min(minX, x), min(minY, y)
+
+        for piece in self.pieces_:
+            for p in piece.img_piece_:
+                p.translate(-minX, -minY)
                 p.apply(colored_img)
             # Contours
             for i in range(4):
