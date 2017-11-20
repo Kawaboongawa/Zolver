@@ -1,7 +1,7 @@
 from Puzzle.PuzzlePiece import *
 from Img.filters import angle_between
 import math
-
+import numpy as np
 
 def rotate(origin, point, angle):
     ox, oy = origin
@@ -16,9 +16,9 @@ def rotate(origin, point, angle):
 
 
 def stick_pieces(bloc, bloc_index_edge, piece, piece_index_edge, final_stick=False):
-    vec_bloc = bloc.edges_[bloc_index_edge][0][0] - bloc.edges_[bloc_index_edge][-1][0]
-    vec_piece = piece.edges_[piece_index_edge][0][0] - piece.edges_[piece_index_edge][-1][0]
-    translation = bloc.edges_[bloc_index_edge][0][0] - piece.edges_[piece_index_edge][-1][0]
+    vec_bloc = np.subtract(bloc.edges_[bloc_index_edge][0][0], bloc.edges_[bloc_index_edge][0][-1])
+    vec_piece =  np.subtract(piece.edges_[piece_index_edge][0][0], piece.edges_[piece_index_edge][0][-1])
+    translation =  np.subtract(bloc.edges_[bloc_index_edge][0][0], piece.edges_[piece_index_edge][0][-1])
     angle = angle_between((vec_bloc[0], vec_bloc[1], 0), (-vec_piece[0], -vec_piece[1], 0))
 
     # First move the first corner of piece to the corner of bloc edge

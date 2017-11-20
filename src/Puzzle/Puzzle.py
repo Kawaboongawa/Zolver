@@ -2,6 +2,7 @@ from Puzzle.PuzzlePiece import *
 
 from Puzzle.Extractor import Extractor
 from Puzzle.Mover import *
+from Img.filters import load_signatures
 from cv2 import cv2
 
 from Puzzle.Enums import Directions
@@ -31,6 +32,7 @@ def add_tuples(tuple1, tuple2):
 
 class Puzzle():
     def __init__(self, path, pixmapWidget=None):
+        self.signatures = load_signatures("dataset")
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
 
@@ -166,9 +168,8 @@ class Puzzle():
         tests = []
         for index_piece, piece in enumerate(pieces):
             if piece != cur_piece:
-                for index_edge, edge in enumerate(piece.edges_):
-                    tests.append((index_piece, index_edge, piece.fourier_descriptors_[index_edge].match_descriptors(
-                        cur_piece.fourier_descriptors_[edge_cur_piece])))
+              for index_edge, edge in enumerate(piece.edges_):
+                  tests.append((index_piece, index_edge, 0))
 
         l = sorted(tests, key=lambda x: x[2])
         diff = []

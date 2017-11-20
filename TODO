@@ -2,3 +2,5 @@
 
 - [ ] Just do it
 - [X] Create src folder
+- [X] export signature
+- [ ] compute penalisation function

@@ -4,11 +4,12 @@ import numpy as np
 from scipy.spatial import distance
 import imutils
 import random
-import math
+import math, pickle, os
 
 from Img.Pixel import Pixel, flatten_colors
 from Puzzle.PuzzlePiece import PuzzlePiece
-
+import matplotlib.pyplot as plt
+import scipy, sklearn.preprocessing
 
 def auto_canny(img, sigma=0.33):
     # compute the median of the single channel pixel intensities
@@ -161,15 +162,25 @@ def find_corners_mser(img):
 def my_dist(x, y):
     return np.sqrt(np.sum((x - y) ** 2, axis=1))
 
+def clamp(a, threshmin=-0.1, threshmax=0.1):
+    for ind, pt in enumerate(a):
+        if pt < threshmin:
+            a[ind] = -1
+        elif pt > threshmax:
+            a[ind] = 1
+        else:
+            a[ind] = 0
+
+COUNT = 0
+
 def get_relative_angles(cnt):
+    global COUNT
+    COUNT = COUNT + 1
+
     angles = []
     last = np.pi
-    print(len(cnt))
     for i in range(0, len(cnt) - 1):
-        print(cnt)
-        print(cnt[1])
         dir = (cnt[i + 1][0] - cnt[i][0], cnt[i + 1][1] - cnt[i][1])
-        print(dir)
         angle = math.atan2(-dir[1], dir[0])
         while (angle < last - np.pi):
             angle += 2 * np.pi
@@ -177,8 +188,24 @@ def get_relative_angles(cnt):
             angle -= 2 * np.pi
         angles.append(angle)
         last = angle
+
+    angles = np.gradient(angles)
+    # angles = np.gradient(angles)
+    angles = scipy.ndimage.filters.gaussian_filter(angles, 1)
+    n = np.linalg.norm(angles)
+    if n != 0:
+        angles = angles / n
+
+    # clamp(angles)
+    # angles = sklearn.preprocessing.binarize(np.array(angles).reshape((len(cnt) - 1, 1)), threshold=0.1)
+
+    pickle.dump(angles, open("/tmp/save" + str(COUNT) + ".p", "wb"))
+
     plt.plot(angles)
-    plt.show()
+    plt.savefig("/tmp/fig" + str(COUNT) + ".png")
+    plt.clf()
+    plt.cla()
+    plt.close()
     return angles
 
 # Point farthest election
@@ -215,7 +242,6 @@ def angle_between(v1, v2):
     if v1 == v2:
         return 0
     return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
-
 
 # Return puzzle Piece array
 def export_contours(img, img_bw, contours, path, modulo):
@@ -305,6 +331,16 @@ def export_contours(img, img_bw, contours, path, modulo):
         # rotated = imutils.rotate_bound(out2, angle)
         list_img.append(out2)
 
+
+    # Normalize all edges to min edge
+    length = np.min([np.min([y.size for y in np.array(x.edges_)]) for x in puzzle_pieces])
+    for p in puzzle_pieces:
+        p.normalize_edges(int(length / 3))
+
+    for p in puzzle_pieces:
+        for edge in p.edges_:
+            get_relative_angles(np.array(edge[0]))
+
     max_height = max([x.shape[0] for x in list_img])
     max_width = max([x.shape[1] for x in list_img])
     pieces_img = np.zeros([max_height * (int(len(list_img) / modulo) + 1), max_width * modulo], dtype=np.uint8)
@@ -315,6 +351,17 @@ def export_contours(img, img_bw, contours, path, modulo):
     cv2.imwrite(path, pieces_img)
     return puzzle_pieces
 
+def load_signatures(path):
+    holes, heads, borders = [], [], []
+    holes = [x for x in os.listdir(path) if "hole" in x]
+    heads = [x for x in os.listdir(path) if "head" in x]
+    borders = [x for x in os.listdir(path) if "border" in x]
+
+    holes = [pickle.load(open(os.path.join(path, f), "rb")) for f in holes]
+    heads = [pickle.load(open(os.path.join(path, f), "rb")) for f in heads]
+    borders = [pickle.load(open(os.path.join(path, f), "rb")) for f in borders]
+
+    return np.average(holes), np.average(heads), np.average(borders)
 
 def display(img, name='image'):
     cv2.imshow(name, img)

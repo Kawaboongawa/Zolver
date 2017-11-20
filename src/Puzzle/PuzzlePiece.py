@@ -26,7 +26,6 @@ def is_border(edge, threshold):
         total_dist += dist_to_line(edge[0][0], edge[-1][0], p[0])
     return total_dist < threshold
 
-
 class PuzzlePiece():
     def __init__(self, edges, color_vect, img_piece):
         self.position = (0, 0)
@@ -39,19 +38,19 @@ class PuzzlePiece():
 
         # Keep informations if the edge is a connected
         self.connected_ = []
-
         self.fourier_descriptors_ = []
         for e in edges:
-            norm_e = self.normalize_edges(e, 128)
-            self.fourier_descriptors_.append(FourierDescriptor(norm_e, 128))
+            # norm_e = self.normalize_edges(e, 128)
+            # self.fourier_descriptors_.append(FourierDescriptor(norm_e, 128))
             self.connected_.append(is_border(e, 1000))
 
-    def normalize_edges(self, edge, n):
-        point_dist = float(len(edge)) / float(n)
-        index = float(0)
-        dst = []
-        for i in range(0, n):
-            # TODO: fix triple array
-            dst.append((edge[int(index)][0][0], edge[int(index)][0][1]))
-            index += point_dist
-        return dst
+    def normalize_edges(self, n):
+        for idx, edge in enumerate(self.edges_):
+            point_dist = float(len(edge)) / float(n)
+            index = float(0)
+            dst = []
+            for i in range(0, n):
+                # TODO: fix triple array
+                dst.append([edge[int(index)][0][0], edge[int(index)][0][1]])
+                index += point_dist
+            self.edges_[idx] = [dst]
