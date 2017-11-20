@@ -6,7 +6,7 @@ import imutils
 import random
 import math
 
-from Img.Pixel import Pixel, filter_dist, flatten_colors
+from Img.Pixel import Pixel, flatten_colors
 from Puzzle.PuzzlePiece import PuzzlePiece
 
 
@@ -205,14 +205,18 @@ def export_contours(img, img_bw, contours, path, modulo):
 
     for idx, cnt in enumerate(contours):
         corners, edges = my_find_corners(img_bw, cnt)
+
+        x_bound, y_bound, w_bound, h_bound = cv2.boundingRect(cnt)
+
         mask_border = np.zeros_like(img_bw)
         mask_full = np.zeros_like(img_bw)
         mask_full = cv2.drawContours(mask_full, contours, idx, 255, -1)
         mask_border = cv2.drawContours(mask_border, contours, idx, 255, 1)
-        mask_inv_border = cv2.bitwise_not(mask_border)
+        # mask_full = mask_full[y:y + h, x:x + w]
 
         img_piece = np.zeros_like(img)
         img_piece[mask_full == 255] = img[mask_full == 255]
+
         print('Contour', idx, '/',  len(contours) - 1)
         pixels = []
         for x, y in tuple(zip(*np.where(mask_full == 255))):
@@ -220,20 +224,29 @@ def export_contours(img, img_bw, contours, path, modulo):
 
         color_vect = []
 
+        # go faster, use only a subset of the img with the piece
+        img_piece_tiny = img_piece[y_bound:y_bound + h_bound, x_bound:x_bound + w_bound]
+        mask_border_tiny = mask_border[y_bound:y_bound + h_bound, x_bound:x_bound + w_bound]
+        mask_full_tiny = mask_full[y_bound:y_bound + h_bound, x_bound:x_bound + w_bound]
 
+        mask_around_tiny = np.zeros_like(mask_full_tiny)
+        mask_inv_border_tiny = cv2.bitwise_not(mask_border_tiny)
+        mask_full_tiny = cv2.bitwise_and(mask_full_tiny, mask_full_tiny, mask=mask_inv_border_tiny)
 
         out_color = np.zeros_like(img)
         for i in range(4):
-            for p in edges[i]:
+            for ip, p in enumerate(edges[i]):
                 p = p[0]
-                mask_around = np.zeros_like(img_bw)
-                cv2.circle(mask_around, (p[0], p[1]), 3, 255, -1)
-                mask_around = cv2.bitwise_and(mask_around, mask_around, mask=mask_full)
-                mask_around = cv2.bitwise_and(mask_around, mask_around, mask=mask_inv_border)
+                if ip != 0:
+                    p2 = edges[i][ip - 1][0]
+                    cv2.circle(mask_around_tiny, (p2[0] - x_bound, p2[1] - y_bound), 3, 0, -1)
+                cv2.circle(mask_around_tiny, (p[0] - x_bound, p[1] - y_bound), 3, 255, -1)
+
+                mask_around_tiny = cv2.bitwise_and(mask_around_tiny, mask_around_tiny, mask=mask_full_tiny)
 
                 neighbors_color = []
-                for x, y in tuple(zip(*np.where(mask_around == 255))):
-                    neighbors_color.append(img_piece[x, y])
+                for y, x in tuple(zip(*np.where(mask_around_tiny == 255))):
+                    neighbors_color.append(img_piece_tiny[y, x])
                 color_vect.append(flatten_colors(neighbors_color))
                 out_color[p[1], p[0]] = color_vect[-1]
 
@@ -241,6 +254,9 @@ def export_contours(img, img_bw, contours, path, modulo):
         puzzle_pieces.append(PuzzlePiece(edges, color_vect, pixels))
 
         cv2.imwrite("/tmp/color_border.png", out_color)
+
+
+        mask_border = np.zeros_like(img_bw)
 
         for i in range(4):
             for p in edges[i]:
@@ -282,6 +298,12 @@ def export_contours(img, img_bw, contours, path, modulo):
 
     cv2.imwrite(path, pieces_img)
     return puzzle_pieces
+
+
+def display(img, name='image'):
+    cv2.imshow(name, img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
 def get_fourier(img):
