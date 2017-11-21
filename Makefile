@@ -4,3 +4,6 @@ all:
 
 clean:
 	$(RM) -r src/*/__pycache__
+
+check:
+	python3 tests/script.py
