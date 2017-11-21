@@ -123,7 +123,7 @@ def printImgContour(initial_img, contours):
         approx = cv2.approxPolyDP(c, 0.02 * peri, True)
         cv2.drawContours(tmpimage, [approx], -1, (0, 255, 0), 2)
     self.imgNumber = self.imgNumber + 1
-    print(str(self.imgNumber))
+    # print(str(self.imgNumber))
     cv2.imshow("imgContour" + str(self.imgNumber), tmpimage)
     cv2.waitKey(0)
 
@@ -165,6 +165,7 @@ def find_corners_mser(img):
 def my_dist(x, y):
     return np.sqrt(np.sum((x - y) ** 2, axis=1))
 
+
 def clamp(a, threshmin=-0.1, threshmax=0.1):
     for ind, pt in enumerate(a):
         if pt < threshmin:
@@ -174,7 +175,9 @@ def clamp(a, threshmin=-0.1, threshmax=0.1):
         else:
             a[ind] = 0
 
+
 COUNT = 0
+
 
 def get_relative_angles(cnt, export=False, norm=False):
     global COUNT
@@ -213,6 +216,7 @@ def get_relative_angles(cnt, export=False, norm=False):
 
     return angles
 
+
 # Point farthest election
 def my_find_corners(img, cnt):
     corners = []
@@ -241,6 +245,7 @@ def my_find_corners(img, cnt):
     edges.append(np.concatenate((cnt[indices[3]:], cnt[:indices[0]]), axis=0))
 
     return corners, edges
+
 
 def my_find_corner_signature(img, cnt):
     global COUNT
@@ -306,7 +311,7 @@ def my_find_corner_signature(img, cnt):
         if comb[0] > comb[1]:
             combs_l[icomb] = (comb[1], comb[0])
 
-    print('Number combs: ', len(combs_l))
+    # print('Number combs: ', len(combs_l))
     results_comp = []
     for comb in combs_l:
         if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
@@ -347,14 +352,15 @@ def my_find_corner_signature(img, cnt):
 
     to_remove = []
     t = np.argmax([results_comp[index_max_hole][0], results_comp[index_max_head][1], results_comp[index_max_border][2]])
-    print(t)
+    # print(t)
 
     if t == 0:
         # Roll values
         offset = len(relative_angles) - combs_l[index_max_hole][1] - 1
-        relative_angles = np.roll(relative_angles , offset)
+        relative_angles = np.roll(relative_angles, offset)
 
-        print(((combs_l[index_max_hole][0] + offset) % len(relative_angles), (combs_l[index_max_hole][1] + offset) % len(relative_angles)))
+        # print(((combs_l[index_max_hole][0] + offset) % len(relative_angles),
+        #        (combs_l[index_max_hole][1] + offset) % len(relative_angles)))
 
         # Remove extremums between already found edge
         extr_tmp = []
@@ -377,7 +383,7 @@ def my_find_corner_signature(img, cnt):
             if comb[0] > comb[1]:
                 combs_l[icomb] = (comb[1], comb[0])
 
-        print('Number combs: ', len(combs_l))
+        # print('Number combs: ', len(combs_l))
         results_comp = []
         for comb in combs_l:
             if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
@@ -387,24 +393,30 @@ def my_find_corner_signature(img, cnt):
             tmp_relative = []
             tmp_signature = []
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-                tmp_signature.append(np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
                 tmp_signature.append(np.array(signatures['holes']))
 
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-                tmp_signature.append(np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
                 tmp_signature.append(np.array(signatures['heads']))
 
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-                tmp_signature.append(np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
                 tmp_signature.append(np.array(signatures['borders']))
 
             hole = np.correlate(tmp_relative[0], tmp_signature[0])
@@ -415,9 +427,9 @@ def my_find_corner_signature(img, cnt):
     elif t == 1:
         # Roll values
         offset = len(relative_angles) - combs_l[index_max_head][1] - 1
-        relative_angles = np.roll(relative_angles , offset)
+        relative_angles = np.roll(relative_angles, offset)
 
-        print(((combs_l[index_max_head][0] + offset) % len(relative_angles), (combs_l[index_max_head][1] + offset) % len(relative_angles)))
+        # print(((combs_l[index_max_head][0] + offset) % len(relative_angles), (combs_l[index_max_head][1] + offset) % len(relative_angles)))
 
         # Remove extremums between already found edge
         extr_tmp = []
@@ -440,7 +452,7 @@ def my_find_corner_signature(img, cnt):
             if comb[0] > comb[1]:
                 combs_l[icomb] = (comb[1], comb[0])
 
-        print('Number combs: ', len(combs_l))
+        # print('Number combs: ', len(combs_l))
         results_comp = []
         for comb in combs_l:
             if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
@@ -450,24 +462,30 @@ def my_find_corner_signature(img, cnt):
             tmp_relative = []
             tmp_signature = []
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-                tmp_signature.append(np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
                 tmp_signature.append(np.array(signatures['holes']))
 
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-                tmp_signature.append(np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
                 tmp_signature.append(np.array(signatures['heads']))
 
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-                tmp_signature.append(np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
                 tmp_signature.append(np.array(signatures['borders']))
 
             hole = np.correlate(tmp_relative[0], tmp_signature[0])
@@ -479,9 +497,9 @@ def my_find_corner_signature(img, cnt):
 
         # Roll values
         offset = len(relative_angles) - combs_l[index_max_border][1] - 1
-        relative_angles = np.roll(relative_angles , offset)
+        relative_angles = np.roll(relative_angles, offset)
 
-        print(((combs_l[index_max_border][0] + offset) % len(relative_angles), (combs_l[index_max_border][1] + offset) % len(relative_angles)))
+        # print(((combs_l[index_max_border][0] + offset) % len(relative_angles), (combs_l[index_max_border][1] + offset) % len(relative_angles)))
 
         # Remove extremums between already found edge
         extr_tmp = []
@@ -504,7 +522,7 @@ def my_find_corner_signature(img, cnt):
             if comb[0] > comb[1]:
                 combs_l[icomb] = (comb[1], comb[0])
 
-        print('Number combs: ', len(combs_l))
+        # print('Number combs: ', len(combs_l))
         results_comp = []
         for comb in combs_l:
             if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
@@ -514,24 +532,30 @@ def my_find_corner_signature(img, cnt):
             tmp_relative = []
             tmp_signature = []
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-                tmp_signature.append(np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
                 tmp_signature.append(np.array(signatures['holes']))
 
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-                tmp_signature.append(np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
                 tmp_signature.append(np.array(signatures['heads']))
 
             if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-                tmp_signature.append(np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_signature.append(
+                    np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
                 tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
             else:
-                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
+                tmp_relative.append(
+                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
                 tmp_signature.append(np.array(signatures['borders']))
 
             hole = np.correlate(tmp_relative[0], tmp_signature[0])
@@ -551,44 +575,51 @@ def my_find_corner_signature(img, cnt):
             # TODO: Find type of edge
             continue
 
-        index_max_hole = np.argmax([x[0] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
-        index_max_head = np.argmax([x[1] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
-        index_max_border = np.argmax([x[2] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
+        index_max_hole = np.argmax(
+            [x[0] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
+        index_max_head = np.argmax(
+            [x[1] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
+        index_max_border = np.argmax(
+            [x[2] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
 
         to_remove = []
-        t = np.argmax([results_comp[index_max_hole][0], results_comp[index_max_head][1], results_comp[index_max_border][2]])
+        t = np.argmax(
+            [results_comp[index_max_hole][0], results_comp[index_max_head][1], results_comp[index_max_border][2]])
         if t == 0:
 
-            print(combs_l[index_max_hole])
+            # print(combs_l[index_max_hole])
             plt.axvline(x=combs_l[index_max_hole][0], lw=1, color='red')
             plt.axvline(x=combs_l[index_max_hole][1], lw=1, color='red')
 
             for ic, c in enumerate(combs_l):
-                if (c[0] <= combs_l[index_max_hole][0] and c[1] <= combs_l[index_max_hole][0]) or (c[0] >= combs_l[index_max_hole][1] and c[1] >= combs_l[index_max_hole][1]):
+                if (c[0] <= combs_l[index_max_hole][0] and c[1] <= combs_l[index_max_hole][0]) or (
+                        c[0] >= combs_l[index_max_hole][1] and c[1] >= combs_l[index_max_hole][1]):
                     continue
                 to_remove.append(ic)
 
         elif t == 1:
 
-            print(combs_l[index_max_head])
+            # print(combs_l[index_max_head])
             plt.axvline(x=combs_l[index_max_head][0], lw=1, color='red')
             plt.axvline(x=combs_l[index_max_head][1], lw=1, color='red')
 
             # Need remove all combs inside
             for ic, c in enumerate(combs_l):
-                if (c[0] <= combs_l[index_max_head][0] and c[1] <= combs_l[index_max_head][0]) or (c[0] >= combs_l[index_max_head][1] and c[1] >= combs_l[index_max_head][1]):
+                if (c[0] <= combs_l[index_max_head][0] and c[1] <= combs_l[index_max_head][0]) or (
+                        c[0] >= combs_l[index_max_head][1] and c[1] >= combs_l[index_max_head][1]):
                     continue
                 to_remove.append(ic)
 
         elif t == 2:
 
-            print(combs_l[index_max_border])
+            # print(combs_l[index_max_border])
             plt.axvline(x=combs_l[index_max_border][0], lw=1, color='red')
             plt.axvline(x=combs_l[index_max_border][1], lw=1, color='red')
 
             # Need remove all combs inside
             for ic, c in enumerate(combs_l):
-                if (c[0] <= combs_l[index_max_border][0] and c[1] <= combs_l[index_max_border][0]) or (c[0] >= combs_l[index_max_border][1] and c[1] >= combs_l[index_max_border][1]):
+                if (c[0] <= combs_l[index_max_border][0] and c[1] <= combs_l[index_max_border][0]) or (
+                        c[0] >= combs_l[index_max_border][1] and c[1] >= combs_l[index_max_border][1]):
                     continue
                 to_remove.append(ic)
 
@@ -596,8 +627,7 @@ def my_find_corner_signature(img, cnt):
             del combs_l[ic]
             del results_comp[ic]
 
-        print("/tmp/extr" + str(COUNT) + ".png: ", 'index ', i, ' is a: ', t)
-
+            # print("/tmp/extr" + str(COUNT) + ".png: ", 'index ', i, ' is a: ', t)
 
     for e in extr:
         plt.axvline(x=e, lw=0.2)
@@ -609,10 +639,12 @@ def my_find_corner_signature(img, cnt):
 
     return corners, edges
 
+
 def angle_between(v1, v2):
     if v1 == v2:
         return 0
     return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+
 
 # Return puzzle Piece array
 def export_contours(img, img_bw, contours, path, modulo):
@@ -621,7 +653,7 @@ def export_contours(img, img_bw, contours, path, modulo):
 
     for idx, cnt in enumerate(contours):
 
-        my_find_corner_signature(img_bw, cnt)
+        # my_find_corner_signature(img_bw, cnt)
         corners, edges = my_find_corners(img_bw, cnt)
 
         mask_border = np.zeros_like(img_bw)
@@ -668,11 +700,8 @@ def export_contours(img, img_bw, contours, path, modulo):
                 out_color[p[1], p[0]] = color_edge[-1]
             color_vect.append(np.array(color_edge))
 
-
-
         puzzle_pieces.append(PuzzlePiece(edges, np.array(color_vect), pixels))
         cv2.imwrite("/tmp/color_border.png", out_color)
-
 
         mask_border = np.zeros_like(img_bw)
 
@@ -685,7 +714,6 @@ def export_contours(img, img_bw, contours, path, modulo):
 
         x, y, w, h = cv2.boundingRect(cnt)
         out2 = out[y:y + h, x:x + w]
-
 
         # NEED COMPUTE CENTER FROM 4 CORNERS (barycentre)
         # centerX = np.sum([x2[0] - x for x2 in corners]) / len(corners)
@@ -707,7 +735,6 @@ def export_contours(img, img_bw, contours, path, modulo):
         # rotated = imutils.rotate_bound(out2, angle)
         list_img.append(out2)
 
-
     # Normalize all edges to min edge
     length = np.min([np.min([y.size for y in np.array(x.edges_)]) for x in puzzle_pieces])
     for p in puzzle_pieces:
@@ -723,6 +750,7 @@ def export_contours(img, img_bw, contours, path, modulo):
     cv2.imwrite(path, pieces_img)
     return puzzle_pieces
 
+
 def load_signatures(path):
     holes, heads, borders = [], [], []
     holes = [x for x in os.listdir(path) if "hole" in x]
@@ -733,7 +761,9 @@ def load_signatures(path):
     heads = [pickle.load(open(os.path.join(path, f), "rb")) for f in heads]
     borders = [pickle.load(open(os.path.join(path, f), "rb")) for f in borders]
 
-    return {'holes': np.average(holes, axis=0), 'heads': np.average(heads, axis=0), 'borders': np.average(borders, axis=0)}
+    return {'holes': np.average(holes, axis=0), 'heads': np.average(heads, axis=0),
+            'borders': np.average(borders, axis=0)}
+
 
 def display(img, name='image'):
     cv2.imshow(name, img)

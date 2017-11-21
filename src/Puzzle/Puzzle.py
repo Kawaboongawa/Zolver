@@ -193,15 +193,20 @@ class Puzzle():
         return l[m][0], l[m][1]
 
     def export_pieces(self, path_contour, path_colored):
-        tests_img = np.zeros_like(self.extract.img_bw)
-        colored_img = np.zeros_like(self.extract.img)
 
         print('Build final images')
         minX, minY = float('inf'), float('inf')
+        maxX, maxY = -float('inf'), -float('inf')
         for piece in self.pieces_:
             for p in piece.img_piece_:
                 x, y = p.pos
                 minX, minY = min(minX, x), min(minY, y)
+                maxX, maxY = max(maxX, x), max(maxY, y)
+
+        print(self.extract.img.shape)
+
+        colored_img = np.zeros((maxY - minY, maxX - minX, 3))
+        tests_img = np.zeros_like(self.extract.img_bw)
 
         for piece in self.pieces_:
             for p in piece.img_piece_:

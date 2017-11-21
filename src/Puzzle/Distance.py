@@ -2,8 +2,8 @@ import numpy as np
 import math
 
 def normalize_vect_len(e1, e2):
-    longest = e1 if len(e1) > len(e2) else e2
-    shortest = e1 if len(e1) < len(e2) else e2
+    longest = np.array(e1 if len(e1) > len(e2) else e2)
+    shortest = np.array(e2 if len(e1) > len(e2) else e1)
     indexes = np.array(range(len(longest)))
     np.random.shuffle(indexes)
     indexes = indexes[:len(shortest)]
@@ -19,4 +19,4 @@ def diff_match_edges(e1, e2):
     diff = 0
     for i, p in enumerate(shortest):
         diff += np.linalg.norm(p[0] - longest[len(longest) - i - 1][0]) ** 2
-    return math.sqrt(diff / len(shortest))
+    return math.sqrt(diff / len(shortest))  # RMSE
