@@ -2,8 +2,8 @@ import numpy as np
 import math
 
 def normalize_vect_len(e1, e2):
-    longest = np.array(e1 if len(e1) > len(e2) else e2)
-    shortest = np.array(e2 if len(e1) > len(e2) else e1)
+    longest = e1 if len(e1) > len(e2) else e2
+    shortest = e2 if len(e1) > len(e2) else e1
     indexes = np.array(range(len(longest)))
     np.random.shuffle(indexes)
     indexes = indexes[:len(shortest)]
