@@ -62,17 +62,16 @@ class PuzzlePiece():
         self.connected_ = []
         self.fourier_descriptors_ = []
         for e in edges:
-            # norm_e = self.normalize_edges(e, 128)
-            # self.fourier_descriptors_.append(FourierDescriptor(norm_e, 128))
+            norm_e = self.normalize_edges(e, 128)
+            self.fourier_descriptors_.append(FourierDescriptor(norm_e, 128))
             self.connected_.append(is_border(e, 1000))
 
-    def normalize_edges(self, n):
-        for idx, edge in enumerate(self.edges_):
-            point_dist = float(len(edge)) / float(n)
-            index = float(0)
-            dst = []
-            for i in range(0, n):
-                # TODO: fix triple array
-                dst.append([edge[int(index)][0][0], edge[int(index)][0][1]])
-                index += point_dist
-            self.edges_[idx] = [dst]
+    def normalize_edges(self, edge, n):
+        point_dist = float(len(edge)) / float(n)
+        index = float(0)
+        dst = []
+        for i in range(0, n):
+            # TODO: fix triple array
+            dst.append((edge[int(index)][0][0], edge[int(index)][0][1]))
+            index += point_dist
+        return dst

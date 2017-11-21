@@ -159,8 +159,9 @@ class Puzzle():
         tests = []
         for index_piece, piece in enumerate(pieces):
             if piece != cur_piece:
-              for index_edge, edge in enumerate(piece.edges_):
-                  tests.append((index_piece, index_edge, 0))
+                for index_edge, edge in enumerate(piece.edges_):
+                    tests.append((index_piece, index_edge, piece.fourier_descriptors_[index_edge].match_descriptors(
+                        cur_piece.fourier_descriptors_[edge_cur_piece])))
 
         l = sorted(tests, key=lambda x: x[2])
         diff = []
