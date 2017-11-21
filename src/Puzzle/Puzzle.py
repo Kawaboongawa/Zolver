@@ -204,9 +204,7 @@ class Puzzle():
                 minX, minY = min(minX, x), min(minY, y)
                 maxX, maxY = max(maxX, x), max(maxY, y)
 
-        print(self.extract.img.shape)
-
-        colored_img = np.zeros((maxY - minY, maxX - minX, 3))
+        colored_img = np.zeros((maxX - minX, maxY - minY, 3))
         tests_img = np.zeros_like(self.extract.img_bw)
 
         for piece in self.pieces_:
