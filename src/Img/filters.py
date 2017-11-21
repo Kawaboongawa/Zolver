@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import scipy, sklearn.preprocessing
 import itertools
 
+
 def auto_canny(img, sigma=0.33):
     # compute the median of the single channel pixel intensities
     v = np.median(img)
@@ -649,24 +650,28 @@ def export_contours(img, img_bw, contours, path, modulo):
 
         out_color = np.zeros_like(img)
         for i in range(4):
+            color_edge = []
             for ip, p in enumerate(edges[i]):
                 p = p[0]
+                CIRCLE_SIZE = 5
                 if ip != 0:
                     p2 = edges[i][ip - 1][0]
-                    cv2.circle(mask_around_tiny, (p2[0] - x_bound, p2[1] - y_bound), 3, 0, -1)
-                cv2.circle(mask_around_tiny, (p[0] - x_bound, p[1] - y_bound), 3, 255, -1)
+                    cv2.circle(mask_around_tiny, (p2[0] - x_bound, p2[1] - y_bound), CIRCLE_SIZE, 0, -1)
+                cv2.circle(mask_around_tiny, (p[0] - x_bound, p[1] - y_bound), CIRCLE_SIZE, 255, -1)
 
                 mask_around_tiny = cv2.bitwise_and(mask_around_tiny, mask_around_tiny, mask=mask_full_tiny)
 
                 neighbors_color = []
                 for y, x in tuple(zip(*np.where(mask_around_tiny == 255))):
                     neighbors_color.append(img_piece_tiny[y, x])
-                color_vect.append(flatten_colors(neighbors_color))
-                out_color[p[1], p[0]] = color_vect[-1]
+                color_edge.append(flatten_colors(neighbors_color))
+                out_color[p[1], p[0]] = color_edge[-1]
+            color_vect.append(np.array(color_edge))
 
-        puzzle_pieces.append(PuzzlePiece(edges, color_vect, pixels))
 
-        # cv2.imwrite("/tmp/color_border.png", out_color)
+
+        puzzle_pieces.append(PuzzlePiece(edges, np.array(color_vect), pixels))
+        cv2.imwrite("/tmp/color_border.png", out_color)
 
 
         mask_border = np.zeros_like(img_bw)

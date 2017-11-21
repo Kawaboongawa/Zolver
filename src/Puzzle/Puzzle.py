@@ -1,3 +1,4 @@
+from Puzzle.Distance import diff_match_edges
 from Puzzle.PuzzlePiece import *
 
 from Puzzle.Extractor import Extractor
@@ -9,15 +10,6 @@ from Puzzle.Enums import Directions
 import sys
 import scipy
 
-# Match edges by performing a simple norm on each points
-def diff_match_edges(e1, e2):
-    diff = 0
-    for i, p in enumerate(e1):
-        if i < len(e2):
-            diff += np.linalg.norm(p[0] - e2[len(e2) - i - 1][0])
-        else:
-            break
-    return diff
 
 
 # Return opposite direction of dir
@@ -70,17 +62,17 @@ class Puzzle():
                     # for each connected_pieces, for each edges, if the edges is not connected we need
                     # to find the correct piece/edge to connect the piece to
                     if not p.connected_[ie]:
-                        print("<--- New match --->")
-                        print("connected: {}".format(p.connected_))
+                        # print("<--- New match --->")
+                        # print("connected: {}".format(p.connected_))
                         # Stick best get a list of pieces to test and return the index of the best match (piece/edge)
                         tmp_ip, tmp_ie = self.stick_best(connected_pieces[ip], ie, left_pieces)
 
-                        print("orientation {}, position {}".format(p.orientation[ie].value, p.position))
+                        # print("orientation {}, position {}".format(p.orientation[ie].value, p.position))
                         # The position of the piece to connect is the position of the connected piece + orientation on the grid
                         left_pieces[tmp_ip].position = add_tuples(p.position, p.orientation[ie].value)
                         left_pieces[tmp_ip].orientation[(ie + 2) % 4] = neg_dir(connected_pieces[ip].orientation[ie])
-                        print("orientation {}, position {}".format(left_pieces[tmp_ip].orientation[(ie + 2) % 4].value,
-                                                                   left_pieces[tmp_ip].position))
+                        # print("orientation {}, position {}".format(left_pieces[tmp_ip].orientation[(ie + 2) % 4].value,
+                        #                                            left_pieces[tmp_ip].position))
 
                         # We need to fill the new orientation of the new piece because a piece can be rotated
                         # Quick and dirty sorry
@@ -181,7 +173,11 @@ class Puzzle():
 
                 # Stick pieces to test distance
                 stick_pieces(cur_piece, edge_cur_piece, pieces[l[i][0]], l[i][1])
-                diff.append(diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece]))
+                # print(pieces[l[i][0]].edges_[l[i][1]])
+                # print(pieces[l[i][0]].color_vect[l[i][1]])
+                # print("forme", diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece]),"color", diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
+                diff.append(0.99 * diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece])
+                            + 0.01 * diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
 
                 # Restore state of edges
                 pieces[l[i][0]].edges_ = tmp
@@ -189,7 +185,7 @@ class Puzzle():
                 diff.append(float('inf'))
 
         m = np.argmin(diff)
-        print(l[m][0], l[m][1])
+        # print(l[m][0], l[m][1])
 
         # Stick the best piece found
         stick_pieces(cur_piece, edge_cur_piece, pieces[l[m][0]], l[m][1], final_stick=True)
