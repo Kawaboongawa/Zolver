@@ -43,8 +43,9 @@ class Puzzle():
 
         #connected_pieces = [self.pieces_[0]]
         #left_pieces = self.pieces_[1:]
-        self.solve(connected_pieces, left_pieces, True)
-        self.solve(self.pieces_, non_border_pieces)
+        #self.solve(connected_pieces, left_pieces)
+        self.solve(connected_pieces, left_pieces, border=True)
+        # self.solve(self.pieces_, non_border_pieces)
         self.translate_puzzle()
         self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
 
@@ -111,7 +112,6 @@ class Puzzle():
                 if to_break:
                     break
             self.export_pieces("/tmp/test_stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
-
         self.pieces_ = connected_pieces
 
     def orientate_piece(self, ie, tmp_ip, left_pieces):
@@ -174,7 +174,7 @@ class Puzzle():
                     tests.append((index_piece, index_edge, piece.fourier_descriptors_[index_edge].match_descriptors(
                         cur_piece.fourier_descriptors_[edge_cur_piece])))
         l = sorted(tests, key=lambda x: x[2])
-
+        #return l[0][0], l[0][1]
         diff = []
         for i in range(len(l)):
             if not pieces[l[i][0]].connected_[l[i][1]]:
@@ -182,7 +182,6 @@ class Puzzle():
                 tmp = np.array(pieces[l[i][0]].edges_)
                 for j in range(4):
                     tmp[j] = np.array(pieces[l[i][0]].edges_[j])
-
                 # Stick pieces to test distance
                 stick_pieces(cur_piece, edge_cur_piece, pieces[l[i][0]], l[i][1])
                 # print(pieces[l[i][0]].edges_[l[i][1]])
@@ -190,20 +189,12 @@ class Puzzle():
                 # print("forme", diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece]),"color", diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
                 diff.append(1.0 * diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece])
                             + 0.000 * diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
-
                 # Restore state of edges
                 pieces[l[i][0]].edges_ = tmp
             else:
                 diff.append(float('inf'))
 
         m = np.argmin(diff)
-        # print(l[m][0], l[m][1])
-        if len(pieces) == 9:
-            print("n: ", len(pieces))
-            print("m: ", m)
-            print("l", l)
-            print("diff", diff)
-            #m = 5
         # Stick the best piece found
         stick_pieces(cur_piece, edge_cur_piece, pieces[l[m][0]], l[m][1], final_stick=True)
 
