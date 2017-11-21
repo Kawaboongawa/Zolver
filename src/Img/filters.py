@@ -736,9 +736,9 @@ def export_contours(img, img_bw, contours, path, modulo):
         list_img.append(out2)
 
     # Normalize all edges to min edge
-    length = np.min([np.min([y.size for y in np.array(x.edges_)]) for x in puzzle_pieces])
-    for p in puzzle_pieces:
-        p.normalize_edges(int(length / 3))
+    #length = np.min([np.min([y.size for y in np.array(x.edges_)]) for x in puzzle_pieces])
+    #for p in puzzle_pieces:
+    #    p.normalize_edges(int(length / 3))
 
     max_height = max([x.shape[0] for x in list_img])
     max_width = max([x.shape[1] for x in list_img])
