@@ -26,6 +26,22 @@ class Puzzle():
     def __init__(self, path, pixmapWidget=None):
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
+        '''border_pieces = []
+               for e in self.pieces_:
+                   if e.nBorders_ > 0:
+                       border_pieces.append(e)
+               for e in border_pieces:
+                   if e.nBorders_ > 1:
+                       connected_pieces = [e]
+                       break
+
+        left_pieces = border_pieces'''
+        connected_pieces = [self.pieces_[0]]
+        left_pieces = self.pieces_[1:]
+        self.solve(connected_pieces, left_pieces)
+        self.translate_puzzle()
+        self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
+
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
         # The first piece has an orientation like that:
@@ -51,9 +67,9 @@ class Puzzle():
         # |  |  |  |
         # +--+--+--+
         # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
-        connected_pieces = [self.pieces_[0]]
-        left_pieces = self.pieces_[1:]
 
+
+    def solve(self, connected_pieces, left_pieces):
         # while there are still pieces to connect...
         while len(left_pieces) > 0:
             to_break = False
@@ -74,49 +90,10 @@ class Puzzle():
                         # print("orientation {}, position {}".format(left_pieces[tmp_ip].orientation[(ie + 2) % 4].value,
                         #                                            left_pieces[tmp_ip].position))
 
-                        # We need to fill the new orientation of the new piece because a piece can be rotated
-                        # Quick and dirty sorry
-                        for i_tmp in range(1, 3):
-                            o_pos = (ie + 2 + i_tmp - 1) % 4
-                            n_pos = (o_pos + 1) % 4
-                            if left_pieces[tmp_ip].orientation[o_pos] == Directions.N:
-                                left_pieces[tmp_ip].orientation[n_pos] = Directions.E
-                            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.E:
-                                left_pieces[tmp_ip].orientation[n_pos] = Directions.S
-                            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.S:
-                                left_pieces[tmp_ip].orientation[n_pos] = Directions.W
-                            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.W:
-                                left_pieces[tmp_ip].orientation[n_pos] = Directions.N
 
-                        # Then we need to search the other pieces already in the puzzle that are going to be also connected:
-                        # +--+--+--+
-                        # |  | X| O|
-                        # +--+--+--+
-                        # |  | X| X|
-                        # +--+--+--+
-                        # |  |  |  |
-                        # +--+--+--+
-                        #
-                        # For example if I am going to put a piece at the marker 'O' only one edge will be connected to the piece
-                        # therefore we need to search the adjacent pieces and connect them properly
-                        # Again quick and dirty feel free to change it
-                        for ip2, p2 in enumerate(connected_pieces):
-                            if p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.N.value):
-                                connected_pieces[ip2].connected_[p2.orientation.index(Directions.S)] = True
-                                left_pieces[tmp_ip].connected_[
-                                    left_pieces[tmp_ip].orientation.index(Directions.N)] = True
-                            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.S.value):
-                                connected_pieces[ip2].connected_[p2.orientation.index(Directions.N)] = True
-                                left_pieces[tmp_ip].connected_[
-                                    left_pieces[tmp_ip].orientation.index(Directions.S)] = True
-                            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.W.value):
-                                connected_pieces[ip2].connected_[p2.orientation.index(Directions.E)] = True
-                                left_pieces[tmp_ip].connected_[
-                                    left_pieces[tmp_ip].orientation.index(Directions.W)] = True
-                            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.E.value):
-                                connected_pieces[ip2].connected_[p2.orientation.index(Directions.W)] = True
-                                left_pieces[tmp_ip].connected_[
-                                    left_pieces[tmp_ip].orientation.index(Directions.E)] = True
+
+                        self.orientate_piece(ie, tmp_ip, left_pieces)
+                        self.connect_piece(tmp_ip, connected_pieces, left_pieces)
 
                         # We are adding pieces to connected_pieces while looping into it so I break
                         connected_pieces.append(left_pieces[tmp_ip])
@@ -129,6 +106,7 @@ class Puzzle():
 
         self.pieces_ = connected_pieces
 
+    def translate_puzzle(self):
         # Translate all pieces to the top left corner to be sure the puzzle is in the image
         minX = sys.maxsize
         minY = sys.maxsize
@@ -149,7 +127,51 @@ class Puzzle():
             for p in piece.img_piece_:
                 p.translate(minX, minY)
 
-        self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
+    def orientate_piece(self, ie, tmp_ip, left_pieces):
+        # We need to fill the new orientation of the new piece because a piece can be rotated
+        # Quick and dirty sorry
+        for i_tmp in range(1, 3):
+            o_pos = (ie + 2 + i_tmp - 1) % 4
+            n_pos = (o_pos + 1) % 4
+            if left_pieces[tmp_ip].orientation[o_pos] == Directions.N:
+                left_pieces[tmp_ip].orientation[n_pos] = Directions.E
+            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.E:
+                left_pieces[tmp_ip].orientation[n_pos] = Directions.S
+            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.S:
+                left_pieces[tmp_ip].orientation[n_pos] = Directions.W
+            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.W:
+                left_pieces[tmp_ip].orientation[n_pos] = Directions.N
+
+    def connect_piece(self, tmp_ip, connected_pieces, left_pieces):
+        # Then we need to search the other pieces already in the puzzle that are going to be also connected:
+        # +--+--+--+
+        # |  | X| O|
+        # +--+--+--+
+        # |  | X| X|
+        # +--+--+--+
+        # |  |  |  |
+        # +--+--+--+
+        #
+        # For example if I am going to put a piece at the marker 'O' only one edge will be connected to the piece
+        # therefore we need to search the adjacent pieces and connect them properly
+        # Again quick and dirty feel free to change it
+        for ip2, p2 in enumerate(connected_pieces):
+            if p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.N.value):
+                connected_pieces[ip2].connected_[p2.orientation.index(Directions.S)] = True
+                left_pieces[tmp_ip].connected_[
+                    left_pieces[tmp_ip].orientation.index(Directions.N)] = True
+            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.S.value):
+                connected_pieces[ip2].connected_[p2.orientation.index(Directions.N)] = True
+                left_pieces[tmp_ip].connected_[
+                    left_pieces[tmp_ip].orientation.index(Directions.S)] = True
+            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.W.value):
+                connected_pieces[ip2].connected_[p2.orientation.index(Directions.E)] = True
+                left_pieces[tmp_ip].connected_[
+                    left_pieces[tmp_ip].orientation.index(Directions.W)] = True
+            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.E.value):
+                connected_pieces[ip2].connected_[p2.orientation.index(Directions.W)] = True
+                left_pieces[tmp_ip].connected_[
+                    left_pieces[tmp_ip].orientation.index(Directions.E)] = True
 
     def stick_best(self, cur_piece, edge_cur_piece, pieces):
         if cur_piece.connected_[edge_cur_piece]:
