@@ -1,7 +1,7 @@
 import numpy as np
 
 from Img.FourierDescriptor import FourierDescriptor
-from Puzzle.Enums import Directions
+from Puzzle.Enums import *
 
 
 def cart2pol(x, y):
@@ -26,12 +26,34 @@ def is_border(edge, threshold):
         total_dist += dist_to_line(edge[0][0], edge[-1][0], p[0])
     return total_dist < threshold
 
+def normalize_edge(edge, n):
+    point_dist = float(len(edge)) / float(n)
+    index = float(0)
+    dst = []
+    for i in range(0, n):
+        # TODO: fix triple array
+        dst.append([edge[int(index)][0], edge[int(index)][1]])
+        index += point_dist
+    return dst
+
+def normalize_list(l, n):
+    point_dist = float(len(l)) / float(n)
+    index = float(0)
+    dst = []
+    for i in range(0, n):
+        # TODO: fix triple array
+        dst.append(l[int(index)])
+        index += point_dist
+    return dst
+
 class PuzzlePiece():
     def __init__(self, edges, color_vect, img_piece):
         self.position = (0, 0)
         # Keep orientations in an array (Correct only for first piece then the
         # values will be ovewritten)
         self.orientation = [Directions.N, Directions.E, Directions.S, Directions.W]
+        self.relative_angles_ = []
+        self.types_ = [TypePiece.UNDEFINED, TypePiece.UNDEFINED, TypePiece.UNDEFINED, TypePiece.UNDEFINED]
         self.edges_ = edges
         self.color_vect = color_vect
         self.img_piece_ = img_piece  # List of Pixels

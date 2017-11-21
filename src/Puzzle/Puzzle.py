@@ -7,7 +7,7 @@ from cv2 import cv2
 
 from Puzzle.Enums import Directions
 import sys
-
+import scipy
 
 # Match edges by performing a simple norm on each points
 def diff_match_edges(e1, e2):
@@ -32,7 +32,6 @@ def add_tuples(tuple1, tuple2):
 
 class Puzzle():
     def __init__(self, path, pixmapWidget=None):
-        self.signatures = load_signatures("dataset")
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
 

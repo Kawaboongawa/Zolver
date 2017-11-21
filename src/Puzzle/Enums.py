@@ -6,3 +6,9 @@ class Directions(Enum):
     S = (0, -1)
     E = (1, 0)
     W = (-1, 0)
+
+class TypePiece(Enum):
+    HOLE = 0
+    HEAD = 1
+    BORDER = 2
+    UNDEFINED = 3
