@@ -36,7 +36,7 @@ class Extractor():
             self.img_bw = cv2.bitwise_not(self.img_bw)
             # filling holes in the pieces 2
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10))
-            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, kernel)
+            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, kernel)
             # Inversing colors back : end of filling pieces
             self.img_bw = cv2.bitwise_not(self.img_bw)
 
@@ -47,12 +47,11 @@ class Extractor():
         # In case with fail to find the pieces, we fill some holes and then try again
         nb_error_max = 42
         while True:
-            self.img_bw, contours, hier = cv2.findContours(self.img_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-            puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
-            break
             try:
-                pass
-            except (ValueError,IndexError):
+                self.img_bw, contours, hier = cv2.findContours(self.img_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+                puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
+                break
+            except (IndexError):
                 fill_holes()
                 nb_error_max -= 1
                 if nb_error_max <= 0:
