@@ -322,7 +322,6 @@ def my_find_corner_signature(img, cnt):
     # Keep only 20% max values
     s = np.flip(np.argsort([relative_angles[x] for x in extr_tmp]), axis=1)[0]
     extr = []
-
     for i in range(int(len(extr_tmp[0]) * 0.2)):
         extr.append(extr_tmp[0][s[i]])
 
@@ -359,97 +358,40 @@ def my_find_corner_signature(img, cnt):
     t = np.argmax([results_comp[index_max_hole][0], results_comp[index_max_head][1], results_comp[index_max_border][2]])
     # print(t)
 
+    index = None
     if t == 0:
-        # Roll values
-        offset = len(relative_angles) - combs_l[index_max_hole][1] - 1
-        relative_angles = np.roll(relative_angles, offset)
-
-        # print(((combs_l[index_max_hole][0] + offset) % len(relative_angles),
-        #        (combs_l[index_max_hole][1] + offset) % len(relative_angles)))
-
-        # Remove extremums between already found edge
-        extr_tmp = []
-        for ie, e in enumerate(extr):
-            if e > combs_l[index_max_hole][0] and e <= combs_l[index_max_hole][1]:
-                continue
-            extr_tmp.append(e)
-        extr = np.array(extr_tmp)
-
-        for ie, e in enumerate(extr):
-            extr[ie] = (extr[ie] + offset) % len(relative_angles)
-        extr = np.append(extr, 0)
-
-        plt.axvline(x=np.max(extr), lw=1, color='red')
-        plt.axvline(x=len(relative_angles) - 1, lw=1, color='red')
-
-        combs = itertools.combinations(extr, 2)
-        combs_l = list(combs)
-        for icomb, comb in enumerate(combs_l):
-            if comb[0] > comb[1]:
-                combs_l[icomb] = (comb[1], comb[0])
-
-        results_comp = compute_comp(combs_l, relative_angles, signatures)
-
+        index = index_max_hole
     elif t == 1:
-        # Roll values
-        offset = len(relative_angles) - combs_l[index_max_head][1] - 1
-        relative_angles = np.roll(relative_angles, offset)
-
-        # print(((combs_l[index_max_head][0] + offset) % len(relative_angles), (combs_l[index_max_head][1] + offset) % len(relative_angles)))
-
-        # Remove extremums between already found edge
-        extr_tmp = []
-        for ie, e in enumerate(extr):
-            if e > combs_l[index_max_head][0] and e <= combs_l[index_max_head][1]:
-                continue
-            extr_tmp.append(e)
-        extr = np.array(extr_tmp)
-
-        for ie, e in enumerate(extr):
-            extr[ie] = (extr[ie] + offset) % len(relative_angles)
-        extr = np.append(extr, 0)
-
-        plt.axvline(x=np.max(extr), lw=1, color='red')
-        plt.axvline(x=len(relative_angles) - 1, lw=1, color='red')
-
-        combs = itertools.combinations(extr, 2)
-        combs_l = list(combs)
-        for icomb, comb in enumerate(combs_l):
-            if comb[0] > comb[1]:
-                combs_l[icomb] = (comb[1], comb[0])
-
-        results_comp = compute_comp(combs_l, relative_angles, signatures)
-
+        index = index_max_head
     elif t == 2:
+        index = index_max_border
 
-        # Roll values
-        offset = len(relative_angles) - combs_l[index_max_border][1] - 1
-        relative_angles = np.roll(relative_angles, offset)
+    # Roll values
+    offset = len(relative_angles) - combs_l[index][1] - 1
+    relative_angles = np.roll(relative_angles, offset)
 
-        # print(((combs_l[index_max_border][0] + offset) % len(relative_angles), (combs_l[index_max_border][1] + offset) % len(relative_angles)))
+    # Remove extremums between already found edge
+    extr_tmp = []
+    for ie, e in enumerate(extr):
+        if e > combs_l[index][0] and e <= combs_l[index][1]:
+            continue
+        extr_tmp.append(e)
+    extr = np.array(extr_tmp)
 
-        # Remove extremums between already found edge
-        extr_tmp = []
-        for ie, e in enumerate(extr):
-            if e > combs_l[index_max_border][0] and e <= combs_l[index_max_border][1]:
-                continue
-            extr_tmp.append(e)
-        extr = np.array(extr_tmp)
+    for ie, e in enumerate(extr):
+        extr[ie] = (extr[ie] + offset) % len(relative_angles)
+    extr = np.append(extr, 0)
 
-        for ie, e in enumerate(extr):
-            extr[ie] = (extr[ie] + offset) % len(relative_angles)
-        extr = np.append(extr, 0)
+    plt.axvline(x=np.max(extr), lw=1, color='red')
+    plt.axvline(x=len(relative_angles) - 1, lw=1, color='red')
 
-        plt.axvline(x=np.max(extr), lw=1, color='red')
-        plt.axvline(x=len(relative_angles) - 1, lw=1, color='red')
+    combs = itertools.combinations(extr, 2)
+    combs_l = list(combs)
+    for icomb, comb in enumerate(combs_l):
+        if comb[0] > comb[1]:
+            combs_l[icomb] = (comb[1], comb[0])
 
-        combs = itertools.combinations(extr, 2)
-        combs_l = list(combs)
-        for icomb, comb in enumerate(combs_l):
-            if comb[0] > comb[1]:
-                combs_l[icomb] = (comb[1], comb[0])
-
-        results_comp = compute_comp(combs_l, relative_angles, signatures)
+    results_comp = compute_comp(combs_l, relative_angles, signatures)
 
     for i in range(1, 4):
         if len(results_comp) == 0:
