@@ -246,6 +246,43 @@ def my_find_corners(img, cnt):
 
     return corners, edges
 
+def compute_comp(combs_l, relative_angles, signatures):
+    # print('Number combs: ', len(combs_l))
+    results_comp = []
+    for comb in combs_l:
+        if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
+            results_comp.append([-1000000, -1000000, -1000000])
+            continue
+
+        tmp_relative = []
+        tmp_signature = []
+        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
+            tmp_signature.append(np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
+            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
+        else:
+            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
+            tmp_signature.append(np.array(signatures['holes']))
+
+        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
+            tmp_signature.append(np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
+            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
+        else:
+            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
+            tmp_signature.append(np.array(signatures['heads']))
+
+        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
+            tmp_signature.append(np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
+            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
+        else:
+            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
+            tmp_signature.append(np.array(signatures['borders']))
+
+        hole = np.correlate(tmp_relative[0], tmp_signature[0])
+        head = np.correlate(tmp_relative[1], tmp_signature[1])
+        border = np.correlate(tmp_relative[2], tmp_signature[2])
+        results_comp.append([hole[0], head[0], border[0]])
+
+    return results_comp
 
 def my_find_corner_signature(img, cnt):
     global COUNT
@@ -312,39 +349,7 @@ def my_find_corner_signature(img, cnt):
             combs_l[icomb] = (comb[1], comb[0])
 
     # print('Number combs: ', len(combs_l))
-    results_comp = []
-    for comb in combs_l:
-        if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
-            results_comp.append([-1000000, -1000000, -1000000])
-            continue
-
-        tmp_relative = []
-        tmp_signature = []
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-            tmp_signature.append(np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
-            tmp_signature.append(np.array(signatures['holes']))
-
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-            tmp_signature.append(np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
-            tmp_signature.append(np.array(signatures['heads']))
-
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-            tmp_signature.append(np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
-            tmp_signature.append(np.array(signatures['borders']))
-
-        hole = np.correlate(tmp_relative[0], tmp_signature[0])
-        head = np.correlate(tmp_relative[1], tmp_signature[1])
-        border = np.correlate(tmp_relative[2], tmp_signature[2])
-        results_comp.append([hole[0], head[0], border[0]])
+    results_comp = compute_comp(combs_l, relative_angles, signatures)
 
     index_max_hole = np.argmax([x[0] for x in results_comp])
     index_max_head = np.argmax([x[1] for x in results_comp])
@@ -383,46 +388,7 @@ def my_find_corner_signature(img, cnt):
             if comb[0] > comb[1]:
                 combs_l[icomb] = (comb[1], comb[0])
 
-        # print('Number combs: ', len(combs_l))
-        results_comp = []
-        for comb in combs_l:
-            if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
-                results_comp.append([-1000000, -1000000, -1000000])
-                continue
-
-            tmp_relative = []
-            tmp_signature = []
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
-                tmp_signature.append(np.array(signatures['holes']))
-
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
-                tmp_signature.append(np.array(signatures['heads']))
-
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
-                tmp_signature.append(np.array(signatures['borders']))
-
-            hole = np.correlate(tmp_relative[0], tmp_signature[0])
-            head = np.correlate(tmp_relative[1], tmp_signature[1])
-            border = np.correlate(tmp_relative[2], tmp_signature[2])
-            results_comp.append([hole[0], head[0], border[0]])
+        results_comp = compute_comp(combs_l, relative_angles, signatures)
 
     elif t == 1:
         # Roll values
@@ -452,46 +418,7 @@ def my_find_corner_signature(img, cnt):
             if comb[0] > comb[1]:
                 combs_l[icomb] = (comb[1], comb[0])
 
-        # print('Number combs: ', len(combs_l))
-        results_comp = []
-        for comb in combs_l:
-            if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
-                results_comp.append([-1000000, -1000000, -1000000])
-                continue
-
-            tmp_relative = []
-            tmp_signature = []
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
-                tmp_signature.append(np.array(signatures['holes']))
-
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
-                tmp_signature.append(np.array(signatures['heads']))
-
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
-                tmp_signature.append(np.array(signatures['borders']))
-
-            hole = np.correlate(tmp_relative[0], tmp_signature[0])
-            head = np.correlate(tmp_relative[1], tmp_signature[1])
-            border = np.correlate(tmp_relative[2], tmp_signature[2])
-            results_comp.append([hole[0], head[0], border[0]])
+        results_comp = compute_comp(combs_l, relative_angles, signatures)
 
     elif t == 2:
 
@@ -522,46 +449,7 @@ def my_find_corner_signature(img, cnt):
             if comb[0] > comb[1]:
                 combs_l[icomb] = (comb[1], comb[0])
 
-        # print('Number combs: ', len(combs_l))
-        results_comp = []
-        for comb in combs_l:
-            if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
-                results_comp.append([-1000000, -1000000, -1000000])
-                continue
-
-            tmp_relative = []
-            tmp_signature = []
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
-                tmp_signature.append(np.array(signatures['holes']))
-
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
-                tmp_signature.append(np.array(signatures['heads']))
-
-            if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-                tmp_signature.append(
-                    np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
-                tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-            else:
-                tmp_relative.append(
-                    np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
-                tmp_signature.append(np.array(signatures['borders']))
-
-            hole = np.correlate(tmp_relative[0], tmp_signature[0])
-            head = np.correlate(tmp_relative[1], tmp_signature[1])
-            border = np.correlate(tmp_relative[2], tmp_signature[2])
-            results_comp.append([hole[0], head[0], border[0]])
+        results_comp = compute_comp(combs_l, relative_angles, signatures)
 
     for i in range(1, 4):
         if len(results_comp) == 0:
@@ -653,7 +541,7 @@ def export_contours(img, img_bw, contours, path, modulo):
 
     for idx, cnt in enumerate(contours):
 
-        # my_find_corner_signature(img_bw, cnt)
+        my_find_corner_signature(img_bw, cnt)
         corners, edges = my_find_corners(img_bw, cnt)
 
         mask_border = np.zeros_like(img_bw)
