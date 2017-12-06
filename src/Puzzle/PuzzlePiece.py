@@ -60,11 +60,17 @@ class PuzzlePiece():
 
         # Keep informations if the edge is a connected
         self.connected_ = []
+        self.borders_ = []
+        self.nBorders_ = 0
         self.fourier_descriptors_ = []
         for e in edges:
             norm_e = self.normalize_edges(e, 128)
             self.fourier_descriptors_.append(FourierDescriptor(norm_e, 128))
-            self.connected_.append(is_border(e, 1000))
+            border = is_border(e, 1000)
+            self.borders_.append(border)
+            self.connected_.append(border)
+            if border:
+                self.nBorders_ += 1
 
     def normalize_edges(self, edge, n):
         point_dist = float(len(edge)) / float(n)
