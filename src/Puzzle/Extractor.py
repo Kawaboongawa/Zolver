@@ -46,18 +46,18 @@ class Extractor():
 
         # In case with fail to find the pieces, we fill some holes and then try again
         nb_error_max = 42
-        while True:
-            try:
-                self.img_bw, contours, hier = cv2.findContours(self.img_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-                puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
-                break
-            except (IndexError):
-                fill_holes()
-                nb_error_max -= 1
-                if nb_error_max <= 0:
-                    print('Could not find the pieces, exiting the app')
-                    sys.exit(1)
-                print('Error while trying to find the pieces, trying again after filling some holes')
+        # while True: #FIXME Fix this stupid try catch....
+        #     try:
+        self.img_bw, contours, hier = cv2.findContours(self.img_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
+                # break
+            # except (IndexError):
+            #     fill_holes()
+            #     nb_error_max -= 1
+            #     if nb_error_max <= 0:
+            #         print('Could not find the pieces, exiting the app')
+            #         sys.exit(1)
+            #     print('Error while trying to find the pieces, trying again after filling some holes')
         if self.pixmapWidget is not None:
             self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
 

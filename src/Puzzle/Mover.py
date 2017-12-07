@@ -15,22 +15,23 @@ def rotate(origin, point, angle):
     return qx, qy
 
 
-def stick_pieces(bloc, bloc_index_edge, piece, piece_index_edge, final_stick=False):
-    vec_bloc = np.subtract(bloc.edges_[bloc_index_edge][0][0], bloc.edges_[bloc_index_edge][-1][0])
-    vec_piece =  np.subtract(piece.edges_[piece_index_edge][0][0], piece.edges_[piece_index_edge][-1][0])
-    translation =  np.subtract(bloc.edges_[bloc_index_edge][0][0], piece.edges_[piece_index_edge][-1][0])
+def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
+    vec_bloc = np.subtract(bloc_e.shape[0], bloc_e.shape[-1])
+    vec_piece = np.subtract(e.shape[0], e.shape[-1])
+
+    translation = np.subtract(bloc_e.shape[0], bloc_e.shape[-1])
     angle = angle_between((vec_bloc[0], vec_bloc[1], 0), (-vec_piece[0], -vec_piece[1], 0))
 
     # First move the first corner of piece to the corner of bloc edge
-    for index, edge in enumerate(piece.edges_):
-        piece.edges_[index] += translation
+    for edge in p.edges_:
+        edge.shape += translation
 
     # Then rotate piece of `angle` degrees centered on the corner
-    for index_edge, edge in enumerate(piece.edges_):
-        for index_point, p in enumerate(edge):
-            piece.edges_[index_edge][index_point][0] = rotate(bloc.edges_[bloc_index_edge][0][0], p[0], -angle)
+    for edge in p.edges_:
+        for i, point in enumerate(edge.shape):
+            edge.shape[i] = rotate(bloc_e.shape[0], point, -angle)
 
     if final_stick:
-        for p in piece.img_piece_:
-            p.translate(translation[1], translation[0])
-            p.rotate(bloc.edges_[bloc_index_edge][0][0], -angle)
+        for pixel in p.img_piece_:
+            pixel.translate(translation[1], translation[0])
+            pixel.rotate(e[0], -angle)

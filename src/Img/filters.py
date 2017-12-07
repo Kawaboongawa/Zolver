@@ -7,6 +7,8 @@ import random
 import math, pickle, os
 
 from Img.Pixel import Pixel, flatten_colors
+from Puzzle.Edge import Edge
+from Puzzle.Enums import directions, TypePiece
 from Puzzle.PuzzlePiece import PuzzlePiece
 from Puzzle.PuzzlePiece import normalize_edge, normalize_list
 import matplotlib.pyplot as plt
@@ -66,66 +68,6 @@ def findSignificantContours(img, edgeImg):
     significant.sort(key=lambda x: x[1])
     # print ([x[1] for x in significant]);
     return [x[0] for x in significant]
-
-
-def findContourTest2(initial_img):
-    blurred = cv2.GaussianBlur(initial_img, (5, 5), 0)  # Remove noise
-    edgeImg = np.max(
-        np.array([self.edgedetect(blurred[:, :, 0]),
-                  self.edgedetect(blurred[:, :, 1]),
-                  self.edgedetect(blurred[:, :, 2])]),
-        axis=0)
-    cv2.imshow("frame1", edgeImg)
-    cv2.waitKey(0)
-    mean = np.mean(edgeImg)
-    # Zero any value that is less than mean. This reduces a lot of noise.
-    edgeImg[edgeImg <= mean] = 0
-    cv2.imshow("frame2", edgeImg)
-    cv2.waitKey(0)
-    edgeImg_8u = np.asarray(edgeImg, np.uint8)
-    # Find contours
-    significant = self.findSignificantContours(initial_img, edgeImg_8u)
-    self.printImgContour(initial_img, significant)
-    # Mask
-    mask = edgeImg.copy()
-    mask[mask > 0] = 0
-    cv2.fillPoly(mask, significant, 255)
-    # Invert mask
-    mask = np.logical_not(mask)
-    # Finally remove the background
-    initial_img[mask] = 0
-    self.printImgContour(initial_img, significant)
-    contour = significant
-    epsilon = 0.10 * cv2.arcLength(contour, True)
-    approx = cv2.approxPolyDP(contour, 3, True)
-    contour = approx
-    # Use Savitzky-Golay filter to smoothen contour.
-    # Consider each window to be 5% of image dimensions
-    window_size = int(
-        round(min(initial_img.shape[0], initial_img.shape[1]) * 0.05))
-    x = savgol_filter(contour[:, 0, 0], window_size * 2 + 1, 3)
-    y = savgol_filter(contour[:, 0, 1], window_size * 2 + 1, 3)
-    approx = np.empty((x.size, 1, 2))
-    approx[:, 0, 0] = x
-    approx[:, 0, 1] = y
-    approx = approx.astype(int)
-    contour = approx
-    self.printImgContour(initial_img, contour)
-
-
-imgNumber = 0
-
-
-def printImgContour(initial_img, contours):
-    tmpimage = initial_img.copy()
-    for c in contours:
-        peri = cv2.arcLength(c, True)
-        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-        cv2.drawContours(tmpimage, [approx], -1, (0, 255, 0), 2)
-    self.imgNumber = self.imgNumber + 1
-    # print(str(self.imgNumber))
-    cv2.imshow("imgContour" + str(self.imgNumber), tmpimage)
-    cv2.waitKey(0)
 
 
 def findContourTest1(initial_img):
@@ -244,6 +186,7 @@ def my_find_corners(img, cnt):
         edges.append(cnt[indices[i]:indices[i + 1]])
     edges.append(np.concatenate((cnt[indices[3]:], cnt[:indices[0]]), axis=0))
 
+    edges = np.array([np.array([x[0] for x in e]) for e in edges])  # quick'n'dirty fix of the shape
     return corners, edges
 
 def compute_comp(combs_l, relative_angles, signatures):
@@ -480,11 +423,12 @@ def angle_between(v1, v2):
 def export_contours(img, img_bw, contours, path, modulo):
     puzzle_pieces = []
     list_img = []
+    print('>>> START contour/corner detection')
 
     for idx, cnt in enumerate(contours):
 
         my_find_corner_signature(img_bw, cnt)
-        corners, edges = my_find_corners(img_bw, cnt)
+        corners, edges_shape = my_find_corners(img_bw, cnt)
 
         mask_border = np.zeros_like(img_bw)
         mask_full = np.zeros_like(img_bw)
@@ -513,11 +457,10 @@ def export_contours(img, img_bw, contours, path, modulo):
         out_color = np.zeros_like(img)
         for i in range(4):
             color_edge = []
-            for ip, p in enumerate(edges[i]):
-                p = p[0]
+            for ip, p in enumerate(edges_shape[i]):
                 CIRCLE_SIZE = 5
                 if ip != 0:
-                    p2 = edges[i][ip - 1][0]
+                    p2 = edges_shape[i][ip - 1]
                     cv2.circle(mask_around_tiny, (p2[0] - x_bound, p2[1] - y_bound), CIRCLE_SIZE, 0, -1)
                 cv2.circle(mask_around_tiny, (p[0] - x_bound, p[1] - y_bound), CIRCLE_SIZE, 255, -1)
 
@@ -526,18 +469,28 @@ def export_contours(img, img_bw, contours, path, modulo):
                 neighbors_color = []
                 for y, x in tuple(zip(*np.where(mask_around_tiny == 255))):
                     neighbors_color.append(img_piece_tiny[y, x])
-                color_edge.append(flatten_colors(neighbors_color))
+                color_edge.append(np.array(flatten_colors(neighbors_color)))
                 out_color[p[1], p[0]] = color_edge[-1]
             color_vect.append(np.array(color_edge))
 
-        puzzle_pieces.append(PuzzlePiece(edges, np.array(color_vect), pixels))
+        edges = []
+        for s, c in zip(edges_shape, color_vect):
+            edges.append(Edge(s, c))
+
+        for i, e in enumerate(edges):
+            e.direction = directions[i]
+            if e.is_border(1000):
+                e.connected = True
+                e.type = TypePiece.BORDER
+
+        puzzle_pieces.append(PuzzlePiece(edges, pixels))
         cv2.imwrite("/tmp/color_border.png", out_color)
 
         mask_border = np.zeros_like(img_bw)
 
         for i in range(4):
-            for p in edges[i]:
-                mask_border[p[0][1], p[0][0]] = 255
+            for p in edges_shape[i]:
+                mask_border[p[1], p[0]] = 255
 
         out = np.zeros_like(img_bw)
         out[mask_border == 255] = img_bw[mask_border == 255]

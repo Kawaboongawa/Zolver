@@ -26,19 +26,26 @@ class Puzzle():
     def __init__(self, path, pixmapWidget=None):
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
+        print('>>> START solving puzzle')
+
         border_pieces = []
         non_border_pieces = []
-        for e in self.pieces_:
-            if e.nBorders_ > 0:
-                border_pieces.append(e)
+
+        # Separate border pieces from the other
+        for piece in self.pieces_:
+            if piece.number_of_border():
+                border_pieces.append(piece)
             else:
-                non_border_pieces.append(e)
-        for e in border_pieces:
-            if e.nBorders_ > 1:
-                connected_pieces = [e]
-                border_pieces.remove(e)
+                non_border_pieces.append(piece)
+
+        # Start by a corner piece
+        for piece in border_pieces:
+            if piece.number_of_border() > 1:
+                connected_pieces = [piece]
+                border_pieces.remove(piece)
                 break
-        print("number of border pieces: ", len(border_pieces) + 1)
+
+        print("Number of border pieces: ", len(border_pieces) + 1)
         left_pieces = border_pieces
 
         #connected_pieces = [self.pieces_[0]]
@@ -83,21 +90,23 @@ class Puzzle():
                 for ie, e in enumerate(p.edges_):
                     # for each connected_pieces, for each edges, if the edges is not connected we need
                     # to find the correct piece/edge to connect the piece to
-                    if p.connected_[ie]:
+                    if e.connected:
                         continue
-                    tmp = ie - 1
-                    if (tmp < 0):
-                        tmp = 3
-                    if border and not (p.borders_[(ie + 1) % 4] or p.borders_[tmp]):
-                        continue
+
+                    # fixme à remettre ?
+                    # tmp = ie - 1 if ie != 0 else 3
+                    # if border and not (p.borders_[(ie + 1) % 4] or p.borders_[tmp]):
+                    #     continue
+
                     print("<--- New match --->")
                     print("connected: {}".format(p.connected_))
                     # Stick best get a list of pieces to test and return the index of the best match (piece/edge)
-                    tmp_ip, tmp_ie = self.stick_best(connected_pieces[ip], ie, left_pieces, border)
+                    tmp_ip, tmp_ie = self.stick_best(p, ie, left_pieces, border)
                     # print("orientation {}, position {}".format(p.orientation[ie].value, p.position))
+
                     # The position of the piece to connect is the position of the connected piece + orientation on the grid
                     left_pieces[tmp_ip].position = add_tuples(p.position, p.orientation[ie].value)
-                    left_pieces[tmp_ip].orientation[(ie + 2) % 4] = neg_dir(connected_pieces[ip].orientation[ie])
+                    left_pieces[tmp_ip].orientation[(ie + 2) % 4] = neg_dir(p.orientation[ie])
                     # print("orientation {}, position {}".format(left_pieces[tmp_ip].orientation[(ie + 2) % 4].value,
                     #                                            left_pieces[tmp_ip].position))
 
@@ -160,46 +169,55 @@ class Puzzle():
                 left_pieces[tmp_ip].connected_[
                     left_pieces[tmp_ip].orientation.index(Directions.E)] = True
 
-    def stick_best(self, cur_piece, edge_cur_piece, pieces, border=False):
-        if cur_piece.connected_[edge_cur_piece]:
+    def stick_best(self, cur_piece, cur_edge, pieces, border=False):
+        if cur_edge.connected:
             return
 
         # Fourier descriptor... Not used I think
-        tests = []
-        for index_piece, piece in enumerate(pieces):
-            if piece != cur_piece:
-                for index_edge, edge in enumerate(piece.edges_):
-                    if border and piece.nBorders_ < 2 and piece.borders_[(index_edge + 2) % 4]:
-                        continue
-                    tests.append((index_piece, index_edge, piece.fourier_descriptors_[index_edge].match_descriptors(
-                        cur_piece.fourier_descriptors_[edge_cur_piece])))
-        l = sorted(tests, key=lambda x: x[2])
+        # tests = []
+        # for index_piece, piece in enumerate(pieces):
+        #     if piece != cur_piece:
+        #         for index_edge, edge in enumerate(piece.edges_):
+        #             if border and piece.nBorders_ < 2 and piece.borders_[(index_edge + 2) % 4]:
+        #                 continue
+        #             tests.append((index_piece, index_edge, piece.fourier_descriptors_[index_edge].match_descriptors(
+        #                 cur_piece.fourier_descriptors_[edge_cur_piece])))
+        # l = sorted(tests, key=lambda x: x[2])
         #return l[0][0], l[0][1]
+
+        edges_to_test = []
+        for piece in pieces:
+            if piece != cur_piece:
+                for edge in piece.edges_:
+                    # if border and piece.nBorders_ < 2 and piece.borders_[(index_edge + 2) % 4]: # FIXME ?
+                    #     continue
+                    if not edge.connected:
+                        edges_to_test.append((piece, edge))
+
+
         diff = []
-        for i in range(len(l)):
-            if not pieces[l[i][0]].connected_[l[i][1]]:
-                # Save edges to restore them
-                tmp = np.array(pieces[l[i][0]].edges_)
-                for j in range(4):
-                    tmp[j] = np.array(pieces[l[i][0]].edges_[j])
-                # Stick pieces to test distance
-                stick_pieces(cur_piece, edge_cur_piece, pieces[l[i][0]], l[i][1])
-                # print(pieces[l[i][0]].edges_[l[i][1]])
-                # print(pieces[l[i][0]].color_vect[l[i][1]])
-                # print("forme", diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece]),"color", diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
-                diff.append(0 * diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece])
-                            + 1 * diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece], reverse=True))
+        for piece, edge in edges_to_test:
+            # Save edges to restore them
+            for e in piece.edges_:
+                e.backup_shape()
 
-                # Restore state of edges
-                pieces[l[i][0]].edges_ = tmp
-            else:
-                diff.append(float('inf'))
+            # Stick pieces to test distance
+            stick_pieces(cur_piece, cur_edge, piece, edge)
 
-        m = np.argmin(diff)
+            # print("forme", diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece]),"color", diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
+            diff.append(0 * diff_match_edges(edge.color, cur_edge.color, reverse=True)
+                        + 1 * diff_match_edges(edge.shape, cur_edge.shape))
+
+            # Restore state of edges
+            for e in piece.edges_:
+                e.restore_backup_shape()
+
+
         # Stick the best piece found
-        stick_pieces(cur_piece, edge_cur_piece, pieces[l[m][0]], l[m][1], final_stick=True)
+        best_p, best_e = edges_to_test[np.argmin(diff)]
+        stick_pieces(cur_piece, cur_edge, best_p, best_e, final_stick=True)
 
-        return l[m][0], l[m][1]
+        return best_p, best_e
 
     def translate_puzzle(self):
         # Translate all pieces to the top left corner to be sure the puzzle is in the image

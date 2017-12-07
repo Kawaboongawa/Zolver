@@ -1,7 +1,7 @@
 import numpy as np
 
 from Img.FourierDescriptor import FourierDescriptor
-from Puzzle.Enums import *
+from Puzzle.Enums import directions, Directions, TypePiece
 
 
 def cart2pol(x, y):
@@ -16,15 +16,10 @@ def pol2cart(rho, phi):
     return x, y
 
 
-def dist_to_line(p1, p2, p3):
-    return np.linalg.norm(np.cross(p2 - p1, p1 - p3)) / np.linalg.norm(p2 - p1)
 
 
-def is_border(edge, threshold):
-    total_dist = 0
-    for p in edge:
-        total_dist += dist_to_line(edge[0][0], edge[-1][0], p[0])
-    return total_dist < threshold
+
+
 
 def normalize_edge(edge, n):
     point_dist = float(len(edge)) / float(n)
@@ -47,30 +42,15 @@ def normalize_list(l, n):
     return dst
 
 class PuzzlePiece():
-    def __init__(self, edges, color_vect, img_piece):
+    def __init__(self, edges, img_piece):
         self.position = (0, 0)
         # Keep orientations in an array (Correct only for first piece then the
         # values will be ovewritten)
-        self.orientation = [Directions.N, Directions.E, Directions.S, Directions.W]
         self.relative_angles_ = []
-        self.types_ = [TypePiece.UNDEFINED, TypePiece.UNDEFINED, TypePiece.UNDEFINED, TypePiece.UNDEFINED]
         self.edges_ = edges
-        self.color_vect = color_vect
         self.img_piece_ = img_piece  # List of Pixels
+        self.nBorders_ = self.number_of_border()
 
-        # Keep informations if the edge is a connected
-        self.connected_ = []
-        self.borders_ = []
-        self.nBorders_ = 0
-        self.fourier_descriptors_ = []
-        for e in edges:
-            norm_e = self.normalize_edges(e, 128)
-            self.fourier_descriptors_.append(FourierDescriptor(norm_e, 128))
-            border = is_border(e, 1000)
-            self.borders_.append(border)
-            self.connected_.append(border)
-            if border:
-                self.nBorders_ += 1
 
     def normalize_edges(self, edge, n):
         point_dist = float(len(edge)) / float(n)
@@ -81,3 +61,6 @@ class PuzzlePiece():
             dst.append((edge[int(index)][0][0], edge[int(index)][0][1]))
             index += point_dist
         return dst
+
+    def number_of_border(self):
+        return len(list(filter(lambda x: x.type == TypePiece.BORDER, self.edges_)))
