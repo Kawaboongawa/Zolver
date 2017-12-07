@@ -12,11 +12,14 @@ def normalize_vect_len(e1, e2):
 
 
 # Match edges by performing a simple norm on each points
-def diff_match_edges(e1, e2):
+def diff_match_edges(e1, e2, reverse=True):
     diff = 0
     for i, p in enumerate(e1):
         if i < len(e2):
-            diff += np.linalg.norm(p[0] - e2[len(e2) - i - 1][0])
+            if reverse:
+                diff += np.linalg.norm(p[0] - e2[len(e2) - i - 1][0])
+            else:
+                diff += np.linalg.norm(p - e2[len(e2) - i - 1])
         else:
             break
     return diff

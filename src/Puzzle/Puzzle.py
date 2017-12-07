@@ -187,8 +187,9 @@ class Puzzle():
                 # print(pieces[l[i][0]].edges_[l[i][1]])
                 # print(pieces[l[i][0]].color_vect[l[i][1]])
                 # print("forme", diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece]),"color", diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
-                diff.append(1.0 * diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece])
-                            + 0.000 * diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
+                diff.append(0 * diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece])
+                            + 1 * diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece], reverse=True))
+
                 # Restore state of edges
                 pieces[l[i][0]].edges_ = tmp
             else:
