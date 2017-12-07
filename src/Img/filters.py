@@ -405,7 +405,7 @@ def my_find_corner_signature(img, cnt):
     for e in extr:
         plt.axvline(x=e, lw=0.2)
     plt.plot(relative_angles)
-    plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png')
+    # plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png')
     plt.clf()
     plt.cla()
     plt.close()

@@ -17,7 +17,7 @@ def diff_match_edges(e1, e2, reverse=True):
     for i, p in enumerate(e1):
         if i < len(e2):
             if reverse:
-                diff += np.linalg.norm(p[0] - e2[len(e2) - i - 1][0])
+                diff += np.linalg.norm(p - e2[len(e2) - i - 1])
             else:
                 diff += np.linalg.norm(p - e2[len(e2) - i - 1])
         else:

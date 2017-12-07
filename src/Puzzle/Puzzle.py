@@ -113,7 +113,7 @@ class Puzzle():
     def update_direction(self, e, best_p, best_e):
         opp = get_opposite_direction(e.direction)
         step = step_direction(opp, best_e.direction)
-        for edge in best_p:
+        for edge in best_p.edges_:
             edge.direction = rotate_direction(edge.direction, step)
 
     def connect_piece(self, connected_directions, curr_p, dir, best_p):
@@ -133,20 +133,22 @@ class Puzzle():
         # For example if I am going to put a piece at the marker 'O' only one edge will be connected to the piece
         # therefore we need to search the adjacent pieces and connect them properly
 
+        print(connected_directions)
         old_coord = list(filter(lambda x: x[1] == curr_p, connected_directions))[0][0]
         new_coord = add_tuple(old_coord, dir.value)
 
         for (coord, p) in connected_directions:
             for d in directions:
                 if equals_tuple(coord, add_tuple(new_coord, d.value)):
-                    for edge in best_p:
+                    for edge in best_p.edges_:
                         if edge.direction == d:
                             edge.connected = True
                             break
-                    for edge in p:
+                    for edge in p.edges_:
                         if edge.direction == get_opposite_direction(d):
                             edge.connected = True
                             break
+        connected_directions.append((new_coord, best_p))
 
 
 
@@ -233,18 +235,18 @@ class Puzzle():
                 maxX, maxY = max(maxX, x), max(maxY, y)
 
         colored_img = np.zeros((maxX - minX, maxY - minY, 3))
-        tests_img = np.zeros_like(self.extract.img_bw)
+        border_img = np.zeros_like(self.extract.img_bw)
 
         for piece in self.pieces_:
             for p in piece.img_piece_:
                 p.translate(-minX, -minY)
                 p.apply(colored_img)
             # Contours
-            for i in range(4):
-                for p in piece.edges_.shape[i]:
+            for e in piece.edges_:
+                for p in e.shape:
                     if p[0] < self.extract.img_bw.shape[1] and p[1] < self.extract.img_bw.shape[0]:
-                        tests_img[p[1], p[0]] = 255
+                        border_img[p[1], p[0]] = 255
 
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
-        cv2.imwrite(path_contour, tests_img)
+        cv2.imwrite(path_contour, border_img)
         cv2.imwrite(path_colored, colored_img)
