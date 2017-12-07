@@ -6,20 +6,10 @@ from Puzzle.Mover import *
 from Img.filters import load_signatures
 from cv2 import cv2
 
-from Puzzle.Enums import Directions
+from Puzzle.Enums import *
 import sys
 import scipy
 
-
-
-# Return opposite direction of dir
-def neg_dir(dir):
-    return Directions((-dir.value[0], -dir.value[1]))
-
-
-# Helper function to add two tuples
-def add_tuples(tuple1, tuple2):
-    return tuple(map(lambda x, y: x + y, tuple1, tuple2))
 
 
 class Puzzle():
@@ -53,6 +43,7 @@ class Puzzle():
         #self.solve(connected_pieces, left_pieces)
         self.solve(connected_pieces, left_pieces, border=True)
         # self.solve(self.pieces_, non_border_pieces)
+        print('>>> SAVING result...')
         self.translate_puzzle()
         self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
 
@@ -83,11 +74,13 @@ class Puzzle():
         # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
 
     def solve(self, connected_pieces, left_pieces, border=False):
+        connected_directions = [((0, 0), connected_pieces[0])] # ((x, y), p), x & y relative to the first piece, init with 1st piece
+
         # while there are still pieces to connect...
         while len(left_pieces) > 0:
             to_break = False
-            for ip, p in enumerate(connected_pieces):
-                for ie, e in enumerate(p.edges_):
+            for p in connected_pieces:
+                for e in p.edges_:
                     # for each connected_pieces, for each edges, if the edges is not connected we need
                     # to find the correct piece/edge to connect the piece to
                     if e.connected:
@@ -99,23 +92,16 @@ class Puzzle():
                     #     continue
 
                     print("<--- New match --->")
-                    print("connected: {}".format(p.connected_))
+                    # print("connected: {}".format(p.connected_))
                     # Stick best get a list of pieces to test and return the index of the best match (piece/edge)
-                    tmp_ip, tmp_ie = self.stick_best(p, ie, left_pieces, border)
-                    # print("orientation {}, position {}".format(p.orientation[ie].value, p.position))
+                    best_p, best_e = self.stick_best(p, e, left_pieces, border)
 
-                    # The position of the piece to connect is the position of the connected piece + orientation on the grid
-                    left_pieces[tmp_ip].position = add_tuples(p.position, p.orientation[ie].value)
-                    left_pieces[tmp_ip].orientation[(ie + 2) % 4] = neg_dir(p.orientation[ie])
-                    # print("orientation {}, position {}".format(left_pieces[tmp_ip].orientation[(ie + 2) % 4].value,
-                    #                                            left_pieces[tmp_ip].position))
-
-                    self.orientate_piece(ie, tmp_ip, left_pieces)
-                    self.connect_piece(tmp_ip, connected_pieces, left_pieces)
+                    self.update_direction(e, best_p, best_e)
+                    self.connect_piece(connected_directions, p, e.direction, best_p)
 
                     # We are adding pieces to connected_pieces while looping into it so I break
-                    connected_pieces.append(left_pieces[tmp_ip])
-                    del left_pieces[tmp_ip]
+                    connected_pieces.append(best_p)
+                    del left_pieces[left_pieces.index(best_p)]
                     to_break = True
                     break
                 if to_break:
@@ -123,22 +109,18 @@ class Puzzle():
             self.export_pieces("/tmp/test_stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
         self.pieces_ = connected_pieces
 
-    def orientate_piece(self, ie, tmp_ip, left_pieces):
-        # We need to fill the new orientation of the new piece because a piece can be rotated
-        # Quick and dirty sorry
-        for i_tmp in range(1, 3):
-            o_pos = (ie + 2 + i_tmp - 1) % 4
-            n_pos = (o_pos + 1) % 4
-            if left_pieces[tmp_ip].orientation[o_pos] == Directions.N:
-                left_pieces[tmp_ip].orientation[n_pos] = Directions.E
-            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.E:
-                left_pieces[tmp_ip].orientation[n_pos] = Directions.S
-            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.S:
-                left_pieces[tmp_ip].orientation[n_pos] = Directions.W
-            elif left_pieces[tmp_ip].orientation[o_pos] == Directions.W:
-                left_pieces[tmp_ip].orientation[n_pos] = Directions.N
 
-    def connect_piece(self, tmp_ip, connected_pieces, left_pieces):
+    def update_direction(self, e, best_p, best_e):
+        opp = get_opposite_direction(e.direction)
+        step = step_direction(opp, best_e.direction)
+        for edge in best_p:
+            edge.direction = rotate_direction(edge.direction, step)
+
+    def connect_piece(self, connected_directions, curr_p, dir, best_p):
+        def add_tuple(a, b):
+            return a[0] + b[0], a[1] + b[1]
+        def equals_tuple(a, b):
+            return a[0] == b[0] and a[1] == b[1]
         # Then we need to search the other pieces already in the puzzle that are going to be also connected:
         # +--+--+--+
         # |  | X| O|
@@ -150,24 +132,23 @@ class Puzzle():
         #
         # For example if I am going to put a piece at the marker 'O' only one edge will be connected to the piece
         # therefore we need to search the adjacent pieces and connect them properly
-        # Again quick and dirty feel free to change it
-        for ip2, p2 in enumerate(connected_pieces):
-            if p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.N.value):
-                connected_pieces[ip2].connected_[p2.orientation.index(Directions.S)] = True
-                left_pieces[tmp_ip].connected_[
-                    left_pieces[tmp_ip].orientation.index(Directions.N)] = True
-            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.S.value):
-                connected_pieces[ip2].connected_[p2.orientation.index(Directions.N)] = True
-                left_pieces[tmp_ip].connected_[
-                    left_pieces[tmp_ip].orientation.index(Directions.S)] = True
-            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.W.value):
-                connected_pieces[ip2].connected_[p2.orientation.index(Directions.E)] = True
-                left_pieces[tmp_ip].connected_[
-                    left_pieces[tmp_ip].orientation.index(Directions.W)] = True
-            elif p2.position == add_tuples(left_pieces[tmp_ip].position, Directions.E.value):
-                connected_pieces[ip2].connected_[p2.orientation.index(Directions.W)] = True
-                left_pieces[tmp_ip].connected_[
-                    left_pieces[tmp_ip].orientation.index(Directions.E)] = True
+
+        old_coord = list(filter(lambda x: x[1] == curr_p, connected_directions))[0][0]
+        new_coord = add_tuple(old_coord, dir.value)
+
+        for (coord, p) in connected_directions:
+            for d in directions:
+                if equals_tuple(coord, add_tuple(new_coord, d.value)):
+                    for edge in best_p:
+                        if edge.direction == d:
+                            edge.connected = True
+                            break
+                    for edge in p:
+                        if edge.direction == get_opposite_direction(d):
+                            edge.connected = True
+                            break
+
+
 
     def stick_best(self, cur_piece, cur_edge, pieces, border=False):
         if cur_edge.connected:
@@ -226,15 +207,15 @@ class Puzzle():
         for p in self.pieces_:
             for e in p.edges_:
                 for p in e:
-                    if p[0][0] < minX:
-                        minX = p[0][0]
-                    if p[0][1] < minY:
-                        minY = p[0][1]
+                    if p[0] < minX:
+                        minX = p[0]
+                    if p[1] < minY:
+                        minY = p[1]
 
-        for ip, p in enumerate(self.pieces_):
-            for ie, e in enumerate(p.edges_):
-                for i, p in enumerate(e):
-                    self.pieces_[ip].edges_[ie][i] += (-minX, -minY)
+        for p in self.pieces_:
+            for e in p.edges_:
+                for ip, _ in enumerate(e):
+                    e.shape[ip] += (-minX, -minY)
 
         for piece in self.pieces_:
             for p in piece.img_piece_:
@@ -260,9 +241,9 @@ class Puzzle():
                 p.apply(colored_img)
             # Contours
             for i in range(4):
-                for p in piece.edges_[i]:
-                    if p[0][0] < self.extract.img_bw.shape[1] and p[0][1] < self.extract.img_bw.shape[0]:
-                        tests_img[p[0][1], p[0][0]] = 255
+                for p in piece.edges_.shape[i]:
+                    if p[0] < self.extract.img_bw.shape[1] and p[1] < self.extract.img_bw.shape[0]:
+                        tests_img[p[1], p[0]] = 255
 
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
         cv2.imwrite(path_contour, tests_img)
