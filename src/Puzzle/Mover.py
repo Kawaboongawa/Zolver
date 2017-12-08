@@ -32,6 +32,8 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
             edge.shape[i] = rotate(bloc_e.shape[0], point, -angle)
 
     if final_stick:
+        print(translation, angle)
         for pixel in p.img_piece_:
             pixel.translate(translation[1], translation[0])
-            pixel.rotate(e.shape[0], -angle)
+            pixel.rotate(bloc_e.shape[0], -angle)
+

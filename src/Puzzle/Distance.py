@@ -4,16 +4,30 @@ import math
 def normalize_vect_len(e1, e2):
     longest = e1 if len(e1) > len(e2) else e2
     shortest = e2 if len(e1) > len(e2) else e1
-    indexes = np.array(range(len(longest)))
-    np.random.shuffle(indexes)
-    indexes = indexes[:len(shortest)]
-    longest = longest[sorted(indexes)]
+    # indexes = np.array(range(len(longest)))
+    # np.random.shuffle(indexes)
+    # indexes = indexes[:len(shortest)]
+    # longest = longest[sorted(indexes)]
     return shortest, longest
+
+
+def diff_match_edges2(e1, e2, reverse=True):
+    shortest, longest = normalize_vect_len(e1, e2)
+    diff = 0
+    for i, p in enumerate(shortest):
+        ratio = len(shortest) / i
+        j = int(len(longest) * ratio)
+        x1, y1 = longest[j]
+        x2, y2 = shortest[i]
+        diff += (x2 - x1) ** 2 + (y2 - y1) ** 2
+    return
+
 
 
 # Match edges by performing a simple norm on each points
 def diff_match_edges(e1, e2, reverse=True):
     diff = 0
+    # print(e1[0], e2[0])
     for i, p in enumerate(e1):
         if i < len(e2):
             if reverse:
@@ -22,6 +36,7 @@ def diff_match_edges(e1, e2, reverse=True):
                 diff += np.linalg.norm(p - e2[len(e2) - i - 1])
         else:
             break
+    # print(diff)
     return diff
     # if len(e2) < len(e1) * 0.9 or len(e2) > len(e1) * 1.1:
     #     return float('inf')

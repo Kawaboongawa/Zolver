@@ -188,13 +188,13 @@ class Puzzle():
             stick_pieces(cur_piece, cur_edge, piece, edge)
 
             # print("forme", diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece]),"color", diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
-            diff.append(0 * diff_match_edges(edge.color, cur_edge.color, reverse=True)
-                        + 1 * diff_match_edges(edge.shape, cur_edge.shape))
+            # diff.append(0 * diff_match_edges(edge.color, cur_edge.color, reverse=True)
+            #             + 1 * diff_match_edges(edge.shape, cur_edge.shape))
 
+            diff.append(1 * diff_match_edges(edge.shape, cur_edge.shape))
             # Restore state of edges
             for e in piece.edges_:
                 e.restore_backup_shape()
-
 
         # Stick the best piece found
         best_p, best_e = edges_to_test[np.argmin(diff)]
