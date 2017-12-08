@@ -7,9 +7,11 @@ class Pixel:
         self.pos = pos
         self.color = color
 
-    def apply(self, img):
-        if self.pos[0] >= 0 and self.pos[1] >= 0 and self.pos[0] < img.shape[0] and self.pos[1] < img.shape[1]:
-            img[self.pos] = self.color
+    def apply(self, img, dx=0, dy=0):
+        x, y = self.pos
+        x, y = x + dx, y + dy
+        if x >= 0 and y >= 0 and x < img.shape[0] and y < img.shape[1]:
+            img[(x, y)] = self.color
 
     def translate(self, dx, dy):
         self.pos = (self.pos[0] + dx, self.pos[1] + dy)

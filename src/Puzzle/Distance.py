@@ -15,12 +15,12 @@ def diff_match_edges2(e1, e2, reverse=True):
     shortest, longest = normalize_vect_len(e1, e2)
     diff = 0
     for i, p in enumerate(shortest):
-        ratio = len(shortest) / i
+        ratio = i / len(shortest)
         j = int(len(longest) * ratio)
         x1, y1 = longest[j]
         x2, y2 = shortest[i]
         diff += (x2 - x1) ** 2 + (y2 - y1) ** 2
-    return
+    return diff / len(shortest)
 
 
 

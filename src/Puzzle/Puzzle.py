@@ -1,4 +1,4 @@
-from Puzzle.Distance import diff_match_edges
+from Puzzle.Distance import diff_match_edges, diff_match_edges2
 from Puzzle.PuzzlePiece import *
 
 from Puzzle.Extractor import Extractor
@@ -45,7 +45,7 @@ class Puzzle():
         # self.solve(self.pieces_, non_border_pieces)
         print('>>> SAVING result...')
         self.translate_puzzle()
-        self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
+        self.export_pieces("/tmp/stick.png", "/tmp/colored.png", centered=True)
 
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
@@ -223,7 +223,8 @@ class Puzzle():
             for p in piece.img_piece_:
                 p.translate(minX, minY)
 
-    def export_pieces(self, path_contour, path_colored):
+    def export_pieces(self, path_contour, path_colored, centered=False):
+        # Center true has a border effect, do not call it before the end!
 
         print('Build final images')
         minX, minY = float('inf'), float('inf')
@@ -235,16 +236,16 @@ class Puzzle():
                 maxX, maxY = max(maxX, x), max(maxY, y)
 
         colored_img = np.zeros((maxX - minX, maxY - minY, 3))
+
         border_img = np.zeros_like(self.extract.img_bw)
 
         for piece in self.pieces_:
             for p in piece.img_piece_:
-                p.translate(-minX, -minY)
-                p.apply(colored_img)
+                p.apply(colored_img, dx=-minX, dy=-minY)
             # Contours
             for e in piece.edges_:
                 for p in e.shape:
-                    if p[0] < self.extract.img_bw.shape[1] and p[1] < self.extract.img_bw.shape[0]:
+                    if 0 <= p[0] < self.extract.img_bw.shape[1] and 0 <= p[1] < self.extract.img_bw.shape[0]:
                         border_img[p[1], p[0]] = 255
 
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
