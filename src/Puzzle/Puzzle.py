@@ -208,15 +208,15 @@ class Puzzle():
         minY = sys.maxsize
         for p in self.pieces_:
             for e in p.edges_:
-                for p in e:
-                    if p[0] < minX:
-                        minX = p[0]
-                    if p[1] < minY:
-                        minY = p[1]
+                for pixel in e.shape:
+                    if pixel[0] < minX:
+                        minX = pixel[0]
+                    if pixel[1] < minY:
+                        minY = pixel[1]
 
         for p in self.pieces_:
             for e in p.edges_:
-                for ip, _ in enumerate(e):
+                for ip, _ in enumerate(e.shape):
                     e.shape[ip] += (-minX, -minY)
 
         for piece in self.pieces_:

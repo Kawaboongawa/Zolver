@@ -46,7 +46,7 @@ class Extractor():
 
         # In case with fail to find the pieces, we fill some holes and then try again
         nb_error_max = 42
-        # while True: #FIXME Fix this stupid try catch....
+        # while True: #FIXME Fix this stupid try catch.... @Denis
         #     try:
         self.img_bw, contours, hier = cv2.findContours(self.img_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)

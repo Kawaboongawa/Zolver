@@ -186,7 +186,7 @@ def my_find_corners(img, cnt):
         edges.append(cnt[indices[i]:indices[i + 1]])
     edges.append(np.concatenate((cnt[indices[3]:], cnt[:indices[0]]), axis=0))
 
-    edges = np.array([np.array([x[0] for x in e]) for e in edges])  # quick'n'dirty fix of the shape
+    edges = [np.array([x[0] for x in e]) for e in edges]  # quick'n'dirty fix of the shape
     return corners, edges
 
 def compute_comp(combs_l, relative_angles, signatures):

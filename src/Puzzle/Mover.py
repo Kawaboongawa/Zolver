@@ -19,7 +19,7 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
     vec_bloc = np.subtract(bloc_e.shape[0], bloc_e.shape[-1])
     vec_piece = np.subtract(e.shape[0], e.shape[-1])
 
-    translation = np.subtract(bloc_e.shape[0], bloc_e.shape[-1])
+    translation = np.subtract(bloc_e.shape[0], e.shape[-1])
     angle = angle_between((vec_bloc[0], vec_bloc[1], 0), (-vec_piece[0], -vec_piece[1], 0))
 
     # First move the first corner of piece to the corner of bloc edge
