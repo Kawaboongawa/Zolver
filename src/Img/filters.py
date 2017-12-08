@@ -14,6 +14,7 @@ from Puzzle.Enums import directions, TypeEdge
 from Puzzle.PuzzlePiece import PuzzlePiece
 from Puzzle.PuzzlePiece import normalize_edge, normalize_list
 import matplotlib.pyplot as plt
+import matplotlib
 import scipy, sklearn.preprocessing
 import itertools
 
@@ -129,6 +130,8 @@ def get_relative_angles(cnt, export=False, norm=False):
 
     angles = []
     last = np.pi
+    cnt = np.append(cnt, [cnt[0]], axis=0)
+    cnt = np.append(cnt, [cnt[1]], axis=0)
     for i in range(0, len(cnt) - 1):
         dir = (cnt[i + 1][0] - cnt[i][0], cnt[i + 1][1] - cnt[i][1])
         angle = math.atan2(-dir[1], dir[0])
@@ -191,7 +194,7 @@ def my_find_corners(img, cnt):
     edges = [np.array([x[0] for x in e]) for e in edges]  # quick'n'dirty fix of the shape
     return corners, edges
 
-def compute_comp(combs_l, relative_angles, signatures):
+def compute_comp(combs_l, relative_angles, signatures, method='correlate'):
     # print('Number combs: ', len(combs_l))
     results_comp = []
     for comb in combs_l:
@@ -222,20 +225,31 @@ def compute_comp(combs_l, relative_angles, signatures):
             tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
             tmp_signature.append(np.array(signatures['borders']))
 
-        hole = np.correlate(tmp_relative[0], tmp_signature[0])
-        head = np.correlate(tmp_relative[1], tmp_signature[1])
-        border = np.correlate(tmp_relative[2], tmp_signature[2])
+        hole, head, border = 0, 0, 0
+        if method == 'correlate':
+            hole = np.correlate(tmp_relative[0], tmp_signature[0])
+            head = np.correlate(tmp_relative[1], tmp_signature[1])
+            border = np.correlate(tmp_relative[2], tmp_signature[2])
+        elif method == 'convolve':
+            hole = np.convolve(tmp_relative[0], tmp_signature[0], 'valid')
+            head = np.convolve(tmp_relative[1], tmp_signature[1], 'valid')
+            border = np.convolve(tmp_relative[2], tmp_signature[2], 'valid')
+        elif method == 'mean':
+            hole = (np.convolve(tmp_relative[0], tmp_signature[0], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
+            head = (np.convolve(tmp_relative[1], tmp_signature[1], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
+            border = (np.convolve(tmp_relative[2], tmp_signature[2], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
         results_comp.append([hole[0], head[0], border[0]])
 
     return results_comp
 
-def my_find_corner_signature(img, cnt):
+def my_find_corner_signature(img, cnt, piece_img):
     global COUNT
     COUNT = COUNT + 1
 
     corners = []
     edges = []
     signatures = load_signatures("dataset")
+
 
     # Try smooh signatures
     signatures['holes'] = scipy.ndimage.filters.gaussian_filter(signatures['holes'], 2)
@@ -293,7 +307,7 @@ def my_find_corner_signature(img, cnt):
             combs_l[icomb] = (comb[1], comb[0])
 
     # print('Number combs: ', len(combs_l))
-    results_comp = compute_comp(combs_l, relative_angles, signatures)
+    results_comp = compute_comp(combs_l, relative_angles, signatures, method='correlate')
 
     index_max_hole = np.argmax([x[0] for x in results_comp])
     index_max_head = np.argmax([x[1] for x in results_comp])
@@ -327,6 +341,8 @@ def my_find_corner_signature(img, cnt):
         extr[ie] = (extr[ie] + offset) % len(relative_angles)
     extr = np.append(extr, 0)
 
+    plt.figure(1)
+    plt.subplot(211)
     plt.axvline(x=np.max(extr), lw=1, color='red')
     plt.axvline(x=len(relative_angles) - 1, lw=1, color='red')
 
@@ -336,7 +352,7 @@ def my_find_corner_signature(img, cnt):
         if comb[0] > comb[1]:
             combs_l[icomb] = (comb[1], comb[0])
 
-    results_comp = compute_comp(combs_l, relative_angles, signatures)
+    results_comp = compute_comp(combs_l, relative_angles, signatures, method='correlate')
 
     for i in range(1, 4):
         if len(results_comp) == 0:
@@ -404,10 +420,18 @@ def my_find_corner_signature(img, cnt):
 
             # print("/tmp/extr" + str(COUNT) + ".png: ", 'index ', i, ' is a: ', t)
 
+
     for e in extr:
         plt.axvline(x=e, lw=0.2)
     plt.plot(relative_angles)
-    # plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png')
+    ax=plt.gca()
+    #ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.75))
+
+    plt.subplot(212)
+    plt.imshow(piece_img)
+    plt.axis("off")
+
+    #plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png', dpi=900)
     plt.clf()
     plt.cla()
     plt.close()
@@ -519,6 +543,7 @@ def export_contours(img, img_bw, contours, path, modulo):
 
         # print((h, h, 0), (corners[0][0] - x - centerX, corners[0][1] - y - centerY, 0), angle)
 
+        my_find_corner_signature(img_bw, cnt, out2)
         # rotated = imutils.rotate_bound(out2, angle)
         list_img.append(out2)
 
