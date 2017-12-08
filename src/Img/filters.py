@@ -240,7 +240,7 @@ def compute_comp(combs_l, relative_angles, signatures, method='correlate'):
 
     return results_comp
 
-def my_find_corner_signature(img, cnt, piece_img):
+def my_find_corner_signature(img, cnt, piece_img=None):
     global COUNT
     COUNT = COUNT + 1
 
@@ -419,20 +419,21 @@ def my_find_corner_signature(img, cnt, piece_img):
             # print("/tmp/extr" + str(COUNT) + ".png: ", 'index ', i, ' is a: ', t)
 
 
-    for e in extr:
-        plt.axvline(x=e, lw=0.2)
-    plt.plot(relative_angles)
-    ax=plt.gca()
-    #ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.75))
+    if piece_img is not None:
+        for e in extr:
+            plt.axvline(x=e, lw=0.2)
+        plt.plot(relative_angles)
+        ax=plt.gca()
+        #ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.75))
 
-    plt.subplot(212)
-    plt.imshow(piece_img)
-    plt.axis("off")
+        plt.subplot(212)
+        plt.imshow(piece_img)
+        plt.axis("off")
 
-    #plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png', dpi=900)
-    plt.clf()
-    plt.cla()
-    plt.close()
+        plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png', dpi=900)
+        plt.clf()
+        plt.cla()
+        plt.close()
 
     return corners, edges
 
@@ -451,7 +452,7 @@ def export_contours(img, img_bw, contours, path, modulo):
 
     for idx, cnt in enumerate(contours):
 
-        my_find_corner_signature(img_bw, cnt)
+        #my_find_corner_signature(img_bw, cnt)
         corners, edges_shape = my_find_corners(img_bw, cnt)
 
         mask_border = np.zeros_like(img_bw)
@@ -540,7 +541,7 @@ def export_contours(img, img_bw, contours, path, modulo):
 
         # print((h, h, 0), (corners[0][0] - x - centerX, corners[0][1] - y - centerY, 0), angle)
 
-        my_find_corner_signature(img_bw, cnt, out2)
+        my_find_corner_signature(img_bw, cnt)
         # rotated = imutils.rotate_bound(out2, angle)
         list_img.append(out2)
 
