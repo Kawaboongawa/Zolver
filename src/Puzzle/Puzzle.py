@@ -45,7 +45,7 @@ class Puzzle():
         # self.solve(self.pieces_, non_border_pieces)
         print('>>> SAVING result...')
         self.translate_puzzle()
-        self.export_pieces("/tmp/stick.png", "/tmp/colored.png", centered=True)
+        self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
 
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
@@ -106,7 +106,7 @@ class Puzzle():
                     break
                 if to_break:
                     break
-            self.export_pieces("/tmp/test_stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
+            self.export_pieces("/tmp/stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
         self.pieces_ = connected_pieces
 
 
@@ -223,10 +223,7 @@ class Puzzle():
             for p in piece.img_piece_:
                 p.translate(minX, minY)
 
-    def export_pieces(self, path_contour, path_colored, centered=False):
-        # Center true has a border effect, do not call it before the end!
-
-        print('Build final images')
+    def export_pieces(self, path_contour, path_colored):
         minX, minY = float('inf'), float('inf')
         maxX, maxY = -float('inf'), -float('inf')
         for piece in self.pieces_:
@@ -237,16 +234,17 @@ class Puzzle():
 
         colored_img = np.zeros((maxX - minX, maxY - minY, 3))
 
-        border_img = np.zeros_like(self.extract.img_bw)
+        border_img = np.zeros((maxX - minX, maxY - minY, 1))
 
         for piece in self.pieces_:
             for p in piece.img_piece_:
                 p.apply(colored_img, dx=-minX, dy=-minY)
             # Contours
             for e in piece.edges_:
-                for p in e.shape:
-                    if 0 <= p[0] < self.extract.img_bw.shape[1] and 0 <= p[1] < self.extract.img_bw.shape[0]:
-                        border_img[p[1], p[0]] = 255
+                for y, x in e.shape:
+                    y, x = y - minY, x - minX # trust me
+                    if 0 <= y < border_img.shape[1] and 0 <= x < border_img.shape[0]:
+                        border_img[x, y] = 255
 
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
         cv2.imwrite(path_contour, border_img)
