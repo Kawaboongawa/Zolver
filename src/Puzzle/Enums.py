@@ -21,7 +21,7 @@ def get_opposite_direction(dir1):
         if dir1.value[0] == -dir2.value[0] and dir1.value[1] == -dir2.value[1]:
             return dir2
 
-class TypePiece(Enum):
+class TypeEdge(Enum):
     HOLE = 0
     HEAD = 1
     BORDER = 2

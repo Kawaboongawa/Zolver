@@ -242,7 +242,7 @@ class Puzzle():
             # Contours
             for e in piece.edges_:
                 for y, x in e.shape:
-                    y, x = y - minY, x - minX # trust me
+                    y, x = y - minY, x - minX
                     if 0 <= y < border_img.shape[1] and 0 <= x < border_img.shape[0]:
                         border_img[x, y] = 255
 

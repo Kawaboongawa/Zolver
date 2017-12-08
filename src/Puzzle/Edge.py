@@ -1,10 +1,10 @@
 import numpy as np
 
-from Puzzle.Enums import TypePiece, Directions
+from Puzzle.Enums import TypeEdge, Directions
 
 
 class Edge:
-    def __init__(self, shape, color, type=TypePiece.HOLE, connected=False, direction=Directions.N):
+    def __init__(self, shape, color, type=TypeEdge.HOLE, connected=False, direction=Directions.N):
         self.shape = shape
         self.shape_backup = shape
         self.color = color

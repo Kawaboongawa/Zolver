@@ -8,7 +8,7 @@ import math, pickle, os
 
 from Img.Pixel import Pixel, flatten_colors
 from Puzzle.Edge import Edge
-from Puzzle.Enums import directions, TypePiece
+from Puzzle.Enums import directions, TypeEdge
 from Puzzle.PuzzlePiece import PuzzlePiece
 from Puzzle.PuzzlePiece import normalize_edge, normalize_list
 import matplotlib.pyplot as plt
@@ -482,7 +482,7 @@ def export_contours(img, img_bw, contours, path, modulo):
             e.direction = directions[i]
             if e.is_border(1000):
                 e.connected = True
-                e.type = TypePiece.BORDER
+                e.type = TypeEdge.BORDER
 
         puzzle_pieces.append(PuzzlePiece(edges, pixels))
         cv2.imwrite("/tmp/color_border.png", out_color)

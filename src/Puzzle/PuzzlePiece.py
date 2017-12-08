@@ -1,7 +1,7 @@
 import numpy as np
 
 from Img.FourierDescriptor import FourierDescriptor
-from Puzzle.Enums import directions, Directions, TypePiece
+from Puzzle.Enums import directions, Directions, TypeEdge
 
 
 def cart2pol(x, y):
@@ -63,4 +63,4 @@ class PuzzlePiece():
         return dst
 
     def number_of_border(self):
-        return len(list(filter(lambda x: x.type == TypePiece.BORDER, self.edges_)))
+        return len(list(filter(lambda x: x.type == TypeEdge.BORDER, self.edges_)))
