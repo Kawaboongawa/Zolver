@@ -26,3 +26,9 @@ class TypeEdge(Enum):
     HEAD = 1
     BORDER = 2
     UNDEFINED = 3
+
+
+class TypePiece(Enum):
+    CENTER = 0
+    BORDER = 1
+    ANGLE = 2

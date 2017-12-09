@@ -74,10 +74,17 @@ class Puzzle():
         # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
 
     def solve(self, connected_pieces, left_pieces, border=False):
+        angles = filter(lambda x: x.type == TypePiece.ANGLE, left_pieces)
+        borders = filter(lambda x: x.type == TypePiece.BORDER, left_pieces)
+        centers = filter(lambda x: x.type == TypePiece.CENTER, left_pieces)
         connected_directions = [((0, 0), connected_pieces[0])] # ((x, y), p), x & y relative to the first piece, init with 1st piece
+
+        diff = {}
+
 
         # while there are still pieces to connect...
         while len(left_pieces) > 0:
+            print("<--- New match --->")
             to_break = False
             for p in connected_pieces:
                 for e in p.edges_:
@@ -86,13 +93,6 @@ class Puzzle():
                     if e.connected:
                         continue
 
-                    # fixme à remettre ?
-                    # tmp = ie - 1 if ie != 0 else 3
-                    # if border and not (p.borders_[(ie + 1) % 4] or p.borders_[tmp]):
-                    #     continue
-
-                    print("<--- New match --->")
-                    # print("connected: {}".format(p.connected_))
                     # Stick best get a list of pieces to test and return the index of the best match (piece/edge)
                     best_p, best_e = self.stick_best(p, e, left_pieces, border)
 
@@ -108,6 +108,10 @@ class Puzzle():
                     break
             self.export_pieces("/tmp/stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
         self.pieces_ = connected_pieces
+
+
+    def compute_diffs(self, pieces):
+        pass
 
 
     def update_direction(self, e, best_p, best_e):
@@ -133,7 +137,6 @@ class Puzzle():
         # For example if I am going to put a piece at the marker 'O' only one edge will be connected to the piece
         # therefore we need to search the adjacent pieces and connect them properly
 
-        print(connected_directions)
         old_coord = list(filter(lambda x: x[1] == curr_p, connected_directions))[0][0]
         new_coord = add_tuple(old_coord, dir.value)
 
@@ -149,24 +152,14 @@ class Puzzle():
                             edge.connected = True
                             break
         connected_directions.append((new_coord, best_p))
+        print('matched:', list([e[0] for e in connected_directions]))
+
 
 
 
     def stick_best(self, cur_piece, cur_edge, pieces, border=False):
         if cur_edge.connected:
             return
-
-        # Fourier descriptor... Not used I think
-        # tests = []
-        # for index_piece, piece in enumerate(pieces):
-        #     if piece != cur_piece:
-        #         for index_edge, edge in enumerate(piece.edges_):
-        #             if border and piece.nBorders_ < 2 and piece.borders_[(index_edge + 2) % 4]:
-        #                 continue
-        #             tests.append((index_piece, index_edge, piece.fourier_descriptors_[index_edge].match_descriptors(
-        #                 cur_piece.fourier_descriptors_[edge_cur_piece])))
-        # l = sorted(tests, key=lambda x: x[2])
-        #return l[0][0], l[0][1]
 
         edges_to_test = []
         for piece in pieces:
@@ -177,24 +170,16 @@ class Puzzle():
                     if not edge.connected:
                         edges_to_test.append((piece, edge))
 
-
         diff = []
         for piece, edge in edges_to_test:
-            # Save edges to restore them
+            # Stick pieces to test distance
             for e in piece.edges_:
                 e.backup_shape()
-
-            # Stick pieces to test distance
             stick_pieces(cur_piece, cur_edge, piece, edge)
-
-            # print("forme", diff_match_edges(pieces[l[i][0]].edges_[l[i][1]], cur_piece.edges_[edge_cur_piece]),"color", diff_match_edges(pieces[l[i][0]].color_vect[l[i][1]], cur_piece.color_vect[edge_cur_piece]))
-            # diff.append(0 * diff_match_edges(edge.color, cur_edge.color, reverse=True)
-            #             + 1 * diff_match_edges(edge.shape, cur_edge.shape))
-
-            diff.append(1 * diff_match_edges(edge.shape, cur_edge.shape))
-            # Restore state of edges
             for e in piece.edges_:
                 e.restore_backup_shape()
+            diff.append(1 * diff_match_edges(edge.shape, cur_edge.shape))
+
 
         # Stick the best piece found
         best_p, best_e = edges_to_test[np.argmin(diff)]

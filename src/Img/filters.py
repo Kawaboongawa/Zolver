@@ -439,7 +439,6 @@ def export_contours(img, img_bw, contours, path, modulo):
         img_piece[mask_full == 255] = img[mask_full == 255]
 
         pixels = []
-        print(img_piece.shape)
         for x, y in tuple(zip(*np.where(mask_full == 255))):
             pixels.append(Pixel((x, y), img_piece[x, y]))
 

@@ -16,6 +16,10 @@ def rotate(origin, point, angle):
 
 
 def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
+    # Save edges to restore them
+    if not final_stick:
+        pass
+
     vec_bloc = np.subtract(bloc_e.shape[0], bloc_e.shape[-1])
     vec_piece = np.subtract(e.shape[0], e.shape[-1])
 
@@ -32,8 +36,9 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
             edge.shape[i] = rotate(bloc_e.shape[0], point, -angle)
 
     if final_stick:
-        print(translation, angle)
         for pixel in p.img_piece_:
             pixel.translate(translation[1], translation[0])
             pixel.rotate(bloc_e.shape[0], -angle)
-
+    else:
+        # Restore state of edges
+        pass

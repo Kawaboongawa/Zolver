@@ -1,7 +1,7 @@
 import numpy as np
 
 from Img.FourierDescriptor import FourierDescriptor
-from Puzzle.Enums import directions, Directions, TypeEdge
+from Puzzle.Enums import directions, Directions, TypeEdge, TypePiece
 
 
 def cart2pol(x, y):
@@ -50,6 +50,7 @@ class PuzzlePiece():
         self.edges_ = edges
         self.img_piece_ = img_piece  # List of Pixels
         self.nBorders_ = self.number_of_border()
+        self.type = TypePiece(self.nBorders_)
 
 
     def normalize_edges(self, edge, n):
