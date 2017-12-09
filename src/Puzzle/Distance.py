@@ -45,3 +45,6 @@ def diff_match_edges(e1, e2, reverse=True):
     # for i, p in enumerate(shortest):
     #     diff += np.linalg.norm(p[0] - longest[len(longest) - i - 1][0]) ** 2
     # return math.sqrt(diff / len(shortest))  # RMSE
+
+def diff_full_compute(e1, e2):
+    return 1 * diff_match_edges(e1.shape, e2.shape)

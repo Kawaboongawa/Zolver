@@ -1,4 +1,4 @@
-from Puzzle.Distance import diff_match_edges, diff_match_edges2
+from Puzzle.Distance import diff_match_edges, diff_match_edges2, diff_full_compute
 from Puzzle.PuzzlePiece import *
 
 from Puzzle.Extractor import Extractor
@@ -16,31 +16,41 @@ class Puzzle():
     def __init__(self, path, pixmapWidget=None):
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
+        self.connected_directions = []
+        self.diff = {}
+        self.edge_to_piece = {}
+        for p in self.pieces_:
+            for e in p.edges_:
+                self.edge_to_piece[e] = p
+
         print('>>> START solving puzzle')
 
-        # border_pieces = []
-        # non_border_pieces = []
-        # # Separate border pieces from the other
-        # for piece in self.pieces_:
-        #     if piece.number_of_border():
-        #         border_pieces.append(piece)
-        #     else:
-        #         non_border_pieces.append(piece)
-        #
-        # # Start by a corner piece
-        # for piece in border_pieces:
-        #     if piece.number_of_border() > 1:
-        #         connected_pieces = [piece]
-        #         border_pieces.remove(piece)
-        #         break
-        # print("Number of border pieces: ", len(border_pieces) + 1)
-        # left_pieces = border_pieces
-        # self.solve(self.pieces_, non_border_pieces)
+        border_pieces = []
+        non_border_pieces = []
+        connected_pieces = []
+        # Separate border pieces from the other
+        for piece in self.pieces_:
+            if piece.number_of_border():
+                border_pieces.append(piece)
+            else:
+                non_border_pieces.append(piece)
 
-        connected_pieces = [self.pieces_[0]]
-        left_pieces = self.pieces_[1:]
-        self.solve(connected_pieces, left_pieces)
-        self.solve(connected_pieces, left_pieces, border=True)
+        # Start by a corner piece
+        for piece in border_pieces:
+            if piece.number_of_border() > 1:
+                connected_pieces = [piece]
+                border_pieces.remove(piece)
+                break
+        print("Number of border pieces: ", len(border_pieces) + 1)
+
+        print('>>> START solve border')
+        connected_pieces = self.solve(connected_pieces, border_pieces)
+        print('>>> START solve middle')
+        self.solve(connected_pieces, non_border_pieces)
+
+        # connected_pieces = [self.pieces_[0]]
+        # left_pieces = self.pieces_[1:]
+        # self.solve(connected_pieces, left_pieces)
         print('>>> SAVING result...')
         self.translate_puzzle()
         self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
@@ -75,60 +85,30 @@ class Puzzle():
         # angles = filter(lambda x: x.type == TypePiece.ANGLE, left_pieces)
         # borders = filter(lambda x: x.type == TypePiece.BORDER, left_pieces)
         # centers = filter(lambda x: x.type == TypePiece.CENTER, left_pieces)
-        connected_directions = [((0, 0), connected_pieces[0])] # ((x, y), p), x & y relative to the first piece, init with 1st piece
-        diff = {}  # edge on the border of the block -> edge on a left piece -> diff between edges
-        diff = self.compute_diffs(left_pieces, diff, connected_pieces[0])
-
-        edge_to_piece = {e: connected_pieces[0] for e in connected_pieces[0].edges_}
-        for p in left_pieces:
-            for e in p.edges_:
-                edge_to_piece[e] = p
+        if len(self.connected_directions) == 0:
+            self.connected_directions = [((0, 0), connected_pieces[0])] # ((x, y), p), x & y relative to the first piece, init with 1st piece
+            self.diff = self.compute_diffs(left_pieces, self.diff, connected_pieces[0]) # edge on the border of the block -> edge on a left piece -> diff between edges
+        else:
+            self.diff = self.add_to_diffs(left_pieces)
 
         while len(left_pieces) > 0:
             print("<--- New match ---> (left: ", len(left_pieces), ')')
-            block_best_e, best_e = self.best_diff(diff)
-            block_best_p, best_p = edge_to_piece[block_best_e], edge_to_piece[best_e]
+            block_best_e, best_e = self.best_diff(self.diff)
+            block_best_p, best_p = self.edge_to_piece[block_best_e], self.edge_to_piece[best_e]
 
             stick_pieces(block_best_p, block_best_e, best_p, best_e, final_stick=True)
 
             self.update_direction(block_best_e, best_p, best_e)
-            self.connect_piece(connected_directions, block_best_p, block_best_e.direction, best_p)
+            self.connect_piece(self.connected_directions, block_best_p, block_best_e.direction, best_p)
 
             connected_pieces.append(best_p)
             del left_pieces[left_pieces.index(best_p)]
 
-            diff = self.compute_diffs(left_pieces, diff, best_p, edge_connected=block_best_e)
+            self.diff = self.compute_diffs(left_pieces, self.diff, best_p, edge_connected=block_best_e)
             self.export_pieces("/tmp/stick" + str(len(left_pieces)) + ".png",
                                "/tmp/colored" + str(len(left_pieces)) + ".png")
 
-        self.pieces_ = connected_pieces
-
-        # while there are still pieces to connect...
-        # while len(left_pieces) > 0:
-        #     print("<--- New match --->")
-        #     to_break = False
-        #     for p in connected_pieces:
-        #         for e in p.edges_:
-        #             # for each connected_pieces, for each edges, if the edges is not connected we need
-        #             # to find the correct piece/edge to connect the piece to
-        #             if e.connected:
-        #                 continue
-        #
-        #             # Stick best get a list of pieces to test and return the index of the best match (piece/edge)
-        #             best_p, best_e = self.stick_best(p, e, left_pieces, border)
-        #
-        #             self.update_direction(e, best_p, best_e)
-        #             self.connect_piece(connected_directions, p, e.direction, best_p)
-        #
-        #             # We are adding pieces to connected_pieces while looping into it so I break
-        #             connected_pieces.append(best_p)
-        #             del left_pieces[left_pieces.index(best_p)]
-        #             to_break = True
-        #             break
-        #         if to_break:
-        #             break
-        #     self.export_pieces("/tmp/stick" + str(len(left_pieces)) + ".png", "/tmp/colored" + str(len(left_pieces)) + ".png")
-        # self.pieces_ = connected_pieces
+        return connected_pieces
 
 
     def compute_diffs(self, left_pieces, diff, new_connected, edge_connected=None):
@@ -157,7 +137,7 @@ class Puzzle():
                 for e2 in piece.edges_:
                     e2.backup_shape()
                 stick_pieces(new_connected, e, piece, edge)
-                diff_e[edge] = 1 * diff_match_edges(edge.shape, e.shape)
+                diff_e[edge] = diff_full_compute(edge, e)
 
                 for e2 in piece.edges_:
                     e2.restore_backup_shape()
@@ -173,6 +153,29 @@ class Puzzle():
                 if diff_score < min_diff:
                     best_bloc_e, best_e, min_diff = block_e, e, diff_score
         return best_bloc_e, best_e
+
+
+
+    def add_to_diffs(self, left_pieces):
+        # build the list of edge to test
+        edges_to_test = []
+        for piece in left_pieces:
+            for edge in piece.edges_:
+                if not edge.connected:
+                    edges_to_test.append((piece, edge))
+
+        for e, diff_e in self.diff.items():
+            for piece, edge in edges_to_test:
+                for e2 in piece.edges_:
+                    e2.backup_shape()
+                stick_pieces(self.edge_to_piece[e], e, piece, edge)
+                diff_e[edge] = diff_full_compute(edge, e)
+
+                for e2 in piece.edges_:
+                    e2.restore_backup_shape()
+
+        return self.diff
+
 
     def update_direction(self, e, best_p, best_e):
         opp = get_opposite_direction(e.direction)
