@@ -21,8 +21,8 @@ def show_multiple_images(imgs):
 class Extractor():
     def __init__(self, path, pixmapWidget=None):
         self.path = path
-        self.img = cv2.imread(self.path, 1)
-        self.img_bw = cv2.imread(self.path, 1)
+        self.img = cv2.imread(self.path, cv2.IMREAD_COLOR)
+        self.img_bw = cv2.imread(self.path, cv2.IMREAD_GRAYSCALE)
         self.pixmapWidget = pixmapWidget
 
     def extract(self):
@@ -34,7 +34,7 @@ class Extractor():
             self.pixmapWidget.add_image_widget("/tmp/binarized.png", 0, 0)
 
         # show_image(self.img_bw)
-        self.img_bw = cv2.cvtColor(self.img_bw, cv2.COLOR_BGR2GRAY)
+        # self.img_bw = cv2.cvtColor(self.img_bw, cv2.COLOR_RGB2GRAY)
         show_image(self.img_bw)
 
         def test_otsus():
@@ -174,13 +174,24 @@ class Extractor():
             show_image(mgrad)
             self.img_bw = np.max(mgrad, axis=2)  # BGR 2 GRAY
 
+            def f(x):
+                if x < 5:
+                    return 0
+                else:
+                    return 255
+
+            f = np.vectorize(f)
+
+            # self.img_bw = f(self.img_bw)
             # TODO: numperize this
             for i, tab in enumerate(self.img_bw):
-                for j, elt in enumerate(tab):
-                    if self.img_bw[i, j] < 10:
-                        self.img_bw[i, j] = 0
-                    else:
-                        self.img_bw[i, j] = 255
+                self.img_bw[i] = f(self.img_bw[i])
+            #     for j, elt in enumerate(tab):
+            #         if self.img_bw[i, j] < 5:
+            #             self.img_bw[i, j] = 0
+            #         else:
+            #             self.img_bw[i, j] = 255
+
             # self.img_bw = np.apply_along_axis(lambda x: 255 if x > 0 else 0, 0, self.img_bw)
             show_image(self.img_bw)
             return
@@ -204,14 +215,15 @@ class Extractor():
                 self.img_bw = mgrad
                 # self.img_bw = cv2.bitwise_not(self.img_bw)
                 print('Finished noise otsu')
-                show_image(self.img_bw)
 
 
         test_noise_otsu(splitOtsu=True, replace=True)
 
         # self.img_bw = cv2.adaptiveThreshold(self.img_bw, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
         #                              cv2.THRESH_BINARY, 11, 2)
-        _, self.img_bw = cv2.threshold(self.img_bw, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # FIXME: IS THIS OTSU USELESS?
+        # _, self.img_bw = cv2.threshold(self.img_bw, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         # self.img_bw = cv2.bitwise_not(self.img_bw)
         show_image(self.img_bw)
         fill_holes()
@@ -241,9 +253,15 @@ class Extractor():
 
         nb_pieces = None
         if len(sys.argv) > 2:
+            # Number of pieces specified by user
             nb_pieces = int(sys.argv[2])
-        if nb_pieces is not None:
             contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)[:nb_pieces]
+            print('Found nb pieces: ' + str(len(contours)))
+        else:
+            # Try to remove useless contours
+            contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)
+            max = contours[1].shape[0]
+            contours = np.array([elt for elt in contours if elt.shape[0] > max / 2])
             print('Found nb pieces: ' + str(len(contours)))
 
         whiteImg = np.zeros(self.img_bw.shape)
