@@ -1,10 +1,11 @@
 import cv2
 from scipy.signal import savgol_filter
 import numpy as np
-from scipy.spatial import distance
+import scipy.misc
 import imutils
 import random
 import math, pickle, os
+import sklearn.preprocessing
 
 from Img.Pixel import Pixel, flatten_colors
 from Puzzle.Edge import Edge
@@ -15,7 +16,9 @@ import matplotlib.pyplot as plt
 import matplotlib
 import scipy, sklearn.preprocessing
 import itertools
-
+from scipy.spatial.distance import euclidean, chebyshev
+from fastdtw import fastdtw
+from Img.peak_detect import *
 
 def auto_canny(img, sigma=0.33):
     # compute the median of the single channel pixel intensities
@@ -126,10 +129,13 @@ def get_relative_angles(cnt, export=False, norm=False):
     global COUNT
     COUNT = COUNT + 1
 
+    length = len(cnt)
     angles = []
     last = np.pi
-    cnt = np.append(cnt, [cnt[0]], axis=0)
-    cnt = np.append(cnt, [cnt[1]], axis=0)
+
+    cnt_tmp = np.array(cnt)
+    cnt = np.append(cnt, cnt_tmp, axis=0)
+    cnt = np.append(cnt, cnt_tmp, axis=0)
     for i in range(0, len(cnt) - 1):
         dir = (cnt[i + 1][0] - cnt[i][0], cnt[i + 1][1] - cnt[i][1])
         angle = math.atan2(-dir[1], dir[0])
@@ -140,12 +146,11 @@ def get_relative_angles(cnt, export=False, norm=False):
         angles.append(angle)
         last = angle
 
-    angles = np.gradient(angles)
-    angles = scipy.ndimage.filters.gaussian_filter(angles, 1)
-    if norm:
-        n = np.linalg.norm(angles)
-        if n != 0:
-            angles = angles / n
+    angles = np.diff(angles)
+    angles = scipy.ndimage.filters.gaussian_filter(angles, 10)
+
+    angles = np.roll(np.array(angles), length)
+    angles = angles[0:length]
 
     # clamp(angles)
     # angles = sklearn.preprocessing.binarize(np.array(angles).reshape((len(cnt) - 1, 1)), threshold=0.1)
@@ -192,53 +197,217 @@ def my_find_corners(img, cnt):
     edges = [np.array([x[0] for x in e]) for e in edges]  # quick'n'dirty fix of the shape
     return corners, edges
 
+# Determine if a point at index is a maximum local in radius range of relative_angles function
+def is_maximum_local(index, relative_angles, radius):
+    start = max(0, index - radius)
+    end = min(relative_angles.shape[0] - 1, index + radius)
+    for i in range(start, end + 1):
+        if relative_angles[i] > relative_angles[index]:
+            return False
+    return True
+
+# Longest area < 0
+def longest_peak(relative_angles):
+    length = relative_angles.shape[0]
+    longest = (0, 0)
+    j = 0
+    for i in range(length):
+        if relative_angles[i] >= 0:
+            j = i
+        if i - j > longest[1] - longest[0]:
+            longest = (j, i)
+    return longest
+
+# Distance of each points to the line formed by first and last points
+def distance_signature(relative_angles):
+    length = relative_angles.shape[0]
+    
+    l1 = np.array([0, relative_angles[0]])
+    l2 = np.array([length - 1, relative_angles[-1]])
+    
+    '''
+    #TESTS FOR LINE FLAT
+    l1 = np.array([0, 0])
+    l2 = np.array([length - 1, 0])
+    '''
+    signature = np.zeros((length, 1))
+
+    for i in range(length):
+        assert(np.linalg.norm(l2 - l1) != 0)
+        signature[i] = np.linalg.norm(np.cross(l2 - l1, l1 - np.array([i, relative_angles[i]]))) / np.linalg.norm(l2 - l1)
+    
+    return signature
+
+# Flat score
+def flat_score(relative_angles):
+    length = relative_angles.shape[0]
+    distances = distance_signature(relative_angles)
+    diff = 0
+    for i in range(length):
+        diff = max(diff, abs(distances[i]))
+    return diff
+
+# Compute score for indent part
+def indent_score(relative_angles):
+    length = relative_angles.shape[0]
+    peak = longest_peak(relative_angles)
+
+    while peak[0] > 0 and not is_maximum_local(peak[0], relative_angles, 10):
+        peak = (peak[0] - 1, peak[1])
+    while peak[1] < length - 1 and not is_maximum_local(peak[1], relative_angles, 10):
+        peak = (peak[0], peak[1] + 1)
+
+    shape = np.zeros((peak[0] + length - peak[1], 1))
+    for i in range(peak[0] + 1):
+        shape[i] = relative_angles[i]
+    for i in range(peak[1], length):
+        shape[i - peak[1] + peak[0]] = relative_angles[i]
+
+    '''
+    plt.plot(relative_angles)
+    plt.plot(shape)
+    plt.savefig("/tmp/test.png", format='png')
+    plt.clf()
+    plt.cla()
+    plt.close()
+    exit()
+    '''
+
+    # FIX FOR FUNCTIONS > 0
+    if shape.shape[0] == 1:
+        return flat_score(relative_angles)
+    return flat_score(shape)
+
+# Compute score for outdent part
+def outdent_score(relative_angles):
+    return indent_score(-relative_angles)
+
 def compute_comp(combs_l, relative_angles, signatures, method='correlate'):
-    # print('Number combs: ', len(combs_l))
-    results_comp = []
-    for comb in combs_l:
-        if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
-            results_comp.append([-1000000, -1000000, -1000000])
-            continue
+    # Combinations of 4 points
+    print("Number combinations: ", len(combs_l))
+    global COUNT
+    MY_COUNT = 0
 
-        tmp_relative = []
-        tmp_signature = []
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-            tmp_signature.append(np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
-            tmp_signature.append(np.array(signatures['holes']))
+    results_glob = []
+    for comb_t in combs_l:
 
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-            tmp_signature.append(np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
-            tmp_signature.append(np.array(signatures['heads']))
+        # Roll the values of relative angles for this combination
+        offset = len(relative_angles) - comb_t[3] - 1
+        relative_angles_tmp = np.roll(relative_angles, offset)
+        comb_t += offset
+        comb_t = [(0, comb_t[0]), (comb_t[0], comb_t[1]), (comb_t[1], comb_t[2]), (comb_t[2], comb_t[3])]
 
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-            tmp_signature.append(np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
-            tmp_signature.append(np.array(signatures['borders']))
+        results_comp = []
+        for comb in comb_t:
+            tmp_relative = []
+            tmp_signature = []
+        
+            '''
+            if len(relative_angles_tmp[comb[0]:comb[1]]) < len(signatures['holes']):
+                #tmp_signature.append(scipy.misc.imresize(signatures['holes'][:,np.newaxis],  (len(relative_angles_tmp[comb[0]:comb[1]]), 1), interp='bicubic'))
+                
+                tmp_signature.append(np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_relative.append(np.array(relative_angles_tmp[comb[0]:comb[1]]))
+            else:
+                #tmp_relative.append(scipy.misc.imresize(relative_angles_tmp[comb[0]:comb[1]][:,np.newaxis],  (len(signatures['holes']), 1), interp='bicubic'))
+                
+                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
+                tmp_signature.append(np.array(signatures['holes']))
 
-        hole, head, border = 0, 0, 0
-        if method == 'correlate':
-            hole = np.correlate(tmp_relative[0], tmp_signature[0])
-            head = np.correlate(tmp_relative[1], tmp_signature[1])
-            border = np.correlate(tmp_relative[2], tmp_signature[2])
-        elif method == 'convolve':
-            hole = np.convolve(tmp_relative[0], tmp_signature[0], 'valid')
-            head = np.convolve(tmp_relative[1], tmp_signature[1], 'valid')
-            border = np.convolve(tmp_relative[2], tmp_signature[2], 'valid')
-        elif method == 'mean':
-            hole = (np.convolve(tmp_relative[0], tmp_signature[0], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
-            head = (np.convolve(tmp_relative[1], tmp_signature[1], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
-            border = (np.convolve(tmp_relative[2], tmp_signature[2], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
-        results_comp.append([hole[0], head[0], border[0]])
+            if len(relative_angles_tmp[comb[0]:comb[1]]) < len(signatures['heads']):
+                #tmp_signature.append(scipy.misc.imresize(signatures['heads'][:,np.newaxis],  (len(relative_angles_tmp[comb[0]:comb[1]]), 1), interp='bicubic'))
+                
+                tmp_signature.append(np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_relative.append(np.array(relative_angles_tmp[comb[0]:comb[1]]))
+            else:
+                #tmp_relative.append(scipy.misc.imresize(relative_angles_tmp[comb[0]:comb[1]][:,np.newaxis],  (len(signatures['heads']), 1), interp='bicubic'))
+                
+                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
+                tmp_signature.append(np.array(signatures['heads']))
 
-    return results_comp
+            if len(relative_angles_tmp[comb[0]:comb[1]]) < len(signatures['borders']):
+                #tmp_signature.append(scipy.misc.imresize(signatures['borders'][:,np.newaxis],  (len(relative_angles_tmp[comb[0]:comb[1]]), 1), interp='bicubic'))
+                
+                tmp_signature.append(np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
+                tmp_relative.append(np.array(relative_angles_tmp[comb[0]:comb[1]]))
+            else:
+                #tmp_relative.append(scipy.misc.imresize(relative_angles_tmp[comb[0]:comb[1]][:,np.newaxis],  (len(signatures['borders']), 1), interp='bicubic'))
+                
+                tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
+                tmp_signature.append(np.array(signatures['borders']))
+            '''
+
+            hole, head, border = 0, 0, 0
+            if method == 'correlate':
+                hole = np.correlate(np.ravel(tmp_relative[0]), np.ravel(tmp_signature[0]))[0]
+                head = np.correlate(np.ravel(tmp_relative[1]), np.ravel(tmp_signature[1]))[0]
+                border = np.correlate(np.ravel(tmp_relative[2]), np.ravel(tmp_signature[2]))[0]
+            elif method == 'convolve':
+                hole = np.convolve(tmp_relative[0], tmp_signature[0], 'valid')[0]
+                head = np.convolve(tmp_relative[1], tmp_signature[1], 'valid')[0]
+                border = np.convolve(tmp_relative[2], tmp_signature[2], 'valid')[0]
+            elif method == 'mean':
+                hole = (np.convolve(tmp_relative[0], tmp_signature[0], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
+                head = (np.convolve(tmp_relative[1], tmp_signature[1], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
+                border = (np.convolve(tmp_relative[2], tmp_signature[2], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
+            elif method == 'dtw':
+                hole, path = fastdtw(np.ravel(relative_angles_tmp[comb[0]:comb[1]]), np.ravel(signatures['holes']), dist=euclidean)
+                head, path = fastdtw(np.ravel(relative_angles_tmp[comb[0]:comb[1]]), np.ravel(signatures['heads']), dist=euclidean)
+                border, path = fastdtw(np.ravel(relative_angles_tmp[comb[0]:comb[1]]), np.ravel(signatures['borders']), dist=euclidean)
+            elif method == 'euclidean':
+                tmp_relative[0] = sklearn.preprocessing.normalize(tmp_relative[0].reshape(-1,1), axis=0).ravel()
+                tmp_relative[1] = sklearn.preprocessing.normalize(tmp_relative[1].reshape(-1,1), axis=0).ravel()
+                tmp_relative[2] = sklearn.preprocessing.normalize(tmp_relative[2].reshape(-1,1), axis=0).ravel()
+                
+                tmp_relative[0] = scipy.ndimage.filters.gaussian_filter(tmp_relative[0], 2)
+                tmp_relative[1] = scipy.ndimage.filters.gaussian_filter(tmp_relative[1], 2)
+                tmp_relative[2] = scipy.ndimage.filters.gaussian_filter(tmp_relative[2], 2)
+
+                hole = euclidean(tmp_relative[0], tmp_signature[0])
+                head = euclidean(tmp_relative[1], tmp_signature[1])
+                border = euclidean(tmp_relative[2], tmp_signature[2])
+            elif method == 'chebyshev':
+                hole = chebyshev(np.ravel(tmp_relative[0]), np.ravel(tmp_signature[0]))
+                head = chebyshev(np.ravel(tmp_relative[1]), np.ravel(tmp_signature[1]))
+                border = chebyshev(np.ravel(tmp_relative[2]), np.ravel(tmp_signature[2]))
+            elif method == 'flat':
+                hole = indent_score(np.ravel(np.array(relative_angles_tmp[comb[0]:comb[1]])))
+                head = outdent_score(np.ravel(np.array(relative_angles_tmp[comb[0]:comb[1]])))
+                border = flat_score(np.ravel(np.array(relative_angles_tmp[comb[0]:comb[1]])))
+            
+            if COUNT == -1:
+                plt.plot(np.ravel(np.array(relative_angles_tmp[comb[0]:comb[1]])))
+                plt.savefig("/tmp/test-relative-" + str(COUNT) + '-' + str(MY_COUNT) + '-' + str(hole) + '-' + str(head) + '-' + str(border) + ".png", format='png')
+                plt.clf()
+                plt.cla()
+                plt.close()
+
+                MY_COUNT += 1
+            
+            #if COUNT == 18:
+            #    print([hole[0], head[0], border[0]])
+
+            # If best option is border there must be no peaks inside
+            '''
+            if np.min([hole, head, border]) == border:
+                for comb_t2 in combs_l:
+                    comb_t2 = (comb_t2 + offset) % len(relative_angles)
+                    for comb2 in comb_t2:
+                        if (comb2 > comb[0] and comb2 < comb[1]):
+                            border = 100000
+                            break
+                    if border == 100000:
+                        break
+            '''
+            if border > 10:
+                results_comp.append(np.min([hole, head]))
+            else:
+                results_comp.append(border)
+
+        results_glob.append(np.sum(results_comp))
+    
+    print(np.argmin(np.array(results_glob)))
+    return np.argmin(np.array(results_glob))
 
 def my_find_corner_signature(img, cnt, piece_img=None):
     global COUNT
@@ -249,19 +418,21 @@ def my_find_corner_signature(img, cnt, piece_img=None):
     signatures = load_signatures("dataset")
 
 
-    # Try smooh signatures
-    signatures['holes'] = scipy.ndimage.filters.gaussian_filter(signatures['holes'], 2)
-    signatures['heads'] = scipy.ndimage.filters.gaussian_filter(signatures['heads'], 2)
-    signatures['borders'] = scipy.ndimage.filters.gaussian_filter(signatures['borders'], 2)
+    # Try smooth signatures
+    signatures['holes'] = scipy.ndimage.filters.gaussian_filter(signatures['holes'], 10)
+    signatures['heads'] = scipy.ndimage.filters.gaussian_filter(signatures['heads'], 10)
+    #signatures['borders'] = scipy.ndimage.filters.gaussian_filter(signatures['borders'], 2)
 
     # Find relative angles
     cnt_convert = [c[0] for c in cnt]
-    cnt_convert = normalize_edge(cnt_convert, len(signatures['holes']) * 4)
-    relative_angles = get_relative_angles(np.array(cnt_convert), export=False)
+    #cnt_convert = normalize_edge(cnt_convert, len(signatures['holes']) * 4)
+    relative_angles = get_relative_angles(np.array(cnt_convert), export=True)
 
     # Introduce noise to find (flat peak flat) pattern
-    noise = 1e-8 * np.asarray(random.sample(range(0, 1000), len(relative_angles)))
-    relative_angles += noise
+    # noise = 1e-8 * np.asarray(random.sample(range(0, 1000), len(relative_angles)))
+    # relative_angles += noise
+    #noise = 1e-20 * np.asarray(random.sample(range(0, 1000), len(signatures['borders'])))
+    #signatures['borders'] += noise
 
     # Find edges
 
@@ -274,151 +445,59 @@ def my_find_corner_signature(img, cnt, piece_img=None):
         cnt_convert = normalize_edge(cnt_convert, len(signatures['holes']))
     '''
 
-    extr_tmp = scipy.signal.argrelextrema(relative_angles, np.greater, mode='wrap', order=1)
+    relative_angles = np.array(relative_angles)
+    #extr_tmp = scipy.signal.argrelextrema(relative_angles, np.greater, mode='wrap', order=1)
+    
+    extr_tmp = detect_peaks(relative_angles, mph=0.3*np.max(relative_angles))
+    relative_angles = np.roll(relative_angles, int(len(relative_angles) / 2))
+    extr_tmp = np.append(extr_tmp, (detect_peaks(relative_angles, mph=0.3*max(relative_angles)) - int(len(relative_angles) / 2)) % len(relative_angles), axis=0)
+    relative_angles = np.roll(relative_angles, -int(len(relative_angles) / 2))
+    extr_tmp = np.unique(extr_tmp)
 
-    # Keep only 20% max values
-    s = np.flip(np.argsort([relative_angles[x] for x in extr_tmp]), axis=1)[0]
-    extr = []
-    for i in range(int(len(extr_tmp[0]) * 0.2)):
-        extr.append(extr_tmp[0][s[i]])
+    # Keep only 15% max values
+    #s = np.flip(np.argsort([relative_angles[x] for x in extr_tmp]), axis=1)[0]
+    #extr = []
+    #for i in range(int(len(extr_tmp[0]))):
+    #    extr.append(extr_tmp[0][s[i]])
+    extr = extr_tmp
 
-    n = np.linalg.norm(relative_angles)
-    if n != 0:
-        relative_angles = relative_angles / n
+    #relative_angles = sklearn.preprocessing.normalize(relative_angles[:,np.newaxis], axis=0).ravel()
+    signatures['holes'] = sklearn.preprocessing.normalize(signatures['holes'][:,np.newaxis], axis=0).ravel()
+    signatures['heads'] = sklearn.preprocessing.normalize(signatures['heads'][:,np.newaxis], axis=0).ravel()
+    signatures['borders'] = sklearn.preprocessing.normalize(signatures['borders'][:,np.newaxis], axis=0).ravel()
 
-    n = np.linalg.norm(signatures['holes'])
-    if n != 0:
-        signatures['holes'] = signatures['holes'] / n
-
-    n = np.linalg.norm(signatures['heads'])
-    if n != 0:
-        signatures['heads'] = signatures['heads'] / n
-
-    n = np.linalg.norm(signatures['borders'])
-    if n != 0:
-        signatures['borders'] = signatures['borders'] / n
-
-    combs = itertools.combinations(extr, 2)
+    # Build list of permutations of 4 points
+    combs = itertools.permutations(extr, 4)
     combs_l = list(combs)
+    combs_final = []
+    OFFSET_LOW = len(relative_angles) / 8
+    OFFSET_HIGH = len(relative_angles) / 2
     for icomb, comb in enumerate(combs_l):
-        if comb[0] > comb[1]:
-            combs_l[icomb] = (comb[1], comb[0])
-
+        if ((comb[0] > comb[1]) and (comb[1] > comb[2]) and (comb[2] > comb[3])
+            and ((comb[0] - comb[1]) > OFFSET_LOW) and ((comb[0] - comb[1]) < OFFSET_HIGH)
+            and ((comb[1] - comb[2]) > OFFSET_LOW) and ((comb[1] - comb[2]) < OFFSET_HIGH)
+            and ((comb[2] - comb[3]) > OFFSET_LOW) and ((comb[2] - comb[3]) < OFFSET_HIGH)
+            and ((comb[3] + (len(relative_angles) - comb[0])) > OFFSET_LOW) and ((comb[3] + (len(relative_angles) - comb[0])) < OFFSET_HIGH)):
+            combs_final.append((comb[3], comb[2], comb[1], comb[0]))
+            
+    
     # print('Number combs: ', len(combs_l))
-    results_comp = compute_comp(combs_l, relative_angles, signatures, method='correlate')
+    best_fit = combs_final[compute_comp(combs_final, relative_angles, signatures, method='flat')]
 
-    index_max_hole = np.argmax([x[0] for x in results_comp])
-    index_max_head = np.argmax([x[1] for x in results_comp])
-    index_max_border = np.argmax([x[2] for x in results_comp])
-
-    to_remove = []
-    t = np.argmax([results_comp[index_max_hole][0], results_comp[index_max_head][1], results_comp[index_max_border][2]])
-    # print(t)
-
-    index = None
-    if t == 0:
-        index = index_max_hole
-    elif t == 1:
-        index = index_max_head
-    elif t == 2:
-        index = index_max_border
-
-    # Roll values
-    offset = len(relative_angles) - combs_l[index][1] - 1
+    # Roll the values of relative angles for this combination
+    offset = len(relative_angles) - best_fit[3] - 1
     relative_angles = np.roll(relative_angles, offset)
-
-    # Remove extremums between already found edge
-    extr_tmp = []
-    for ie, e in enumerate(extr):
-        if e > combs_l[index][0] and e <= combs_l[index][1]:
-            continue
-        extr_tmp.append(e)
-    extr = np.array(extr_tmp)
-
-    for ie, e in enumerate(extr):
-        extr[ie] = (extr[ie] + offset) % len(relative_angles)
-    extr = np.append(extr, 0)
+    best_fit += offset
+    extr = (extr + offset) % len(relative_angles)
 
     plt.figure(1)
     plt.subplot(211)
-    plt.axvline(x=np.max(extr), lw=1, color='red')
-    plt.axvline(x=len(relative_angles) - 1, lw=1, color='red')
-
-    combs = itertools.combinations(extr, 2)
-    combs_l = list(combs)
-    for icomb, comb in enumerate(combs_l):
-        if comb[0] > comb[1]:
-            combs_l[icomb] = (comb[1], comb[0])
-
-    results_comp = compute_comp(combs_l, relative_angles, signatures, method='correlate')
-
-    for i in range(1, 4):
-        if len(results_comp) == 0:
-            break
-
-        max_left = np.max([x[1] for x in combs_l])
-
-        if i == 3:
-            plt.axvline(x=0, lw=1, color='red')
-            plt.axvline(x=max_left, lw=1, color='red')
-            # TODO: Find type of edge
-            continue
-
-        index_max_hole = np.argmax(
-            [x[0] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
-        index_max_head = np.argmax(
-            [x[1] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
-        index_max_border = np.argmax(
-            [x[2] if combs_l[ix][1] == max_left else -100000 for ix, x in enumerate(results_comp)])
-
-        to_remove = []
-        t = np.argmax(
-            [results_comp[index_max_hole][0], results_comp[index_max_head][1], results_comp[index_max_border][2]])
-        if t == 0:
-
-            # print(combs_l[index_max_hole])
-            plt.axvline(x=combs_l[index_max_hole][0], lw=1, color='red')
-            plt.axvline(x=combs_l[index_max_hole][1], lw=1, color='red')
-
-            for ic, c in enumerate(combs_l):
-                if (c[0] <= combs_l[index_max_hole][0] and c[1] <= combs_l[index_max_hole][0]) or (
-                        c[0] >= combs_l[index_max_hole][1] and c[1] >= combs_l[index_max_hole][1]):
-                    continue
-                to_remove.append(ic)
-
-        elif t == 1:
-
-            # print(combs_l[index_max_head])
-            plt.axvline(x=combs_l[index_max_head][0], lw=1, color='red')
-            plt.axvline(x=combs_l[index_max_head][1], lw=1, color='red')
-
-            # Need remove all combs inside
-            for ic, c in enumerate(combs_l):
-                if (c[0] <= combs_l[index_max_head][0] and c[1] <= combs_l[index_max_head][0]) or (
-                        c[0] >= combs_l[index_max_head][1] and c[1] >= combs_l[index_max_head][1]):
-                    continue
-                to_remove.append(ic)
-
-        elif t == 2:
-
-            # print(combs_l[index_max_border])
-            plt.axvline(x=combs_l[index_max_border][0], lw=1, color='red')
-            plt.axvline(x=combs_l[index_max_border][1], lw=1, color='red')
-
-            # Need remove all combs inside
-            for ic, c in enumerate(combs_l):
-                if (c[0] <= combs_l[index_max_border][0] and c[1] <= combs_l[index_max_border][0]) or (
-                        c[0] >= combs_l[index_max_border][1] and c[1] >= combs_l[index_max_border][1]):
-                    continue
-                to_remove.append(ic)
-
-        for ic in sorted(to_remove, reverse=True):
-            del combs_l[ic]
-            del results_comp[ic]
-
-            # print("/tmp/extr" + str(COUNT) + ".png: ", 'index ', i, ' is a: ', t)
-
-
+    plt.axvline(x=0, lw=1, color='red')
+    plt.axvline(x=best_fit[0], lw=1, color='red')
+    plt.axvline(x=best_fit[1], lw=1, color='red')
+    plt.axvline(x=best_fit[2], lw=1, color='red')
+    plt.axvline(x=best_fit[3], lw=1, color='red')
+    
     if piece_img is not None:
         for e in extr:
             plt.axvline(x=e, lw=0.2)
@@ -541,7 +620,7 @@ def export_contours(img, img_bw, contours, path, modulo):
 
         # print((h, h, 0), (corners[0][0] - x - centerX, corners[0][1] - y - centerY, 0), angle)
 
-        my_find_corner_signature(img_bw, cnt)
+        my_find_corner_signature(img_bw, cnt, out2)
         # rotated = imutils.rotate_bound(out2, angle)
         list_img.append(out2)
 
