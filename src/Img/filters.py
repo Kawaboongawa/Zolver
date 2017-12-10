@@ -17,7 +17,6 @@ import matplotlib
 import scipy, sklearn.preprocessing
 import itertools
 from scipy.spatial.distance import euclidean, chebyshev
-from fastdtw import fastdtw
 from Img.peak_detect import *
 
 def auto_canny(img, sigma=0.33):
@@ -350,10 +349,6 @@ def compute_comp(combs_l, relative_angles, signatures, method='correlate'):
                 hole = (np.convolve(tmp_relative[0], tmp_signature[0], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
                 head = (np.convolve(tmp_relative[1], tmp_signature[1], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
                 border = (np.convolve(tmp_relative[2], tmp_signature[2], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
-            elif method == 'dtw':
-                hole, path = fastdtw(np.ravel(relative_angles_tmp[comb[0]:comb[1]]), np.ravel(signatures['holes']), dist=euclidean)
-                head, path = fastdtw(np.ravel(relative_angles_tmp[comb[0]:comb[1]]), np.ravel(signatures['heads']), dist=euclidean)
-                border, path = fastdtw(np.ravel(relative_angles_tmp[comb[0]:comb[1]]), np.ravel(signatures['borders']), dist=euclidean)
             elif method == 'euclidean':
                 tmp_relative[0] = sklearn.preprocessing.normalize(tmp_relative[0].reshape(-1,1), axis=0).ravel()
                 tmp_relative[1] = sklearn.preprocessing.normalize(tmp_relative[1].reshape(-1,1), axis=0).ravel()
@@ -461,7 +456,7 @@ def my_find_corner_signature(img, cnt, piece_img=None):
     #    extr.append(extr_tmp[0][s[i]])
     extr = extr_tmp
 
-    #relative_angles = sklearn.preprocessing.normalize(relative_angles[:,np.newaxis], axis=0).ravel()
+    relative_angles = sklearn.preprocessing.normalize(relative_angles[:,np.newaxis], axis=0).ravel()
     signatures['holes'] = sklearn.preprocessing.normalize(signatures['holes'][:,np.newaxis], axis=0).ravel()
     signatures['heads'] = sklearn.preprocessing.normalize(signatures['heads'][:,np.newaxis], axis=0).ravel()
     signatures['borders'] = sklearn.preprocessing.normalize(signatures['borders'][:,np.newaxis], axis=0).ravel()
