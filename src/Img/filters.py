@@ -548,7 +548,8 @@ def my_find_corner_signature(img, cnt, piece_img=None):
     edges.append(np.concatenate((cnt[best_fit_tmp[3]:], cnt[:best_fit_tmp[0]]), axis=0))
 
     edges = [np.array([x[0] for x in e]) for e in edges]  # quick'n'dirty fix of the shape
-    return best_fit, edges, types_pieces
+    types_pieces.append(types_pieces[0])
+    return best_fit, edges, types_pieces[1:]
 
 
 def angle_between(v1, v2):
@@ -565,8 +566,8 @@ def export_contours(img, img_bw, contours, path, modulo):
 
     for idx, cnt in enumerate(contours):
 
-        #my_find_corner_signature(img_bw, cnt)
-        corners, edges_shape = my_find_corners(img_bw, cnt)
+        corners, edges_shape, types_edges = my_find_corner_signature(img_bw, cnt)
+        #corners, edges_shape = my_find_corners(img_bw, cnt)
 
         mask_border = np.zeros_like(img_bw)
         mask_full = np.zeros_like(img_bw)
@@ -613,14 +614,15 @@ def export_contours(img, img_bw, contours, path, modulo):
             color_vect.append(np.array(color_edge))
 
         edges = []
+        cpt = 0
         for s, c in zip(edges_shape, color_vect):
-            edges.append(Edge(s, c))
+            edges.append(Edge(s, c, type=types_edges[cpt]))
+            cpt += 1
 
         for i, e in enumerate(edges):
             e.direction = directions[i]
-            if e.is_border(1000):
+            if e.type == TypeEdge.BORDER:
                 e.connected = True
-                e.type = TypeEdge.BORDER
 
         puzzle_pieces.append(PuzzlePiece(edges, pixels))
         cv2.imwrite("/tmp/color_border.png", out_color)
@@ -654,7 +656,8 @@ def export_contours(img, img_bw, contours, path, modulo):
 
         # print((h, h, 0), (corners[0][0] - x - centerX, corners[0][1] - y - centerY, 0), angle)
 
-        my_find_corner_signature(img_bw, cnt, out2)
+        #my_find_corner_signature(img_bw, cnt, out2)
+        
         # rotated = imutils.rotate_bound(out2, angle)
         list_img.append(out2)
 

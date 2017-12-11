@@ -150,8 +150,6 @@ class Puzzle():
                             break
         connected_directions.append((new_coord, best_p))
 
-
-
     def stick_best(self, cur_piece, cur_edge, pieces, border=False):
         if cur_edge.connected:
             return
@@ -167,6 +165,8 @@ class Puzzle():
         #                 cur_piece.fourier_descriptors_[edge_cur_piece])))
         # l = sorted(tests, key=lambda x: x[2])
         #return l[0][0], l[0][1]
+        def compatible_edges(e1, e2):
+            return (e1.type == TypeEdge.HOLE and e2.type == TypeEdge.HEAD) or (e1.type == TypeEdge.HEAD and e2.type == TypeEdge.HOLE)
 
         edges_to_test = []
         for piece in pieces:
@@ -174,6 +174,8 @@ class Puzzle():
                 for edge in piece.edges_:
                     # if border and piece.nBorders_ < 2 and piece.borders_[(index_edge + 2) % 4]: # FIXME ?
                     #     continue
+                    if not compatible_edges(edge, cur_edge):
+                        continue
                     if not edge.connected:
                         edges_to_test.append((piece, edge))
 
