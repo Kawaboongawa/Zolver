@@ -290,7 +290,7 @@ class Extractor():
                     # we remove all those indexes
                 index = index + 1
 
-        show_contours(contours, self.img_bw)
+        show_contours(contours, self.img_bw) # final contours
 
         puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
         # break
