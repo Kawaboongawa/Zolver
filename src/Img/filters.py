@@ -422,8 +422,9 @@ def my_find_corner_signature(img, cnt, piece_img=None):
         pos_peaks_inside.sort()
         neg_peaks_inside.sort()
         types_pieces.append(type_peak(pos_peaks_inside, neg_peaks_inside))
-        print(types_pieces[-1])
         if (types_pieces[-1] == TypeEdge.UNDEFINED):
+            print("UNDEFINED FOUND - try to continue but something bad happened :(")
+            print(types_pieces[-1])
             print(pos_peaks_inside)
             print(neg_peaks_inside)
             

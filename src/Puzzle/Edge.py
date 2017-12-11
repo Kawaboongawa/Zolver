@@ -27,4 +27,5 @@ class Edge:
         self.shape = self.shape_backup
 
     def is_compatible(self, e2):
-        return (self.type == TypeEdge.HOLE and e2.type == TypeEdge.HEAD) or (self.type == TypeEdge.HEAD and e2.type == TypeEdge.HOLE)
+        return (self.type == TypeEdge.HOLE and e2.type == TypeEdge.HEAD) or (self.type == TypeEdge.HEAD and e2.type == TypeEdge.HOLE) \
+               or self.type == TypeEdge.UNDEFINED or e2.type == TypeEdge.UNDEFINED
