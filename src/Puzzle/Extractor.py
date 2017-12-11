@@ -42,7 +42,7 @@ class Extractor():
 
         # show_image(self.img_bw)
         # self.img_bw = cv2.cvtColor(self.img_bw, cv2.COLOR_RGB2GRAY)
-        show_image(self.img_bw)
+        # show_image(self.img_bw)
 
         def test_otsus():
             tmp = [100, 150, 200, 240, 255]
@@ -174,11 +174,11 @@ class Extractor():
                 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
                 morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, kernel)
                 morph = cv2.morphologyEx(morph, cv2.MORPH_OPEN, kernel)
-            show_image(morph)
+            # show_image(morph)
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
             mgrad = cv2.morphologyEx(morph, cv2.MORPH_GRADIENT, kernel)
             print('Morphology gradient')
-            show_image(mgrad)
+            # show_image(mgrad)
             self.img_bw = np.max(mgrad, axis=2)  # BGR 2 GRAY
 
             def f(x):
@@ -200,7 +200,7 @@ class Extractor():
             #             self.img_bw[i, j] = 255
 
             # self.img_bw = np.apply_along_axis(lambda x: 255 if x > 0 else 0, 0, self.img_bw)
-            show_image(self.img_bw)
+            # show_image(self.img_bw)
             return
             if splitOtsu == True:
                 ch = cv2.split(mgrad)
@@ -208,11 +208,11 @@ class Extractor():
                 _, ch[1] = cv2.threshold(ch[1], 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
                 _, ch[2] = cv2.threshold(ch[2], 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
                 merged = cv2.merge(ch, 3)
-                show_image(merged)
+                # show_image(merged)
             else:
                 mgrad = cv2.cvtColor(mgrad, cv2.COLOR_BGR2GRAY)
                 _, mgrad = cv2.threshold(mgrad, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-                show_image(mgrad)
+                # show_image(mgrad)
             if replace == True:
                 # self.img_bw = cv2.bitwise_not(self.img_bw)
                 # ret, tmp = cv2.threshold(mgrad, 240, 255, cv2.THRESH_BINARY_INV)
@@ -234,7 +234,7 @@ class Extractor():
         # self.img_bw = cv2.bitwise_not(self.img_bw)
         # show_image(self.img_bw)
         fill_holes()
-        show_image(self.img_bw)
+        # show_image(self.img_bw)
 
         # apply_small_close()
         # show_image(self.img_bw)
@@ -273,7 +273,7 @@ class Extractor():
 
         # FIXME: remove me
         # contours[0] = ndimage.gaussian_filter(contours[0], sigma=1.0, order=0)
-        show_contours(contours, self.img_bw)
+        # show_contours(contours, self.img_bw)
 
         for i, _ in enumerate(contours):
             index = 0
@@ -290,7 +290,7 @@ class Extractor():
                     # we remove all those indexes
                 index = index + 1
 
-        show_contours(contours, self.img_bw)
+        # show_contours(contours, self.img_bw)
 
         puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
         # break
