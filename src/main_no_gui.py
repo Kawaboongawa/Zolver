@@ -8,8 +8,8 @@ plt.rcParams["figure.figsize"] = fig_size
 
 # Puzzle(sys.argv[1])
 path = '/home/hugo/ing3/pfe/zolver/resources/'
-# Puzzle(path + 'tomatoes.png')
-Puzzle(path + 'moogly.png')
+Puzzle(path + 'tomatoes.png')
+# Puzzle(path + 'moogly.png')
 # Puzzle(path + 'parpaing6.png')
 # Puzzle(path + 'statue.png')
 # Puzzle(path + 'colorfull.png')

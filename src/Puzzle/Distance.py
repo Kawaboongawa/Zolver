@@ -23,9 +23,20 @@ def diff_match_edges2(e1, e2, reverse=True):
     return diff / len(shortest)
 
 
+def diff_match_edges(e1, e2, reverse=True):
+    shortest, longest = normalize_vect_len(e1, e2)
+    diff = 0
+    for i, p in enumerate(shortest):
+        ratio = i / len(shortest)
+        j = int(len(longest) * ratio)
+        x1 = longest[j]
+        x2 = shortest[len(shortest) - i - 1] if reverse else shortest[i]
+        diff += (x2 - x1) ** 2
+    return diff / len(shortest)
+
 
 # Match edges by performing a simple norm on each points
-def diff_match_edges(e1, e2, reverse=True):
+def old_diff_match_edges(e1, e2, reverse=True):
     diff = 0
     # print(e1[0], e2[0])
     for i, p in enumerate(e1):
@@ -38,14 +49,14 @@ def diff_match_edges(e1, e2, reverse=True):
             break
     # print(diff)
     return diff
-    # if len(e2) < len(e1) * 0.9 or len(e2) > len(e1) * 1.1:
-    #     return float('inf')
-    # shortest, longest = normalize_vect_len(e1, e2)
-    # diff = 0
-    # for i, p in enumerate(shortest):
-    #     diff += np.linalg.norm(p[0] - longest[len(longest) - i - 1][0]) ** 2
-    # return math.sqrt(diff / len(shortest))  # RMSE
+
 
 def diff_full_compute(e1, e2):
-    # return 1 * diff_match_edges2(e1.shape, e2.shape)
-    return 1 * diff_match_edges(e1.color, e2.color, reverse=False)
+    return 1 * old_diff_match_edges(e1.shape, e2.shape)
+    return diff_match_edges(e1.color, e2.color, reverse=False)
+    a, b, c, d = 5, 1, 5, 1  # TCMS
+    a, b, c, d = 0, 1, 1, 1  # TCMS
+    return a * diff_match_edges2(e1.shape, e2.shape) \
+           + b * diff_match_edges(e1.color[:, 0], e2.color[:, 0]) \
+           + c * diff_match_edges(e1.color[:, 1], e2.color[:, 1]) \
+           + d * diff_match_edges(e1.color[:, 2], e2.color[:, 2])
