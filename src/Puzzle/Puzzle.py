@@ -155,38 +155,47 @@ class Puzzle():
 
         if self.strategy == Strategy.FILL:
             minX, minY, maxX, maxY = self.extremum
-            best_coord = []
+            best_coords = []
 
             # this is ugly
             for i in range(4, -1, -1): # 4 to 0
+                best_coord = []
                 for x in range(minX, maxX + 1):
                     for y in range(minY, maxY + 1):
                         neighbor = list(filter(lambda e: is_neigbhor((x, y), e[0], connected_direction), connected_direction))
                         if len(neighbor) == i:
                             best_coord.append(((x, y), neighbor))
-                if len(best_coord):
-                    print(i, best_coord)
-                    break
+                best_coords.append(best_coord)
 
-            for c, neighbor in best_coord:
-                for p in left_piece:
-                    for rotation in range(4):
-                        diff_score = 0
-                        p.rotate_edges(1)
-                        last_test = None, None
-                        for block_c, block_p in neighbor:
-                            direction_exposed = Directions(sub_tuple(c, block_c))
-                            edge_exposed = block_p.edge_in_direction(direction_exposed)
-                            edge = p.edge_in_direction(get_opposite_direction(direction_exposed))
-                            # print(edge_exposed.connected, edge.connected)
-                            if edge_exposed.connected or edge.connected:
-                                diff_score = float('inf')
-                                break
-                            else:
-                                diff_score += diff[edge_exposed][edge]
-                                last_test = edge_exposed, edge
-                        if diff_score < min_diff:
-                            best_bloc_e, best_e, min_diff = last_test[0], last_test[1], diff_score
+            for best_coord in best_coords:
+                for c, neighbor in best_coord:
+                    for p in left_piece:
+                        for rotation in range(4):
+                            diff_score = 0
+                            p.rotate_edges(1)
+                            last_test = None, None
+                            for block_c, block_p in neighbor:
+                                direction_exposed = Directions(sub_tuple(c, block_c))
+                                edge_exposed = block_p.edge_in_direction(direction_exposed)
+                                edge = p.edge_in_direction(get_opposite_direction(direction_exposed))
+                                # print(edge_exposed.connected, edge.connected)
+                                if edge_exposed.connected or edge.connected:
+                                    diff_score = float('inf')
+                                    break
+                                else:
+                                    diff_score += diff[edge_exposed][edge]
+                                    last_test = edge_exposed, edge
+                            if diff_score < min_diff:
+                                best_bloc_e, best_e, min_diff = last_test[0], last_test[1], diff_score
+                if best_e is not None:
+                    break
+                elif len(best_coord):
+                    print('Fall back to a worst FILL')
+            if best_e is None:
+                print('Fail to solve the puzzle with FILL, falling back to NAIVE')
+                self.strategy = Strategy.NAIVE
+                best_bloc_e, best_e = self.best_diff(diff, connected_direction, left_piece)
+                self.strategy = Strategy.FILL
             return best_bloc_e, best_e
         elif self.strategy == Strategy.NAIVE:
             for block_e, block_e_diff in diff.items():

@@ -33,7 +33,7 @@ def diff_match_edges(e1, e2, reverse=True):
             if reverse:
                 diff += np.linalg.norm(p - e2[len(e2) - i - 1])
             else:
-                diff += np.linalg.norm(p - e2[len(e2) - i - 1])
+                diff += np.linalg.norm(p - e2[i])
         else:
             break
     # print(diff)
@@ -48,3 +48,4 @@ def diff_match_edges(e1, e2, reverse=True):
 
 def diff_full_compute(e1, e2):
     return 1 * diff_match_edges(e1.shape, e2.shape)
+    # return 1 * diff_match_edges(e1.color, e2.color)

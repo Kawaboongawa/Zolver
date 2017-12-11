@@ -12,4 +12,5 @@ path = '/home/hugo/ing3/pfe/zolver/resources/'
 # Puzzle(path + 'moogly.png')
 # Puzzle(path + 'parpaing6.png')
 # Puzzle(path + 'statue.png')
-Puzzle(path + 'colorfull.png')
+# Puzzle(path + 'colorfull.png')
+Puzzle(path + 'quad_puzzle.png')
