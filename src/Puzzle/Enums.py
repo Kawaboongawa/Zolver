@@ -32,3 +32,8 @@ class TypePiece(Enum):
     CENTER = 0
     BORDER = 1
     ANGLE = 2
+
+class Strategy(Enum):
+    NAIVE = 0
+    FILL = 1
+    BORDER = 2
