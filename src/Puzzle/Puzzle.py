@@ -20,7 +20,6 @@ class Puzzle():
         self.connected_directions = []
         self.diff = {}
         self.edge_to_piece = {}
-        self.strategy = Strategy.FILL
 
         for p in self.pieces_:
             for e in p.edges_:
@@ -33,28 +32,35 @@ class Puzzle():
         non_border_pieces = []
         connected_pieces = []
         # Separate border pieces from the other
-        # for piece in self.pieces_:
-        #     if piece.number_of_border():
-        #         border_pieces.append(piece)
-        #     else:
-        #         non_border_pieces.append(piece)
-        #
-        # # Start by a corner piece
-        # for piece in border_pieces:
-        #     if piece.number_of_border() > 1:
-        #         connected_pieces = [piece]
-        #         border_pieces.remove(piece)
-        #         break
-        # print("Number of border pieces: ", len(border_pieces) + 1)
-        #
-        # print('>>> START solve border')
-        # connected_pieces = self.solve(connected_pieces, border_pieces)
-        # print('>>> START solve middle')
-        # self.solve(connected_pieces, non_border_pieces)
+        for piece in self.pieces_:
+            if piece.number_of_border():
+                border_pieces.append(piece)
+            else:
+                non_border_pieces.append(piece)
 
-        connected_pieces = [self.pieces_[0]]
-        left_pieces = self.pieces_[1:]
-        self.solve(connected_pieces, left_pieces)
+        # Start by a corner piece
+        for piece in border_pieces:
+            if piece.number_of_border() > 1:
+                connected_pieces = [piece]
+                border_pieces.remove(piece)
+                break
+        print("Number of border pieces: ", len(border_pieces) + 1)
+
+        print('>>> START solve border')
+        self.strategy = Strategy.BORDER
+        connected_pieces = self.solve(connected_pieces, border_pieces)
+        print('>>> START solve middle')
+        self.strategy = Strategy.FILL
+        self.solve(connected_pieces, non_border_pieces)
+
+
+        # Simple fill
+        # self.strategy = Strategy.FILL
+        # connected_pieces = [self.pieces_[0]]
+        # left_pieces = self.pieces_[1:]
+        # self.solve(connected_pieces, left_pieces)
+
+
         print('>>> SAVING result...')
         self.translate_puzzle()
         self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
@@ -152,11 +158,19 @@ class Puzzle():
         return diff
 
 
+    def fallback(self, diff, connected_direction, left_piece, strat=Strategy.NAIVE):
+        print('Fail to solve the puzzle with', self.strategy, 'falling back to', strat)
+        old_strat = self.strategy
+        self.strategy = Strategy.NAIVE
+        best_bloc_e, best_e = self.best_diff(diff, connected_direction, left_piece)
+        self.strategy = old_strat
+        return best_bloc_e, best_e
+
     def best_diff(self, diff, connected_direction, left_piece):
         best_bloc_e, best_e, min_diff = None, None, float('inf')
+        minX, minY, maxX, maxY = self.extremum
 
         if self.strategy == Strategy.FILL:
-            minX, minY, maxX, maxY = self.extremum
             best_coords = []
 
             # this is ugly
@@ -192,13 +206,43 @@ class Puzzle():
                 if best_e is not None:
                     break
                 elif len(best_coord):
-                    print('Fall back to a worst FILL')
+                    print('Fall back to a worst', self.strategy)
             if best_e is None:
-                print('Fail to solve the puzzle with FILL, falling back to NAIVE')
-                self.strategy = Strategy.NAIVE
-                best_bloc_e, best_e = self.best_diff(diff, connected_direction, left_piece)
-                self.strategy = Strategy.FILL
+                best_bloc_e, best_e = self.fallback(diff, connected_direction, left_piece)
             return best_bloc_e, best_e
+
+
+        elif self.strategy == Strategy.BORDER:
+            best_coord = []
+            for x in range(minX, maxX + 1):
+                for y in range(minY, maxY + 1):
+                    neighbor = list(
+                        filter(lambda e: is_neigbhor((x, y), e[0], connected_direction), connected_direction))
+                    if len(neighbor) == 1 or (len(neighbor) == 2 and len(left_piece) == 1):
+                        best_coord.append(((x, y), neighbor[0]))
+                        
+            for c, neighbor in best_coord:
+                for p in left_piece:
+                    for rotation in range(4):
+                        diff_score = 0
+                        p.rotate_edges(1)
+                        block_c, block_p = neighbor
+
+                        direction_exposed = Directions(sub_tuple(c, block_c))
+                        edge_exposed = block_p.edge_in_direction(direction_exposed)
+                        edge = p.edge_in_direction(get_opposite_direction(direction_exposed))
+                        if edge_exposed.connected or edge.connected \
+                                or not edge.is_compatible(edge_exposed) or not p.is_border_aligned(block_p):
+                            diff_score = float('inf')
+                        else:
+                            diff_score = diff[edge_exposed][edge]
+                        if diff_score < min_diff:
+                            best_bloc_e, best_e, min_diff = edge_exposed, edge, diff_score
+            if best_e is None:
+                best_bloc_e, best_e = self.fallback(diff, connected_direction, left_piece, strat=Strategy.FILL)
+            return best_bloc_e, best_e
+
+
         elif self.strategy == Strategy.NAIVE:
             for block_e, block_e_diff in diff.items():
                 for e, diff_score in block_e_diff.items():
@@ -271,7 +315,7 @@ class Puzzle():
         minX, minY, maxX, maxY = self.extremum
         # self.extremum = (min(minX, new_coord[0]), min(minY, new_coord[1]), max(maxX, new_coord[0]), max(maxY, new_coord[1]))
         self.extremum = (min(minX, new_coord[0] - 1), min(minY, new_coord[1] - 1), max(maxX, new_coord[0] + 1), max(maxY, new_coord[1] + 1))
-        print('matched:', list([e[0] for e in connected_directions]))
+        # print('matched:', list([e[0] for e in connected_directions]))
 
 
     def stick_best(self, cur_piece, cur_edge, pieces, border=False):

@@ -74,3 +74,10 @@ class PuzzlePiece():
         for e in self.edges_:
             if e.direction == dir:
                 return e
+
+    def is_border_aligned(self, p2):
+        for e in self.edges_:
+            e2 = p2.edge_in_direction(e.direction)
+            if e.type == TypeEdge.BORDER and p2.edge_in_direction(e.direction).type == TypeEdge.BORDER:
+                return True
+        return False
