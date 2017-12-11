@@ -463,10 +463,7 @@ def my_find_corner_signature(img, cnt, piece_img=None):
 
 
 def angle_between(v1, v2):
-    if v1 == v2:
-        return 0
-    return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
-
+    return math.atan2(-v1[1], v1[0]) - math.atan2(-v2[1], v2[0])
 
 # Return puzzle Piece array
 def export_contours(img, img_bw, contours, path, modulo):
