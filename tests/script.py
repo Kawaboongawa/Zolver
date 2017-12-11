@@ -18,15 +18,15 @@ for img, ref in images:
   print('Diff between solved puzzle and ref')
   out = subprocess.run(["compare", "-metric", "ae", ref, "tmp.png", "null:"], stderr=subprocess.PIPE)
 
-  diff = int(out.stderr)
-  cvImage = cv2.imread(img)
-  w, h, channels = cvImage.shape
-  ratio = (diff / (w * h))
-  print('ratio:', ratio)
-  if (ratio > 0.001):
-    print('Estimation : FAILED')
-  else:
-    print('Estimation : OK')
+  #diff = int(out.stderr)
+  #cvImage = cv2.imread(img)
+  #w, h, channels = cvImage.shape
+  #ratio = (diff / (w * h))
+  #print('ratio:', ratio)
+  #if (ratio > 0.001):
+  #  print('Estimation : FAILED')
+  #else:
+  #  print('Estimation : OK')
 
 
   fig = plt.figure("Images")

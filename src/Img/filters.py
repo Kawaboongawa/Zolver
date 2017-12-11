@@ -519,6 +519,7 @@ def export_contours(img, img_bw, contours, path, modulo):
                 for y, x in tuple(zip(*np.where(mask_around_tiny == 255))):
                     neighbors_color.append(img_piece_tiny[y, x])
                 rgb = flatten_colors(neighbors_color)
+                # if len(np.isnan(newElt).nonzero()[0]) == 0:
                 hsl = np.array(rgb_to_hls(rgb[0], rgb[1], rgb[2]))
                 color_edge.append(hsl)
                 out_color[p[1], p[0]] = rgb
