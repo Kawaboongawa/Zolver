@@ -5,6 +5,8 @@ import sys
 import numpy as np
 from Img.filters import *
 
+PREPROCESS_DEBUG_MODE = 1
+
 def show_image(img, ind=None, name='image', show=True):
     plt.axis("off")
     plt.imshow(img)
@@ -170,14 +172,14 @@ class Extractor():
 
         def test_noise_otsu(splitOtsu=True, replace=False):
             morph = self.img.copy()
-            for r in range(4):
+            for r in range(2):
                 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
                 morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, kernel)
                 morph = cv2.morphologyEx(morph, cv2.MORPH_OPEN, kernel)
             # show_image(morph)
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
             mgrad = cv2.morphologyEx(morph, cv2.MORPH_GRADIENT, kernel)
-            print('Morphology gradient')
+            # print('Morphology gradient')
             # show_image(mgrad)
             self.img_bw = np.max(mgrad, axis=2)  # BGR 2 GRAY
 
@@ -232,9 +234,11 @@ class Extractor():
         # FIXME: IS THIS OTSU USELESS?
         # _, self.img_bw = cv2.threshold(self.img_bw, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         # self.img_bw = cv2.bitwise_not(self.img_bw)
-        # show_image(self.img_bw)
+        if PREPROCESS_DEBUG_MODE == 1:
+            show_image(self.img_bw)
         fill_holes()
-        # show_image(self.img_bw)
+        if PREPROCESS_DEBUG_MODE == 1:
+            show_image(self.img_bw)
 
         # apply_small_close()
         # show_image(self.img_bw)
@@ -269,11 +273,12 @@ class Extractor():
             contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)
             max = contours[1].shape[0]
             contours = np.array([elt for elt in contours if elt.shape[0] > max / 2])
-            print('Found nb pieces: ' + str(len(contours)))
+            print('Found nb pieces after removing bad ones: ' + str(len(contours)))
 
         # FIXME: remove me
         # contours[0] = ndimage.gaussian_filter(contours[0], sigma=1.0, order=0)
-        # show_contours(contours, self.img_bw)
+        if PREPROCESS_DEBUG_MODE == 1:
+            show_contours(contours, self.img_bw)
 
         for i, _ in enumerate(contours):
             index = 0
@@ -290,7 +295,8 @@ class Extractor():
                     # we remove all those indexes
                 index = index + 1
 
-        show_contours(contours, self.img_bw) # final contours
+        if PREPROCESS_DEBUG_MODE == 1:
+            show_contours(contours, self.img_bw) # final contours
 
         puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
         # break
