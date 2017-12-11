@@ -270,11 +270,12 @@ class Puzzle():
         print('matched:', list([e[0] for e in connected_directions]))
 
 
-
-
     def stick_best(self, cur_piece, cur_edge, pieces, border=False):
         if cur_edge.connected:
             return
+
+        def compatible_edges(e1, e2):
+            return (e1.type == TypeEdge.HOLE and e2.type == TypeEdge.HEAD) or (e1.type == TypeEdge.HEAD and e2.type == TypeEdge.HOLE)
 
         edges_to_test = []
         for piece in pieces:
@@ -282,6 +283,8 @@ class Puzzle():
                 for edge in piece.edges_:
                     # if border and piece.nBorders_ < 2 and piece.borders_[(index_edge + 2) % 4]: # FIXME ?
                     #     continue
+                    if not compatible_edges(edge, cur_edge):
+                        continue
                     if not edge.connected:
                         edges_to_test.append((piece, edge))
 
