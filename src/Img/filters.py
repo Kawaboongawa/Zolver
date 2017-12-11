@@ -150,16 +150,16 @@ def get_relative_angles(cnt, export=False, norm=False):
     angles = np.diff(angles)
     angles = scipy.ndimage.filters.gaussian_filter(angles, 10)
 
-    angles = np.roll(np.array(angles), length)
+    angles = np.roll(np.array(angles), -length)
     angles = angles[0:length]
-
+    
     # clamp(angles)
     # angles = sklearn.preprocessing.binarize(np.array(angles).reshape((len(cnt) - 1, 1)), threshold=0.1)
 
     if export:
         pickle.dump(angles, open("/tmp/save" + str(COUNT) + ".p", "wb"))
 
-        plt.plot(angles)
+        plt.plot(np.append(angles, angles))
         plt.savefig("/tmp/fig" + str(COUNT) + ".png")
         plt.clf()
         plt.cla()
@@ -312,7 +312,7 @@ def peaks_inside(comb, peaks):
         return cpt
 
     for peak in peaks:
-        if peak > comb[0] and peak < comb[1]:
+        if peak > comb[0] and peak < comb[-1]:
             cpt.append(peak)
     return cpt
 
