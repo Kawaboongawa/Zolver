@@ -396,10 +396,19 @@ class Puzzle():
                 for y, x in e.shape:
                     y, x = y - minY, x - minX
                     if 0 <= y < border_img.shape[1] and 0 <= x < border_img.shape[0]:
-                        rgb = (0, 255, 0) if e.connected else (255, 255, 255)
-                        border_img[x, y, 0] = rgb[0]
+                        rgb = (0, 0, 0)
+                        if e.type == TypeEdge.HOLE:
+                            rgb = (102, 178, 255)
+                        if e.type == TypeEdge.HEAD:
+                            rgb = (255, 255, 102)
+                        if e.type == TypeEdge.UNDEFINED:
+                            rgb = (255, 0, 0)
+
+                        if e.connected:
+                            rgb = (0, 255, 0)
+                        border_img[x, y, 0] = rgb[2]
                         border_img[x, y, 1] = rgb[1]
-                        border_img[x, y, 2] = rgb[2]
+                        border_img[x, y, 2] = rgb[0]
 
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
         cv2.imwrite(path_contour, border_img)
