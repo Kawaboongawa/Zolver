@@ -275,7 +275,7 @@ def outdent_score(relative_angles):
 
 def compute_comp(combs_l, relative_angles, method='correlate'):
     # Combinations of 4 points
-    print("Number combinations: ", len(combs_l))
+    # print("Number combinations: ", len(combs_l))
     global COUNT
     MY_COUNT = 0
 
@@ -422,7 +422,7 @@ def my_find_corner_signature(img, cnt, piece_img=None):
         pos_peaks_inside.sort()
         neg_peaks_inside.sort()
         types_pieces.append(type_peak(pos_peaks_inside, neg_peaks_inside))
-        print(types_pieces[-1])
+        # print(types_pieces[-1])
     
     if piece_img is not None:
         plt.figure(1)

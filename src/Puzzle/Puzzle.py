@@ -138,6 +138,8 @@ class Puzzle():
 
             diff_e = {}
             for piece, edge in edges_to_test:
+                if not e.is_compatible(edge):
+                    continue
                 for e2 in piece.edges_:
                     e2.backup_shape()
                 stick_pieces(new_connected, e, piece, edge)
@@ -179,7 +181,7 @@ class Puzzle():
                                 edge_exposed = block_p.edge_in_direction(direction_exposed)
                                 edge = p.edge_in_direction(get_opposite_direction(direction_exposed))
                                 # print(edge_exposed.connected, edge.connected)
-                                if edge_exposed.connected or edge.connected:
+                                if edge_exposed.connected or edge.connected or not edge.is_compatible(edge_exposed):
                                     diff_score = float('inf')
                                     break
                                 else:
@@ -218,6 +220,8 @@ class Puzzle():
 
         for e, diff_e in self.diff.items():
             for piece, edge in edges_to_test:
+                if not e.is_compatible(edge):
+                    continue
                 for e2 in piece.edges_:
                     e2.backup_shape()
                 stick_pieces(self.edge_to_piece[e], e, piece, edge)
