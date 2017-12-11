@@ -18,7 +18,7 @@ def diff_match_edges2(e1, e2, reverse=True):
         ratio = i / len(shortest)
         j = int(len(longest) * ratio)
         x1, y1 = longest[j]
-        x2, y2 = shortest[i]
+        x2, y2 = shortest[len(shortest) - i - 1] if reverse else shortest[i]
         diff += (x2 - x1) ** 2 + (y2 - y1) ** 2
     return diff / len(shortest)
 
@@ -47,5 +47,5 @@ def diff_match_edges(e1, e2, reverse=True):
     # return math.sqrt(diff / len(shortest))  # RMSE
 
 def diff_full_compute(e1, e2):
-    return 1 * diff_match_edges(e1.shape, e2.shape)
-    # return 1 * diff_match_edges(e1.color, e2.color)
+    # return 1 * diff_match_edges2(e1.shape, e2.shape)
+    return 1 * diff_match_edges(e1.color, e2.color, reverse=False)

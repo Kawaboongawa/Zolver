@@ -1,3 +1,5 @@
+from colorsys import rgb_to_hls
+
 import cv2
 from scipy.signal import savgol_filter
 import numpy as np
@@ -469,8 +471,10 @@ def export_contours(img, img_bw, contours, path, modulo):
                 neighbors_color = []
                 for y, x in tuple(zip(*np.where(mask_around_tiny == 255))):
                     neighbors_color.append(img_piece_tiny[y, x])
-                color_edge.append(np.array(flatten_colors(neighbors_color)))
-                out_color[p[1], p[0]] = color_edge[-1]
+                rgb = flatten_colors(neighbors_color)
+                hsl = np.array(rgb_to_hls(rgb[0], rgb[1], rgb[2]))
+                color_edge.append(hsl)
+                out_color[p[1], p[0]] = rgb
             color_vect.append(np.array(color_edge))
 
         edges = []

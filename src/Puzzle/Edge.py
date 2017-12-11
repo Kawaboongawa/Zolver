@@ -1,5 +1,4 @@
 import numpy as np
-
 from Puzzle.Enums import TypeEdge, Directions
 
 
