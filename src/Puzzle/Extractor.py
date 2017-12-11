@@ -1,3 +1,5 @@
+from scipy import ndimage
+
 from cv2 import cv2
 import sys
 import numpy as np
@@ -17,6 +19,11 @@ def show_multiple_images(imgs):
         show_image(img, show=False)
     plt.show()
 
+def show_contours(contours, imgRef):
+    whiteImg = np.zeros(imgRef.shape)
+    cv2.drawContours(whiteImg, contours, -1, (255, 0, 0), 1, maxLevel=1)
+    show_image(whiteImg)
+    cv2.imwrite("/tmp/cont.png", whiteImg)
 
 class Extractor():
     def __init__(self, path, pixmapWidget=None):
@@ -225,7 +232,7 @@ class Extractor():
         # FIXME: IS THIS OTSU USELESS?
         # _, self.img_bw = cv2.threshold(self.img_bw, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         # self.img_bw = cv2.bitwise_not(self.img_bw)
-        show_image(self.img_bw)
+        # show_image(self.img_bw)
         fill_holes()
         show_image(self.img_bw)
 
@@ -264,9 +271,26 @@ class Extractor():
             contours = np.array([elt for elt in contours if elt.shape[0] > max / 2])
             print('Found nb pieces: ' + str(len(contours)))
 
-        whiteImg = np.zeros(self.img_bw.shape)
-        cv2.drawContours(whiteImg, contours, -1, (255, 0, 0), 1, maxLevel=1)
-        show_image(whiteImg)
+        # FIXME: remove me
+        # contours[0] = ndimage.gaussian_filter(contours[0], sigma=1.0, order=0)
+        show_contours(contours, self.img_bw)
+
+        for i, _ in enumerate(contours):
+            index = 0
+            while index < len(contours[i]):
+                tuple = contours[i][index]
+                # Every time there is a loop with the pixels, we find and then remove the loop
+                sames = [i for i, elt in enumerate(contours[i])
+                         if (math.fabs(elt[0][0] - tuple[0][0]) < 2 and math.fabs(elt[0][1] - tuple[0][1]) < 2)]
+                if len(sames) > 1:
+                    indexLast = sames[-1]
+                    if indexLast - index < len(contours[i]) / 2:
+                        indexRemove = range(index + 1, indexLast)
+                        contours[i] = np.delete(contours[i], indexRemove, axis=0)
+                    # we remove all those indexes
+                index = index + 1
+
+        show_contours(contours, self.img_bw)
 
         puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
         # break
