@@ -5,6 +5,9 @@ all:
 statue:
 	python3.6 src/main_no_gui.py test4_15.PNG
 
+degaulle:
+	python3.6 src/main_no_gui.py test9_30.png
+
 moogly:
 	python3.6 src/main_no_gui.py moogly.png
 
