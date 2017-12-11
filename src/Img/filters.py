@@ -427,7 +427,6 @@ def my_find_corner_signature(img, cnt, piece_img=None):
             print(types_pieces[-1])
             print(pos_peaks_inside)
             print(neg_peaks_inside)
-            
     
     if piece_img is not None:
         plt.figure(1)

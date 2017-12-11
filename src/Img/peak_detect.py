@@ -2,7 +2,7 @@ from __future__ import division, print_function
 import numpy as np
 
 def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
-                 kpsh=False, valley=False, show=False, ax=None):
+                 kpsh=False, valley=False, ax=None):
 
     """Detect peaks in data based on their amplitude and other features.
 
@@ -26,8 +26,6 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
         keep peaks with same height even if they are closer than `mpd`.
     valley : bool, optional (default = False)
         if True (1), detect valleys (local minima) instead of peaks.
-    show : bool, optional (default = False)
-        if True (1), plot data in matplotlib figure.
     ax : a matplotlib.axes.Axes instance, optional (default = None).
 
     Returns
@@ -47,35 +45,6 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
     References
     ----------
     .. [1] http://nbviewer.ipython.org/github/demotu/BMC/blob/master/notebooks/DetectPeaks.ipynb
-
-    Examples
-    --------
-    >>> from detect_peaks import detect_peaks
-    >>> x = np.random.randn(100)
-    >>> x[60:81] = np.nan
-    >>> # detect all peaks and plot data
-    >>> ind = detect_peaks(x, show=True)
-    >>> print(ind)
-
-    >>> x = np.sin(2*np.pi*5*np.linspace(0, 1, 200)) + np.random.randn(200)/5
-    >>> # set minimum peak height = 0 and minimum peak distance = 20
-    >>> detect_peaks(x, mph=0, mpd=20, show=True)
-
-    >>> x = [0, 1, 0, 2, 0, 3, 0, 2, 0, 1, 0]
-    >>> # set minimum peak distance = 2
-    >>> detect_peaks(x, mpd=2, show=True)
-
-    >>> x = np.sin(2*np.pi*5*np.linspace(0, 1, 200)) + np.random.randn(200)/5
-    >>> # detection of valleys instead of peaks
-    >>> detect_peaks(x, mph=0, mpd=20, valley=True, show=True)
-
-    >>> x = [0, 1, 1, 0, 1, 1, 0]
-    >>> # detect both edges
-    >>> detect_peaks(x, edge='both', show=True)
-
-    >>> x = [-2, 1, -2, 2, 1, 1, 3, 0]
-    >>> # set threshold = 2
-    >>> detect_peaks(x, threshold = 2, show=True)
     """
 
     x = np.atleast_1d(x).astype('float64')
@@ -127,12 +96,5 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
                 idel[i] = 0  # Keep current peak
         # remove the small peaks and sort back the indices by their occurrence
         ind = np.sort(ind[~idel])
-
-    if show:
-        if indnan.size:
-            x[indnan] = np.nan
-        if valley:
-            x = -x
-        _plot(x, mph, mpd, threshold, edge, valley, ax, ind)
 
     return ind

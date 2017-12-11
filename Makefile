@@ -14,6 +14,9 @@ moogly:
 color:
 	python3.6 src/main_no_gui.py test14_32.PNG
 
+color2:
+	python3.6 src/main_no_gui.py test22_12_colors.png
+
 clean:
 	$(RM) -r src/*/__pycache__
 
