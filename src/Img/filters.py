@@ -318,7 +318,7 @@ def peaks_inside(comb, peaks):
 
 def is_pattern(comb, peaks):
     cpt = len(peaks_inside(comb, peaks))
-    return cpt == 0 or cpt == 2
+    return cpt == 0 or cpt == 2 or cpt == 3
 
 def is_acceptable_comb(combs, peaks, length):
     offset =  length - combs[3] - 1
@@ -380,7 +380,6 @@ def my_find_corner_signature(img, cnt, piece_img=None):
             and ((comb[3] + (len(relative_angles) - comb[0])) > OFFSET_LOW) and ((comb[3] + (len(relative_angles) - comb[0])) < OFFSET_HIGH)):
             if is_acceptable_comb((comb[3], comb[2], comb[1], comb[0]), extr, len(relative_angles)) and is_acceptable_comb((comb[3], comb[2], comb[1], comb[0]), extr_inverse, len(relative_angles)):
                 combs_final.append((comb[3], comb[2], comb[1], comb[0]))
-        
             
     if len(combs_final) == 0:
         print("ERROR NO COMBINATIONS FOUND, exporting graph...")
@@ -397,9 +396,9 @@ def my_find_corner_signature(img, cnt, piece_img=None):
         plt.plot(relative_angles)
         ax=plt.gca()
 
-        plt.subplot(212)
-        plt.imshow(piece_img)
-        plt.axis("off")
+        #plt.subplot(212)
+        #plt.imshow(piece_img)
+        #plt.axis("off")
 
         plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png', dpi=900)
         plt.clf()
