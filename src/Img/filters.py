@@ -133,15 +133,10 @@ def get_relative_angles(cnt, export=False, norm=False):
     length = len(cnt)
     angles = []
     last = np.pi
-<<<<<<< HEAD
-    cnt = np.append(cnt, [cnt[0]], axis=0)
-    cnt = np.append(cnt, [cnt[1]], axis=0)
-=======
 
     cnt_tmp = np.array(cnt)
     cnt = np.append(cnt, cnt_tmp, axis=0)
     cnt = np.append(cnt, cnt_tmp, axis=0)
->>>>>>> remotes/origin/edge_detection
     for i in range(0, len(cnt) - 1):
         dir = (cnt[i + 1][0] - cnt[i][0], cnt[i + 1][1] - cnt[i][1])
         angle = math.atan2(-dir[1], dir[0])
@@ -203,55 +198,6 @@ def my_find_corners(img, cnt):
     edges = [np.array([x[0] for x in e]) for e in edges]  # quick'n'dirty fix of the shape
     return corners, edges
 
-<<<<<<< HEAD
-def compute_comp(combs_l, relative_angles, signatures, method='correlate'):
-    # print('Number combs: ', len(combs_l))
-    results_comp = []
-    for comb in combs_l:
-        if comb[1] - comb[0] < len(relative_angles) / 6 or comb[1] - comb[0] > len(relative_angles) / 3:
-            results_comp.append([-1000000, -1000000, -1000000])
-            continue
-
-        tmp_relative = []
-        tmp_signature = []
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['holes']):
-            tmp_signature.append(np.array(normalize_list(signatures['holes'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['holes']))))
-            tmp_signature.append(np.array(signatures['holes']))
-
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['heads']):
-            tmp_signature.append(np.array(normalize_list(signatures['heads'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['heads']))))
-            tmp_signature.append(np.array(signatures['heads']))
-
-        if len(relative_angles[comb[0]:comb[1]]) < len(signatures['borders']):
-            tmp_signature.append(np.array(normalize_list(signatures['borders'], len(relative_angles[comb[0]:comb[1]]))))
-            tmp_relative.append(np.array(relative_angles[comb[0]:comb[1]]))
-        else:
-            tmp_relative.append(np.array(normalize_list(relative_angles[comb[0]:comb[1]], len(signatures['borders']))))
-            tmp_signature.append(np.array(signatures['borders']))
-
-        hole, head, border = 0, 0, 0
-        if method == 'correlate':
-            hole = np.correlate(tmp_relative[0], tmp_signature[0])
-            head = np.correlate(tmp_relative[1], tmp_signature[1])
-            border = np.correlate(tmp_relative[2], tmp_signature[2])
-        elif method == 'convolve':
-            hole = np.convolve(tmp_relative[0], tmp_signature[0], 'valid')
-            head = np.convolve(tmp_relative[1], tmp_signature[1], 'valid')
-            border = np.convolve(tmp_relative[2], tmp_signature[2], 'valid')
-        elif method == 'mean':
-            hole = (np.convolve(tmp_relative[0], tmp_signature[0], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
-            head = (np.convolve(tmp_relative[1], tmp_signature[1], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
-            border = (np.convolve(tmp_relative[2], tmp_signature[2], 'valid') + np.correlate(tmp_relative[0], tmp_signature[0])) / 2
-        results_comp.append([hole[0], head[0], border[0]])
-
-    return results_comp
-=======
 # Determine if a point at index is a maximum local in radius range of relative_angles function
 def is_maximum_local(index, relative_angles, radius):
     start = max(0, index - radius)
@@ -388,7 +334,6 @@ def type_peak(peaks_pos_inside, peaks_neg_inside):
     if len(peaks_inside(peaks_neg_inside, peaks_pos_inside)) == 2:
         return TypeEdge.HEAD
     return TypeEdge.UNDEFINED
->>>>>>> remotes/origin/edge_detection
 
 def my_find_corner_signature(img, cnt, piece_img=None):
     global COUNT
