@@ -15,12 +15,6 @@ def pol2cart(rho, phi):
     y = rho * np.sin(phi)
     return x, y
 
-
-
-
-
-
-
 def normalize_edge(edge, n):
     point_dist = float(len(edge)) / float(n)
     index = float(0)

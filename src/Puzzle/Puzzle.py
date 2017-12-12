@@ -236,6 +236,7 @@ class Puzzle():
                             diff_score = float('inf')
                         else:
                             diff_score = diff[edge_exposed][edge]
+                        
                         if diff_score < min_diff:
                             best_bloc_e, best_e, min_diff = edge_exposed, edge, diff_score
             if best_e is None:

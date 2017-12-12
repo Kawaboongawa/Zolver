@@ -11,6 +11,9 @@ degaulle:
 moogly:
 	python3.6 src/main_no_gui.py moogly.png
 
+color-simple:
+	python3.6 src/main_no_gui.py test17_4.png
+
 color:
 	python3.6 src/main_no_gui.py test14_32.PNG
 
