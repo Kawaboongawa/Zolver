@@ -17,6 +17,9 @@ color:
 color2:
 	python3.6 src/main_no_gui.py test22_12_colors.png
 
+lion:
+	python3.6 src/main_no_gui.py test20_12.png
+
 clean:
 	$(RM) -r src/*/__pycache__
 
