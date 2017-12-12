@@ -18,3 +18,15 @@ def is_neigbhor(c1, c2, dir):
         return c1[0] == c2[0] + 1 or c1[0] == c2[0] - 1
     else:
         return False
+
+def corner_puzzle_alignement(c, p, l):
+    for c2, p2 in l:
+        if c2[0] == c[0] or c2[1] == c[1]:
+            return True  # Add more orientation check
+    return False
+
+def display_dim(dims):
+    l = []
+    for x, y in dims:
+        l.append((x + 1, y + 1))
+    return l
