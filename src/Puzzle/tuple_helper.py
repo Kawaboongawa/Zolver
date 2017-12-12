@@ -24,3 +24,9 @@ def corner_puzzle_alignement(c, p, l):
         if c2[0] == c[0] or c2[1] == c[1]:
             return True  # Add more orientation check
     return False
+
+def display_dim(dims):
+    l = []
+    for x, y in dims:
+        l.append((x + 1, y + 1))
+    return l

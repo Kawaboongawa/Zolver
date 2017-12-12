@@ -10,7 +10,7 @@ from Puzzle.Enums import *
 import sys
 import scipy
 
-from Puzzle.tuple_helper import equals_tuple, add_tuple, sub_tuple, is_neigbhor, corner_puzzle_alignement
+from Puzzle.tuple_helper import equals_tuple, add_tuple, sub_tuple, is_neigbhor, corner_puzzle_alignement, display_dim
 
 
 class Puzzle():
@@ -53,7 +53,19 @@ class Puzzle():
         print("Number of border pieces: ", len(border_pieces) + 1)
 
         print('>>> START solve border')
-        self.corner_pos = [((0, 0), connected_pieces[0])]  # we start with a corner
+        start_piece = connected_pieces[0]
+        self.corner_pos = [((0, 0), start_piece)]  # we start with a corner
+
+        while not start_piece.edge_in_direction(Directions.S).connected and not start_piece.edge_in_direction(Directions.W).connected:
+            start_piece.rotate_edges(1)
+
+        # coeff = [1, 1, 1, 1]
+        # for i, d in enumerate(directions):
+        #     if start_piece.edge_in_direction(d).connected:
+        #         coeff[i] = 0
+        # self.extremum = (- coeff[3], - coeff[2], coeff[1], coeff[0])
+        self.extremum = (0, 0, 1, 1)
+
         self.strategy = Strategy.BORDER
         connected_pieces = self.solve(connected_pieces, border_pieces)
         print('>>> START solve middle')
@@ -109,7 +121,7 @@ class Puzzle():
             self.diff = self.add_to_diffs(left_pieces)
 
         while len(left_pieces) > 0:
-            print("<--- New match ---> (left: ", len(left_pieces), ')')
+            print("<--- New match ---> pieces left: ", len(left_pieces), 'extremum:', self.extremum, 'puzzle dimension:', display_dim(self.possible_dim))
             block_best_e, best_e = self.best_diff(self.diff, self.connected_directions, left_pieces)
             block_best_p, best_p = self.edge_to_piece[block_best_e], self.edge_to_piece[best_e]
 
@@ -325,13 +337,22 @@ class Puzzle():
                             break
         connected_directions.append((new_coord, best_p))
 
+
+
+        minX, minY, maxX, maxY = self.extremum
+        coeff = [1, 1, 1, 1]
+        for i, d in enumerate(directions):
+            if best_p.edge_in_direction(d).connected:
+                coeff[i] = 0
+        self.extremum = (min(minX, new_coord[0] - coeff[3]), min(minY, new_coord[1] - coeff[2]),
+                         max(maxX, new_coord[0] + coeff[1]), max(maxY, new_coord[1] + coeff[0]))
+
         if best_p.type == TypePiece.ANGLE:
             self.corner_place_fit_size(new_coord, update_dim=True)
             self.conrner_pos.append(new_coord)
+        else:
+            self.update_dimension()
 
-        minX, minY, maxX, maxY = self.extremum
-        # self.extremum = (min(minX, new_coord[0]), min(minY, new_coord[1]), max(maxX, new_coord[0]), max(maxY, new_coord[1]))
-        self.extremum = (min(minX, new_coord[0] - 1), min(minY, new_coord[1] - 1), max(maxX, new_coord[0] + 1), max(maxY, new_coord[1] + 1))
         print('Placed:', best_p.type, 'at', new_coord)
 
     def stick_best(self, cur_piece, cur_edge, pieces, border=False):
@@ -419,7 +440,6 @@ class Puzzle():
                             rgb = (255, 255, 102)
                         if e.type == TypeEdge.UNDEFINED:
                             rgb = (255, 0, 0)
-
                         if e.connected:
                             rgb = (0, 255, 0)
                         border_img[x, y, 0] = rgb[2]
@@ -438,8 +458,8 @@ class Puzzle():
         for i in range(nb_edge_border // 2 + 1):
             w, h = i, (nb_edge_border // 2) - i
             if w * h == nb_middle:
-                possibilities.append((w + 2, h + 2))
-        print('Possible sizes: (', nb_piece, 'pieces with', nb_border, 'borders among them):', possibilities)
+                possibilities.append((w + 1, h + 1))
+        print('Possible sizes: (', nb_piece, 'pieces with', nb_border, 'borders among them):', display_dim(possibilities))
         return possibilities
 
 
@@ -450,12 +470,13 @@ class Puzzle():
         if len(self.possible_dim) == 1:
             # We have already picked a dimension
             return (c[0] == 0 or c[0] == self.possible_dim[0][0] or c[0] == -self.possible_dim[0][0]) and \
-                   (c[1] == 0 or c[1] == self.possible_dim[0][1]  or c[0] == -self.possible_dim[0][1])
+                   (c[1] == 0 or c[1] == self.possible_dim[0][1] or c[0] == -self.possible_dim[0][1])
         else:
             if c[0] == 0:
                 filtered = list(filter(lambda x: almost_equals(1, c[1], x), self.possible_dim))
                 if len(filtered):
-                    if update_dim:
+                    if update_dim and len(filtered) != len(self.possible_dim):
+                        print('Update possible dimensions with corner place:', display_dim(filtered))
                         self.possible_dim = filtered
                     return True
                 else:
@@ -463,16 +484,29 @@ class Puzzle():
             elif c[1] == 0:
                 filtered = list(filter(lambda x: almost_equals(0, c[0], x), self.possible_dim))
                 if len(filtered):
-                    if update_dim:
+                    if update_dim and len(filtered) != len(self.possible_dim):
+                        print('Update possible dimensions with corner place:', display_dim(filtered))
                         self.possible_dim = filtered
                     return True
                 else:
                     return False
         return False
 
-    def is_edge_at_corner_place(self, c, update_dim=False):
+    def is_edge_at_corner_place(self, c):
         if len(self.possible_dim) == 1:
             # We have already picked a dimension
             return (c[0] == 0 or c[0] == self.possible_dim[0][0] or c[0] == -self.possible_dim[0][0]) and \
                    (c[1] == 0 or c[1] == self.possible_dim[0][1] or c[0] == -self.possible_dim[0][1])
         return False
+
+    def update_dimension(self):
+        if len(self.possible_dim) == 1:
+            return
+        dims = []
+        _, _, maxX, maxY = self.extremum
+        for x, y in self.possible_dim:
+            if maxX < x and maxY < y:
+                dims.append((x, y))
+        if len(dims) != len(self.possible_dim):
+            print('Update possible dimensions with extremum:', display_dim(dims))
+            self.possible_dim = dims
