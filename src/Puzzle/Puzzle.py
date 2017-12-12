@@ -17,6 +17,8 @@ class Puzzle():
     def __init__(self, path, pixmapWidget=None):
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
+
+
         self.connected_directions = []
         self.conrner_pos = [(0, 0)]  # we start with a corner
         self.diff = {}
@@ -25,7 +27,8 @@ class Puzzle():
         for p in self.pieces_:
             for e in p.edges_:
                 self.edge_to_piece[e] = p
-        # self.extremum = (0, 0, 0, 0)
+
+
         self.extremum = (-1, -1, 1, 1)
         print('>>> START solving puzzle')
 
@@ -39,7 +42,9 @@ class Puzzle():
             else:
                 non_border_pieces.append(piece)
 
-        # Start by a corner piece
+        self.possible_dim = self.compute_possible_size(len(self.pieces_), len(border_pieces))
+
+            # Start by a corner piece
         for piece in border_pieces:
             if piece.number_of_border() > 1:
                 connected_pieces = [piece]
@@ -169,7 +174,7 @@ class Puzzle():
         return best_bloc_e, best_e
 
     def best_diff(self, diff, connected_direction, left_piece):
-        best_bloc_e, best_e, min_diff = None, None, float('inf')
+        best_bloc_e, best_e, best_p, min_diff = None, None, None, float('inf')
         minX, minY, maxX, maxY = self.extremum
 
         if self.strategy == Strategy.FILL:
@@ -234,7 +239,9 @@ class Puzzle():
                         edge_exposed = block_p.edge_in_direction(direction_exposed)
                         edge = p.edge_in_direction(get_opposite_direction(direction_exposed))
 
-                        if p.type == TypePiece.ANGLE and not corner_puzzle_alignement(c, p, self.corner_pos):
+                        if p.type == TypePiece.ANGLE and (not corner_puzzle_alignement(c, p, self.corner_pos) or not self.corner_place_fit_size(c)):
+                            diff_score = float('inf')
+                        elif p.type == TypePiece.BORDER and self.is_edge_at_corner_place(c):
                             diff_score = float('inf')
                         elif edge_exposed.connected or edge.connected \
                                 or not edge.is_compatible(edge_exposed) or not p.is_border_aligned(block_p):
@@ -319,13 +326,13 @@ class Puzzle():
         connected_directions.append((new_coord, best_p))
 
         if best_p.type == TypePiece.ANGLE:
+            self.corner_place_fit_size(new_coord, update_dim=True)
             self.conrner_pos.append(new_coord)
 
         minX, minY, maxX, maxY = self.extremum
         # self.extremum = (min(minX, new_coord[0]), min(minY, new_coord[1]), max(maxX, new_coord[0]), max(maxY, new_coord[1]))
         self.extremum = (min(minX, new_coord[0] - 1), min(minY, new_coord[1] - 1), max(maxX, new_coord[0] + 1), max(maxY, new_coord[1] + 1))
-        # print('matched:', list([e[0] for e in connected_directions]))
-
+        print('Placed:', best_p.type, 'at', new_coord)
 
     def stick_best(self, cur_piece, cur_edge, pieces, border=False):
         if cur_edge.connected:
@@ -423,3 +430,49 @@ class Puzzle():
         cv2.imwrite(path_contour, border_img)
         cv2.imwrite(path_colored, colored_img)
 
+
+    def compute_possible_size(self, nb_piece, nb_border):
+        nb_edge_border = nb_border - 4
+        nb_middle = nb_piece - nb_border
+        possibilities = []
+        for i in range(nb_edge_border // 2 + 1):
+            w, h = i, (nb_edge_border // 2) - i
+            if w * h == nb_middle:
+                possibilities.append((w + 2, h + 2))
+        print('Possible sizes: (', nb_piece, 'pieces with', nb_border, 'borders among them):', possibilities)
+        return possibilities
+
+
+    def corner_place_fit_size(self, c,update_dim=False):
+        def almost_equals(idx, target, val):
+            return val[idx] == target or val[idx] == -target
+
+        if len(self.possible_dim) == 1:
+            # We have already picked a dimension
+            return (c[0] == 0 or c[0] == self.possible_dim[0][0] or c[0] == -self.possible_dim[0][0]) and \
+                   (c[1] == 0 or c[1] == self.possible_dim[0][1]  or c[0] == -self.possible_dim[0][1])
+        else:
+            if c[0] == 0:
+                filtered = list(filter(lambda x: almost_equals(1, c[1], x), self.possible_dim))
+                if len(filtered):
+                    if update_dim:
+                        self.possible_dim = filtered
+                    return True
+                else:
+                    return False
+            elif c[1] == 0:
+                filtered = list(filter(lambda x: almost_equals(0, c[0], x), self.possible_dim))
+                if len(filtered):
+                    if update_dim:
+                        self.possible_dim = filtered
+                    return True
+                else:
+                    return False
+        return False
+
+    def is_edge_at_corner_place(self, c, update_dim=False):
+        if len(self.possible_dim) == 1:
+            # We have already picked a dimension
+            return (c[0] == 0 or c[0] == self.possible_dim[0][0] or c[0] == -self.possible_dim[0][0]) and \
+                   (c[1] == 0 or c[1] == self.possible_dim[0][1] or c[0] == -self.possible_dim[0][1])
+        return False
