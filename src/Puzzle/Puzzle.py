@@ -61,11 +61,11 @@ class Puzzle():
                 break
             start_piece.rotate_edges(1)
 
-        coeff = [1, 1, 1, 1]
-        for i, d in enumerate(directions):
-            if start_piece.edge_in_direction(d).connected:
-                coeff[i] = 0
-        print(coeff)
+        # coeff = [1, 1, 1, 1]
+        # for i, d in enumerate(directions):
+        #     if start_piece.edge_in_direction(d).connected:
+        #         coeff[i] = 0
+        # print(coeff)
         # self.extremum = (- coeff[3], - coeff[2], coeff[1], coeff[0])
         self.extremum = (0, 0, 1, 1)
 
@@ -508,8 +508,8 @@ class Puzzle():
         dims = []
         _, _, maxX, maxY = self.extremum
         for x, y in self.possible_dim:
-            if maxX < x and maxY < y:
+            if maxX <= x and maxY <= y:
                 dims.append((x, y))
         if len(dims) != len(self.possible_dim):
-            print('Update possible dimensions with extremum:', display_dim(dims))
+            print('Update possible dimensions with extremum', self.extremum, ':', display_dim(dims))
             self.possible_dim = dims
