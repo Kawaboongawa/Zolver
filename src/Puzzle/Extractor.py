@@ -5,7 +5,7 @@ import sys
 import numpy as np
 from Img.filters import *
 
-PREPROCESS_DEBUG_MODE = 1
+PREPROCESS_DEBUG_MODE = 0
 
 def show_image(img, ind=None, name='image', show=True):
     plt.axis("off")
@@ -200,9 +200,9 @@ class Extractor():
             # nbMorpho is updated with empiric values, they can obviously be changed
             nbMorph = 3
             if self.img.shape[0] * self.img.shape[1] < 1000 * 2000:
-                nbMorph = 2
+                nbMorph = 1
             if self.img.shape[0] * self.img.shape[1] > 3000 * 3000:
-                nbMorph = 6
+                nbMorph = 5
             for r in range(nbMorph):
                 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
                 morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, kernel)
@@ -262,6 +262,7 @@ class Extractor():
             contours = np.array([elt for elt in contours if elt.shape[0] > max / 3])
             print('Found nb pieces after removing bad ones: ' + str(len(contours)))
 
+        print('Smoothing edges...')
         if PREPROCESS_DEBUG_MODE == 1:
             show_contours(contours, self.img_bw)
 
