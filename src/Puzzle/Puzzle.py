@@ -56,13 +56,16 @@ class Puzzle():
         start_piece = connected_pieces[0]
         self.corner_pos = [((0, 0), start_piece)]  # we start with a corner
 
-        while not start_piece.edge_in_direction(Directions.S).connected and not start_piece.edge_in_direction(Directions.W).connected:
+        for i in range(4):
+            if start_piece.edge_in_direction(Directions.S).connected and start_piece.edge_in_direction(Directions.W).connected:
+                break
             start_piece.rotate_edges(1)
 
-        # coeff = [1, 1, 1, 1]
-        # for i, d in enumerate(directions):
-        #     if start_piece.edge_in_direction(d).connected:
-        #         coeff[i] = 0
+        coeff = [1, 1, 1, 1]
+        for i, d in enumerate(directions):
+            if start_piece.edge_in_direction(d).connected:
+                coeff[i] = 0
+        print(coeff)
         # self.extremum = (- coeff[3], - coeff[2], coeff[1], coeff[0])
         self.extremum = (0, 0, 1, 1)
 
