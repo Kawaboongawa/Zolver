@@ -10,7 +10,7 @@ from Puzzle.Enums import *
 import sys
 import scipy
 
-from Puzzle.tuple_helper import equals_tuple, add_tuple, sub_tuple, is_neigbhor
+from Puzzle.tuple_helper import equals_tuple, add_tuple, sub_tuple, is_neigbhor, corner_puzzle_alignement
 
 
 class Puzzle():
@@ -18,6 +18,7 @@ class Puzzle():
         self.extract = Extractor(path, pixmapWidget)
         self.pieces_ = self.extract.extract()
         self.connected_directions = []
+        self.conrner_pos = [(0, 0)]  # we start with a corner
         self.diff = {}
         self.edge_to_piece = {}
 
@@ -47,6 +48,7 @@ class Puzzle():
         print("Number of border pieces: ", len(border_pieces) + 1)
 
         print('>>> START solve border')
+        self.corner_pos = [((0, 0), connected_pieces[0])]  # we start with a corner
         self.strategy = Strategy.BORDER
         connected_pieces = self.solve(connected_pieces, border_pieces)
         print('>>> START solve middle')
@@ -115,8 +117,8 @@ class Puzzle():
             del left_pieces[left_pieces.index(best_p)]
 
             self.diff = self.compute_diffs(left_pieces, self.diff, best_p, edge_connected=block_best_e)
-            self.export_pieces("/tmp/stick" + str(len(left_pieces)) + ".png",
-                               "/tmp/colored" + str(len(left_pieces)) + ".png")
+            self.export_pieces('/tmp/stick{0:03d}'.format(len(self.connected_directions)) + ".png",
+                               '/tmp/colored{0:03d}'.format(len(self.connected_directions)) + ".png")
 
         return connected_pieces
 
@@ -231,7 +233,10 @@ class Puzzle():
                         direction_exposed = Directions(sub_tuple(c, block_c))
                         edge_exposed = block_p.edge_in_direction(direction_exposed)
                         edge = p.edge_in_direction(get_opposite_direction(direction_exposed))
-                        if edge_exposed.connected or edge.connected \
+
+                        if p.type == TypePiece.ANGLE and not corner_puzzle_alignement(c, p, self.corner_pos):
+                            diff_score = float('inf')
+                        elif edge_exposed.connected or edge.connected \
                                 or not edge.is_compatible(edge_exposed) or not p.is_border_aligned(block_p):
                             diff_score = float('inf')
                         else:
@@ -312,6 +317,10 @@ class Puzzle():
                             edge.connected = True
                             break
         connected_directions.append((new_coord, best_p))
+
+        if best_p.type == TypePiece.ANGLE:
+            self.conrner_pos.append(new_coord)
+
         minX, minY, maxX, maxY = self.extremum
         # self.extremum = (min(minX, new_coord[0]), min(minY, new_coord[1]), max(maxX, new_coord[0]), max(maxY, new_coord[1]))
         self.extremum = (min(minX, new_coord[0] - 1), min(minY, new_coord[1] - 1), max(maxX, new_coord[0] + 1), max(maxY, new_coord[1] + 1))
