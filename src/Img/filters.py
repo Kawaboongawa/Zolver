@@ -469,6 +469,7 @@ def angle_between(v1, v2):
 def export_contours(img, img_bw, contours, path, modulo):
     puzzle_pieces = []
     list_img = []
+    out_color = np.zeros_like(img)
     print('>>> START contour/corner detection')
 
     for idx, cnt in enumerate(contours):
@@ -500,7 +501,6 @@ def export_contours(img, img_bw, contours, path, modulo):
         mask_inv_border_tiny = cv2.bitwise_not(mask_border_tiny)
         mask_full_tiny = cv2.bitwise_and(mask_full_tiny, mask_full_tiny, mask=mask_inv_border_tiny)
 
-        out_color = np.zeros_like(img)
         for i in range(4):
             color_edge = []
             for ip, p in enumerate(edges_shape[i]):
@@ -534,7 +534,6 @@ def export_contours(img, img_bw, contours, path, modulo):
                 e.connected = True
 
         puzzle_pieces.append(PuzzlePiece(edges, pixels))
-        cv2.imwrite("/tmp/color_border.png", out_color)
 
         mask_border = np.zeros_like(img_bw)
 
@@ -582,6 +581,7 @@ def export_contours(img, img_bw, contours, path, modulo):
         pieces_img[(max_height * int(index / modulo)):(max_height * int(index / modulo) + image.shape[0]),
         (max_width * (index % modulo)):(max_width * (index % modulo) + image.shape[1])] = image
 
+    cv2.imwrite("/tmp/color_border.png", out_color)
     cv2.imwrite(path, pieces_img)
     return puzzle_pieces
 
