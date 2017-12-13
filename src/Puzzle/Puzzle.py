@@ -242,7 +242,7 @@ class Puzzle():
                         filter(lambda e: is_neigbhor((x, y), e[0], connected_direction), connected_direction))
                     if len(neighbor) == 1 or (len(neighbor) == 2 and len(left_piece) == 1):
                         best_coord.append(((x, y), neighbor[0]))
-                        
+
             for c, neighbor in best_coord:
                 for p in left_piece:
                     for rotation in range(4):
@@ -254,11 +254,14 @@ class Puzzle():
                         edge_exposed = block_p.edge_in_direction(direction_exposed)
                         edge = p.edge_in_direction(get_opposite_direction(direction_exposed))
 
-                        if p.type == TypePiece.ANGLE and (not corner_puzzle_alignement(c, p, self.corner_pos) or not self.corner_place_fit_size(c)):
+                        if p.type == TypePiece.ANGLE:
+                            if not corner_puzzle_alignement(c, p, self.corner_pos):
+                                diff_score = float('inf')
+                            elif not self.corner_place_fit_size(c):
+                                diff_score = float('inf')
+                        if p.type == TypePiece.BORDER and self.is_edge_at_corner_place(c):
                             diff_score = float('inf')
-                        elif p.type == TypePiece.BORDER and self.is_edge_at_corner_place(c):
-                            diff_score = float('inf')
-                        elif edge_exposed.connected or edge.connected \
+                        if diff_score != 0 or edge_exposed.connected or edge.connected \
                                 or not edge.is_compatible(edge_exposed) or not p.is_border_aligned(block_p):
                             diff_score = float('inf')
                         else:
@@ -353,7 +356,7 @@ class Puzzle():
 
         if best_p.type == TypePiece.ANGLE:
             self.corner_place_fit_size(new_coord, update_dim=True)
-            self.conrner_pos.append(new_coord)
+            self.corner_pos.append((new_coord, best_p))
         else:
             self.update_dimension()
 
