@@ -86,7 +86,7 @@ class Puzzle():
 
         print('>>> SAVING result...')
         self.translate_puzzle()
-        self.export_pieces("/tmp/stick.png", "/tmp/colored.png", "Solved (border)", "Solved (full)")
+        self.export_pieces("/tmp/stick.png", "/tmp/colored.png", display=False)
 
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
@@ -422,7 +422,7 @@ class Puzzle():
             for p in piece.img_piece_:
                 p.translate(minX, minY)
 
-    def export_pieces(self, path_contour, path_colored, name_contour, name_colored):
+    def export_pieces(self, path_contour, path_colored, name_contour=None, name_colored=None, display=True):
         minX, minY = float('inf'), float('inf')
         maxX, maxY = -float('inf'), -float('inf')
         for piece in self.pieces_:
@@ -459,7 +459,7 @@ class Puzzle():
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
         cv2.imwrite(path_contour, border_img)
         cv2.imwrite(path_colored, colored_img)
-        if self.viewer:
+        if self.viewer and display:
             self.viewer.addImage(name_contour, path_contour, display=False)
             self.viewer.addImage(name_colored, path_colored)
 

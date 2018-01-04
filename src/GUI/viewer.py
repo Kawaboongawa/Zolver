@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from PyQt5.QtCore import QDir, Qt
+from PyQt5.QtCore import QDir, Qt, QThread
 from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel,
                              QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QComboBox)
@@ -15,6 +15,7 @@ class ImageViewer(QMainWindow):
 
         self.currImg = 0
         self.imgs = []
+        self.img_names = []
 
         self.imageLabel = QLabel()
         self.imageLabel.setBackgroundRole(QPalette.Base)
@@ -44,17 +45,21 @@ class ImageViewer(QMainWindow):
             self.normalSizeAct.setEnabled(True)
             self.openAct.setEnabled(False)
             self.solveAct.setEnabled(True)
-            self.addImage('Base image', fileName)
+            self.addImage('Base image', fileName, addMenu=True)
 
-    def addImage(self, name, fileName, display=True):
+    def addImage(self, name, fileName, display=True, addMenu=False):
         self.imgs.append(fileName)
+        self.img_names.append(name)
         id = len(self.imgs) - 1
-        self.imageMenu.addAction(QAction('&' + name, self, triggered=lambda: self.displayImage(id)))
+        if addMenu:
+            self.imageMenu.addAction(QAction('&' + name, self, triggered=lambda: self.displayImage(id)))
         if display:
             self.displayImage(id)
 
 
     def displayImage(self, fileNameId):
+        print("display", fileNameId, self.img_names[fileNameId], self.imgs[fileNameId])
+        print(self.img_names, self.imgs)
         image = QImage(self.imgs[fileNameId])
         if image.isNull():
             QMessageBox.information(self, "Image Viewer",
@@ -85,7 +90,19 @@ class ImageViewer(QMainWindow):
 
     def solve(self):
         self.solveAct.setEnabled(False)
-        Puzzle(self.imgs[0], viewer=self)
+        self.thread = SolveThread(self.imgs[0], self)
+        self.thread.finished.connect(self.endSolve)
+        self.thread.start()
+
+    def endSolve(self):
+        for id, n in enumerate(self.img_names):
+            if id == 0:
+                continue
+            print("add", id, self.img_names[id], self.imgs[id])
+            self.addOption(n, id)
+
+    def addOption(self, n, id):
+        self.imageMenu.addAction(QAction('&' + n, self, triggered=lambda: self.displayImage(id)))
 
 
     def createActions(self):
@@ -149,6 +166,15 @@ class ImageViewer(QMainWindow):
         scrollBar.setValue(int(factor * scrollBar.value()
                                 + ((factor - 1) * scrollBar.pageStep()/2)))
 
+class SolveThread(QThread):
+    def __init__(self, path, viewer):
+        QThread.__init__(self)
+        self.path = path
+        self.viewer = viewer
+
+    def run(self):
+        print('Running!')
+        Puzzle(self.path, self.viewer)
 
 if __name__ == '__main__':
 
