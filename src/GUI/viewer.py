@@ -4,6 +4,8 @@ from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel,
                              QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QComboBox)
 
+from Puzzle.Puzzle import Puzzle
+
 
 class ImageViewer(QMainWindow):
     def __init__(self):
@@ -27,7 +29,7 @@ class ImageViewer(QMainWindow):
         self.createActions()
         self.createMenus()
 
-        self.setWindowTitle("Image Viewer")
+        self.setWindowTitle("Zolver")
         self.resize(500, 400)
 
     def open(self):
@@ -41,8 +43,8 @@ class ImageViewer(QMainWindow):
             self.zoomOutAct.setEnabled(True)
             self.normalSizeAct.setEnabled(True)
             self.openAct.setEnabled(False)
+            self.solveAct.setEnabled(True)
             self.addImage('Base image', fileName)
-            self.addImage('Base image2', '/tmp/index.jpeg')
 
     def addImage(self, name, fileName, display=True):
         self.imgs.append(fileName)
@@ -81,6 +83,10 @@ class ImageViewer(QMainWindow):
         self.imageLabel.adjustSize()
         self.scaleFactor = 1.0
 
+    def solve(self):
+        self.solveAct.setEnabled(False)
+        Puzzle(self.imgs[0], viewer=self)
+
 
     def createActions(self):
         self.openAct = QAction("&Open...", self, shortcut="Ctrl+O",
@@ -95,18 +101,21 @@ class ImageViewer(QMainWindow):
         self.zoomOutAct = QAction("Zoom &Out (25%)", self, shortcut="Ctrl+M",
                 enabled=False, triggered=self.zoomOut)
 
-        self.normalSizeAct = QAction("&Normal Size", self, shortcut="Ctrl+S",
+        self.normalSizeAct = QAction("&Normal Size", self, shortcut="Ctrl+N",
                 enabled=False, triggered=self.normalSize)
 
         self.displayPrevAct = QAction("&Previous image", self, shortcut="Ctrl+A", enabled=False, triggered=self.displayPrev)
 
         self.displayNextAct = QAction("&Next image", self, shortcut="Ctrl+Z", enabled=False, triggered=self.displayNext)
 
+        self.solveAct = QAction("&Solve puzzle", self, shortcut="Ctrl+S", enabled=False, triggered=self.solve)
+
 
 
     def createMenus(self):
         self.fileMenu = QMenu("&File", self)
         self.fileMenu.addAction(self.openAct)
+        self.fileMenu.addAction(self.solveAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
 

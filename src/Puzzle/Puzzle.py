@@ -14,9 +14,10 @@ from Puzzle.tuple_helper import equals_tuple, add_tuple, sub_tuple, is_neigbhor,
 
 
 class Puzzle():
-    def __init__(self, path, pixmapWidget=None):
-        self.extract = Extractor(path, pixmapWidget)
+    def __init__(self, path, viewer=None):
+        self.extract = Extractor(path, viewer)
         self.pieces_ = self.extract.extract()
+        self.viewer = viewer
 
 
         self.connected_directions = []
@@ -85,7 +86,7 @@ class Puzzle():
 
         print('>>> SAVING result...')
         self.translate_puzzle()
-        self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
+        self.export_pieces("/tmp/stick.png", "/tmp/colored.png", "Solved (border)", "Solved (full)")
 
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
@@ -138,7 +139,9 @@ class Puzzle():
 
             self.diff = self.compute_diffs(left_pieces, self.diff, best_p, edge_connected=block_best_e)
             self.export_pieces('/tmp/stick{0:03d}'.format(len(self.connected_directions)) + ".png",
-                               '/tmp/colored{0:03d}'.format(len(self.connected_directions)) + ".png")
+                               '/tmp/colored{0:03d}'.format(len(self.connected_directions)) + ".png",
+                               'Step {0:03d} (border)'.format(len(self.connected_directions)),
+                               'Step {0:03d} (full)'.format(len(self.connected_directions)))
 
         return connected_pieces
 
@@ -419,7 +422,7 @@ class Puzzle():
             for p in piece.img_piece_:
                 p.translate(minX, minY)
 
-    def export_pieces(self, path_contour, path_colored):
+    def export_pieces(self, path_contour, path_colored, name_contour, name_colored):
         minX, minY = float('inf'), float('inf')
         maxX, maxY = -float('inf'), -float('inf')
         for piece in self.pieces_:
@@ -456,6 +459,9 @@ class Puzzle():
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
         cv2.imwrite(path_contour, border_img)
         cv2.imwrite(path_colored, colored_img)
+        if self.viewer:
+            self.viewer.addImage(name_contour, path_contour, display=False)
+            self.viewer.addImage(name_colored, path_colored)
 
 
     def compute_possible_size(self, nb_piece, nb_border):
