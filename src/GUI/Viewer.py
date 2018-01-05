@@ -1,15 +1,15 @@
-#!/usr/bin/env python
-from PyQt5.QtCore import QDir, Qt, QThread
-from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap
-from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel,
-                             QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QComboBox, QWidget, QVBoxLayout)
+from PyQt5.QtCore import QDir
+from PyQt5.QtGui import QImage, QPalette, QPixmap
+from PyQt5.QtWidgets import (QAction, QFileDialog, QLabel,
+                             QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy)
 
-from Puzzle.Puzzle import Puzzle
+from GUI.ScrollMessageBox import ScrollMessageBox
+from GUI.SolveThread import SolveThread
 
 
-class ImageViewer(QMainWindow):
+class Viewer(QMainWindow):
     def __init__(self):
-        super(ImageViewer, self).__init__()
+        super(Viewer, self).__init__()
 
         self.scaleFactor = 0.0
 
@@ -115,20 +115,15 @@ class ImageViewer(QMainWindow):
 
 
     def createActions(self):
-        self.openAct = QAction("&Open...", self, shortcut="Ctrl+O",
-                triggered=self.open)
+        self.openAct = QAction("&Open...", self, shortcut="Ctrl+O", triggered=self.open)
 
-        self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q",
-                triggered=self.close)
+        self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q", triggered=self.close)
 
-        self.zoomInAct = QAction("Zoom &In (25%)", self, shortcut="Up",
-                enabled=False, triggered=self.zoomIn)
+        self.zoomInAct = QAction("Zoom &In (25%)", self, shortcut="Up", enabled=False, triggered=self.zoomIn)
 
-        self.zoomOutAct = QAction("Zoom &Out (25%)", self, shortcut="Down",
-                enabled=False, triggered=self.zoomOut)
+        self.zoomOutAct = QAction("Zoom &Out (25%)", self, shortcut="Down", enabled=False, triggered=self.zoomOut)
 
-        self.normalSizeAct = QAction("&Normal Size", self, shortcut="Ctrl+N",
-                enabled=False, triggered=self.normalSize)
+        self.normalSizeAct = QAction("&Normal Size", self, shortcut="Ctrl+N", enabled=False, triggered=self.normalSize)
 
         self.displayPrevAct = QAction("&Previous image", self, shortcut="Left", enabled=False, triggered=self.displayPrev)
 
@@ -174,38 +169,4 @@ class ImageViewer(QMainWindow):
         self.zoomOutAct.setEnabled(self.scaleFactor > 0.01)
 
     def adjustScrollBar(self, scrollBar, factor):
-        scrollBar.setValue(int(factor * scrollBar.value()
-                                + ((factor - 1) * scrollBar.pageStep()/2)))
-
-class SolveThread(QThread):
-    def __init__(self, path, viewer):
-        QThread.__init__(self)
-        self.path = path
-        self.viewer = viewer
-
-    def run(self):
-        Puzzle(self.path, self.viewer)
-
-
-class ScrollMessageBox(QMessageBox):
-    def __init__(self, l, *args, **kwargs):
-        QMessageBox.__init__(self, *args, **kwargs)
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        self.setWindowTitle("Zolver Logs")
-        self.content = QWidget()
-        scroll.setWidget(self.content)
-        self.lay = QVBoxLayout(self.content)
-        for item in l:
-            self.lay.addWidget(QLabel(item, self))
-        self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
-        self.setStyleSheet("QScrollArea{min-width:800 px; min-height: 600px}")
-
-
-if __name__ == '__main__':
-    import sys
-
-    app = QApplication(sys.argv)
-    imageViewer = ImageViewer()
-    imageViewer.show()
-    sys.exit(app.exec_())
+        scrollBar.setValue(int(factor * scrollBar.value() + ((factor - 1) * scrollBar.pageStep()/2)))
