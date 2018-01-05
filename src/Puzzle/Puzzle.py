@@ -124,7 +124,7 @@ class Puzzle():
         # +--+--+--+
         # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
 
-    def solve(self, connected_pieces, left_pieces, border=False):
+    def solve(self, connected_pieces, left_pieces, border=False, export=False):
         # angles = filter(lambda x: x.type == TypePiece.ANGLE, left_pieces)
         # borders = filter(lambda x: x.type == TypePiece.BORDER, left_pieces)
         # centers = filter(lambda x: x.type == TypePiece.CENTER, left_pieces)
@@ -148,9 +148,11 @@ class Puzzle():
             del left_pieces[left_pieces.index(best_p)]
 
             self.diff = self.compute_diffs(left_pieces, self.diff, best_p, edge_connected=block_best_e)
-            self.export_pieces('/tmp/stick{0:03d}'.format(len(self.connected_directions)) + ".png",
-                               '/tmp/colored{0:03d}'.format(len(self.connected_directions)) + ".png",
-                               name_colored='Step {0:03d}'.format(len(self.connected_directions)))
+
+            if export:
+                self.export_pieces('/tmp/stick{0:03d}'.format(len(self.connected_directions)) + ".png",
+                                '/tmp/colored{0:03d}'.format(len(self.connected_directions)) + ".png",
+                                name_colored='Step {0:03d}'.format(len(self.connected_directions)))
 
         return connected_pieces
 
