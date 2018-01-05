@@ -2,7 +2,7 @@
 from PyQt5.QtCore import QDir, Qt, QThread
 from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel,
-                             QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QComboBox)
+                             QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QComboBox, QWidget, QVBoxLayout)
 
 from Puzzle.Puzzle import Puzzle
 
@@ -110,8 +110,8 @@ class ImageViewer(QMainWindow):
         self.imageMenu.addAction(QAction('&' + n, self, triggered=lambda: self.displayImage(id)))
 
     def showLogs(self):
-        QMessageBox.about(self, "Zolver logs",
-                          "<p>" + "</p><p>".join(str(x) for x in self.logs) + "</p>")
+        self.logWindow = ScrollMessageBox((str(x) for x in self.logs))
+        self.logWindow.exec_()
 
 
     def createActions(self):
@@ -121,22 +121,22 @@ class ImageViewer(QMainWindow):
         self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q",
                 triggered=self.close)
 
-        self.zoomInAct = QAction("Zoom &In (25%)", self, shortcut="Ctrl+P",
+        self.zoomInAct = QAction("Zoom &In (25%)", self, shortcut="Up",
                 enabled=False, triggered=self.zoomIn)
 
-        self.zoomOutAct = QAction("Zoom &Out (25%)", self, shortcut="Ctrl+M",
+        self.zoomOutAct = QAction("Zoom &Out (25%)", self, shortcut="Down",
                 enabled=False, triggered=self.zoomOut)
 
         self.normalSizeAct = QAction("&Normal Size", self, shortcut="Ctrl+N",
                 enabled=False, triggered=self.normalSize)
 
-        self.displayPrevAct = QAction("&Previous image", self, shortcut="Ctrl+A", enabled=False, triggered=self.displayPrev)
+        self.displayPrevAct = QAction("&Previous image", self, shortcut="Left", enabled=False, triggered=self.displayPrev)
 
-        self.displayNextAct = QAction("&Next image", self, shortcut="Ctrl+Z", enabled=False, triggered=self.displayNext)
+        self.displayNextAct = QAction("&Next image", self, shortcut="Right", enabled=False, triggered=self.displayNext)
 
         self.solveAct = QAction("&Solve puzzle", self, shortcut="Ctrl+S", enabled=False, triggered=self.solve)
 
-        self.logsAct = QAction("&Logs", self, triggered=self.showLogs)
+        self.logsAct = QAction("&Logs", self, shortcut="Ctrl+L", triggered=self.showLogs)
 
 
 
@@ -157,7 +157,6 @@ class ImageViewer(QMainWindow):
         self.imageMenu.addAction(self.displayPrevAct)
         self.imageMenu.addAction(self.displayNextAct)
         self.imageMenu.addSeparator()
-
 
         self.menuBar().addMenu(self.fileMenu)
         self.menuBar().addMenu(self.viewMenu)
@@ -187,8 +186,23 @@ class SolveThread(QThread):
     def run(self):
         Puzzle(self.path, self.viewer)
 
-if __name__ == '__main__':
 
+class ScrollMessageBox(QMessageBox):
+    def __init__(self, l, *args, **kwargs):
+        QMessageBox.__init__(self, *args, **kwargs)
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        self.setWindowTitle("Zolver Logs")
+        self.content = QWidget()
+        scroll.setWidget(self.content)
+        self.lay = QVBoxLayout(self.content)
+        for item in l:
+            self.lay.addWidget(QLabel(item, self))
+        self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
+        self.setStyleSheet("QScrollArea{min-width:800 px; min-height: 600px}")
+
+
+if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
