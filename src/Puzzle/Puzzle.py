@@ -19,8 +19,8 @@ class Puzzle():
         if self.viewer:
             self.viewer.addLog(args)
 
-    def __init__(self, path, viewer=None):
-        self.extract = Extractor(path, viewer)
+    def __init__(self, path, viewer=None, green_screen=False):
+        self.extract = Extractor(path, viewer, green_screen)
         self.pieces_ = self.extract.extract()
         self.viewer = viewer
 

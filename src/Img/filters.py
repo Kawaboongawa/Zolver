@@ -126,7 +126,7 @@ def clamp(a, threshmin=-0.1, threshmax=0.1):
 COUNT = 0
 
 
-def get_relative_angles(cnt, export=False, norm=False):
+def get_relative_angles(cnt, export=False, norm=False, green=False):
     global COUNT
     COUNT = COUNT + 1
 
@@ -148,7 +148,10 @@ def get_relative_angles(cnt, export=False, norm=False):
         last = angle
 
     angles = np.diff(angles)
-    angles = scipy.ndimage.filters.gaussian_filter(angles, 10)
+    sigma = 10
+    if (green):
+        sigma = 5
+    angles = scipy.ndimage.filters.gaussian_filter(angles, sigma)
 
     angles = np.roll(np.array(angles), -length)
     angles = angles[0:length]
@@ -335,7 +338,7 @@ def type_peak(peaks_pos_inside, peaks_neg_inside):
         return TypeEdge.HEAD
     return TypeEdge.UNDEFINED
 
-def my_find_corner_signature(img, cnt, piece_img=None):
+def my_find_corner_signature(img, cnt, green=False, piece_img=None):
     global COUNT
     COUNT = COUNT + 1
 
@@ -344,7 +347,7 @@ def my_find_corner_signature(img, cnt, piece_img=None):
 
     # Find relative angles
     cnt_convert = [c[0] for c in cnt]
-    relative_angles = get_relative_angles(np.array(cnt_convert), export=True)
+    relative_angles = get_relative_angles(np.array(cnt_convert), export=True, green=green)
 
     relative_angles = np.array(relative_angles)
     relative_angles_inverse = -np.array(relative_angles)
@@ -466,14 +469,14 @@ def angle_between(v1, v2):
     return math.atan2(-v1[1], v1[0]) - math.atan2(-v2[1], v2[0])
 
 # Return puzzle Piece array
-def export_contours(img, img_bw, contours, path, modulo, viewer=None):
+def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=False):
     puzzle_pieces = []
     list_img = []
     out_color = np.zeros_like(img)
 
     for idx, cnt in enumerate(contours):
-
-        corners, edges_shape, types_edges = my_find_corner_signature(img_bw, cnt)
+        
+        corners, edges_shape, types_edges = my_find_corner_signature(img_bw, cnt, green)
         #corners, edges_shape = my_find_corners(img_bw, cnt)
 
         mask_border = np.zeros_like(img_bw)
