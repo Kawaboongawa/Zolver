@@ -466,11 +466,10 @@ def angle_between(v1, v2):
     return math.atan2(-v1[1], v1[0]) - math.atan2(-v2[1], v2[0])
 
 # Return puzzle Piece array
-def export_contours(img, img_bw, contours, path, modulo):
+def export_contours(img, img_bw, contours, path, modulo, viewer=None):
     puzzle_pieces = []
     list_img = []
     out_color = np.zeros_like(img)
-    print('>>> START contour/corner detection')
 
     for idx, cnt in enumerate(contours):
 
@@ -583,6 +582,9 @@ def export_contours(img, img_bw, contours, path, modulo):
 
     cv2.imwrite("/tmp/color_border.png", out_color)
     cv2.imwrite(path, pieces_img)
+    if viewer:
+        viewer.addImage("Extracted colored border", "/tmp/color_border.png")
+
     return puzzle_pieces
 
 

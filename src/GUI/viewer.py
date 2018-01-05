@@ -17,6 +17,8 @@ class ImageViewer(QMainWindow):
         self.imgs = []
         self.img_names = []
 
+        self.logs = []
+
         self.imageLabel = QLabel()
         self.imageLabel.setBackgroundRole(QPalette.Base)
         self.imageLabel.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
@@ -34,8 +36,7 @@ class ImageViewer(QMainWindow):
         self.resize(500, 400)
 
     def open(self):
-        fileName, _ = QFileDialog.getOpenFileName(self, "Open File",
-                QDir.currentPath())
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open File", QDir.currentPath())
         if fileName:
             self.scaleFactor = 1.0
 
@@ -56,10 +57,11 @@ class ImageViewer(QMainWindow):
         if display:
             self.displayImage(id)
 
+    def addLog(self, args):
+        self.logs.append(' '.join(map(str, args)))
+
 
     def displayImage(self, fileNameId):
-        print("display", fileNameId, self.img_names[fileNameId], self.imgs[fileNameId])
-        print(self.img_names, self.imgs)
         image = QImage(self.imgs[fileNameId])
         if image.isNull():
             QMessageBox.information(self, "Image Viewer",
@@ -90,6 +92,9 @@ class ImageViewer(QMainWindow):
 
     def solve(self):
         self.solveAct.setEnabled(False)
+        self.solveMenu = QMenu("&Zolver is running", self)
+        self.menuBar().addMenu(self.solveMenu)
+
         self.thread = SolveThread(self.imgs[0], self)
         self.thread.finished.connect(self.endSolve)
         self.thread.start()
@@ -98,11 +103,15 @@ class ImageViewer(QMainWindow):
         for id, n in enumerate(self.img_names):
             if id == 0:
                 continue
-            print("add", id, self.img_names[id], self.imgs[id])
             self.addOption(n, id)
+        self.solveMenu.setEnabled(False)
 
     def addOption(self, n, id):
         self.imageMenu.addAction(QAction('&' + n, self, triggered=lambda: self.displayImage(id)))
+
+    def showLogs(self):
+        QMessageBox.about(self, "Zolver logs",
+                          "<p>" + "</p><p>".join(str(x) for x in self.logs) + "</p>")
 
 
     def createActions(self):
@@ -127,12 +136,15 @@ class ImageViewer(QMainWindow):
 
         self.solveAct = QAction("&Solve puzzle", self, shortcut="Ctrl+S", enabled=False, triggered=self.solve)
 
+        self.logsAct = QAction("&Logs", self, triggered=self.showLogs)
+
 
 
     def createMenus(self):
         self.fileMenu = QMenu("&File", self)
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addAction(self.solveAct)
+        self.fileMenu.addAction(self.logsAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
 
@@ -173,7 +185,6 @@ class SolveThread(QThread):
         self.viewer = viewer
 
     def run(self):
-        print('Running!')
         Puzzle(self.path, self.viewer)
 
 if __name__ == '__main__':
