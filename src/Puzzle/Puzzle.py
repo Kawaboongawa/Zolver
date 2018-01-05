@@ -14,9 +14,15 @@ from Puzzle.tuple_helper import equals_tuple, add_tuple, sub_tuple, is_neigbhor,
 
 
 class Puzzle():
-    def __init__(self, path, pixmapWidget=None):
-        self.extract = Extractor(path, pixmapWidget)
+    def log(self, *args):
+        print(' '.join(map(str, args)))
+        if self.viewer:
+            self.viewer.addLog(args)
+
+    def __init__(self, path, viewer=None):
+        self.extract = Extractor(path, viewer)
         self.pieces_ = self.extract.extract()
+        self.viewer = viewer
 
 
         self.connected_directions = []
@@ -30,7 +36,7 @@ class Puzzle():
 
 
         self.extremum = (-1, -1, 1, 1)
-        print('>>> START solving puzzle')
+        self.log('>>> START solving puzzle')
 
         border_pieces = []
         non_border_pieces = []
@@ -50,9 +56,14 @@ class Puzzle():
                 connected_pieces = [piece]
                 border_pieces.remove(piece)
                 break
-        print("Number of border pieces: ", len(border_pieces) + 1)
+        self.log("Number of border pieces: ", len(border_pieces) + 1)
 
-        print('>>> START solve border')
+        self.export_pieces('/tmp/stick{0:03d}'.format(1) + ".png",
+                           '/tmp/colored{0:03d}'.format(1) + ".png",
+                           'Border types'.format(1),
+                           'Step {0:03d}'.format(1), display_boder=True)
+
+        self.log('>>> START solve border')
         start_piece = connected_pieces[0]
         self.corner_pos = [((0, 0), start_piece)]  # we start with a corner
 
@@ -71,7 +82,7 @@ class Puzzle():
 
         self.strategy = Strategy.BORDER
         connected_pieces = self.solve(connected_pieces, border_pieces)
-        print('>>> START solve middle')
+        self.log('>>> START solve middle')
         self.strategy = Strategy.FILL
         self.solve(connected_pieces, non_border_pieces)
 
@@ -83,9 +94,9 @@ class Puzzle():
         # self.solve(connected_pieces, left_pieces)
 
 
-        print('>>> SAVING result...')
+        self.log('>>> SAVING result...')
         self.translate_puzzle()
-        self.export_pieces("/tmp/stick.png", "/tmp/colored.png")
+        self.export_pieces("/tmp/stick.png", "/tmp/colored.png", display=False)
 
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
@@ -124,7 +135,7 @@ class Puzzle():
             self.diff = self.add_to_diffs(left_pieces)
 
         while len(left_pieces) > 0:
-            print("<--- New match ---> pieces left: ", len(left_pieces), 'extremum:', self.extremum, 'puzzle dimension:', display_dim(self.possible_dim))
+            self.log("<--- New match ---> pieces left: ", len(left_pieces), 'extremum:', self.extremum, 'puzzle dimension:', display_dim(self.possible_dim))
             block_best_e, best_e = self.best_diff(self.diff, self.connected_directions, left_pieces)
             block_best_p, best_p = self.edge_to_piece[block_best_e], self.edge_to_piece[best_e]
 
@@ -138,7 +149,8 @@ class Puzzle():
 
             self.diff = self.compute_diffs(left_pieces, self.diff, best_p, edge_connected=block_best_e)
             self.export_pieces('/tmp/stick{0:03d}'.format(len(self.connected_directions)) + ".png",
-                               '/tmp/colored{0:03d}'.format(len(self.connected_directions)) + ".png")
+                               '/tmp/colored{0:03d}'.format(len(self.connected_directions)) + ".png",
+                               name_colored='Step {0:03d}'.format(len(self.connected_directions)))
 
         return connected_pieces
 
@@ -181,7 +193,7 @@ class Puzzle():
 
 
     def fallback(self, diff, connected_direction, left_piece, strat=Strategy.NAIVE):
-        print('Fail to solve the puzzle with', self.strategy, 'falling back to', strat)
+        self.log('Fail to solve the puzzle with', self.strategy, 'falling back to', strat)
         old_strat = self.strategy
         self.strategy = Strategy.NAIVE
         best_bloc_e, best_e = self.best_diff(diff, connected_direction, left_piece)
@@ -228,7 +240,7 @@ class Puzzle():
                 if best_e is not None:
                     break
                 elif len(best_coord):
-                    print('Fall back to a worst', self.strategy)
+                    self.log('Fall back to a worst', self.strategy)
             if best_e is None:
                 best_bloc_e, best_e = self.fallback(diff, connected_direction, left_piece)
             return best_bloc_e, best_e
@@ -360,7 +372,7 @@ class Puzzle():
         else:
             self.update_dimension()
 
-        print('Placed:', best_p.type, 'at', new_coord)
+        self.log('Placed:', best_p.type, 'at', new_coord)
 
     def stick_best(self, cur_piece, cur_edge, pieces, border=False):
         if cur_edge.connected:
@@ -419,7 +431,7 @@ class Puzzle():
             for p in piece.img_piece_:
                 p.translate(minX, minY)
 
-    def export_pieces(self, path_contour, path_colored):
+    def export_pieces(self, path_contour, path_colored, name_contour=None, name_colored=None, display=True, display_boder=False):
         minX, minY = float('inf'), float('inf')
         maxX, maxY = -float('inf'), -float('inf')
         for piece in self.pieces_:
@@ -456,6 +468,10 @@ class Puzzle():
         # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
         cv2.imwrite(path_contour, border_img)
         cv2.imwrite(path_colored, colored_img)
+        if self.viewer and display:
+            if display_boder:
+                self.viewer.addImage(name_contour, path_contour, display=False)
+            self.viewer.addImage(name_colored, path_colored)
 
 
     def compute_possible_size(self, nb_piece, nb_border):
@@ -466,7 +482,7 @@ class Puzzle():
             w, h = i, (nb_edge_border // 2) - i
             if w * h == nb_middle:
                 possibilities.append((w + 1, h + 1))
-        print('Possible sizes: (', nb_piece, 'pieces with', nb_border, 'borders among them):', display_dim(possibilities))
+        self.log('Possible sizes: (', nb_piece, 'pieces with', nb_border, 'borders among them):', display_dim(possibilities))
         return possibilities
 
 
@@ -483,7 +499,7 @@ class Puzzle():
                 filtered = list(filter(lambda x: almost_equals(1, c[1], x), self.possible_dim))
                 if len(filtered):
                     if update_dim and len(filtered) != len(self.possible_dim):
-                        print('Update possible dimensions with corner place:', display_dim(filtered))
+                        self.log('Update possible dimensions with corner place:', display_dim(filtered))
                         self.possible_dim = filtered
                     return True
                 else:
@@ -492,7 +508,7 @@ class Puzzle():
                 filtered = list(filter(lambda x: almost_equals(0, c[0], x), self.possible_dim))
                 if len(filtered):
                     if update_dim and len(filtered) != len(self.possible_dim):
-                        print('Update possible dimensions with corner place:', display_dim(filtered))
+                        self.log('Update possible dimensions with corner place:', display_dim(filtered))
                         self.possible_dim = filtered
                     return True
                 else:
@@ -515,5 +531,5 @@ class Puzzle():
             if maxX <= x and maxY <= y:
                 dims.append((x, y))
         if len(dims) != len(self.possible_dim):
-            print('Update possible dimensions with extremum', self.extremum, ':', display_dim(dims))
+            self.log('Update possible dimensions with extremum', self.extremum, ':', display_dim(dims))
             self.possible_dim = dims

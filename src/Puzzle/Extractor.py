@@ -28,19 +28,24 @@ def show_contours(contours, imgRef):
     cv2.imwrite("/tmp/cont.png", whiteImg)
 
 class Extractor():
-    def __init__(self, path, pixmapWidget=None):
+    def __init__(self, path, viewer=None):
         self.path = path
         self.img = cv2.imread(self.path, cv2.IMREAD_COLOR)
         self.img_bw = cv2.imread(self.path, cv2.IMREAD_GRAYSCALE)
-        self.pixmapWidget = pixmapWidget
+        self.viewer = viewer
+
+    def log(self, *args):
+        print(' '.join(map(str, args)))
+        if self.viewer:
+            self.viewer.addLog(args)
 
     def extract(self):
         kernel = np.ones((3, 3), np.uint8)
         # img = cv2.resize(initial_img, None, fx=0.5, fy=0.5)
 
         cv2.imwrite("/tmp/binarized.png", self.img_bw)
-        if self.pixmapWidget is not None:
-            self.pixmapWidget.add_image_widget("/tmp/binarized.png", 0, 0)
+        if self.viewer is not None:
+            self.viewer.addImage("Binarized", "/tmp/binarized.png")
 
         # show_image(self.img_bw)
         # self.img_bw = cv2.cvtColor(self.img_bw, cv2.COLOR_RGB2GRAY)
@@ -241,11 +246,11 @@ class Extractor():
             show_image(self.img_bw)
 
         cv2.imwrite("/tmp/binarized_treshold_filled.png", self.img_bw)
-        if self.pixmapWidget is not None:
-            self.pixmapWidget.add_image_widget("/tmp/binarized_treshold.png", 1, 1)
+        if self.viewer is not None:
+            self.viewer.addImage("Binarized treshold", "/tmp/binarized_treshold_filled.png")
 
         self.img_bw, contours, hier = cv2.findContours(self.img_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        print('Found nb pieces: ' + str(len(contours)))
+        self.log('Found nb pieces: ' + str(len(contours)))
 
         # With this we can manually set the maximum number of pieces manually, or we try to guess their number
         # to guess it, we only keep the contours big enough
@@ -254,15 +259,15 @@ class Extractor():
             # Number of pieces specified by user
             nb_pieces = int(sys.argv[2])
             contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)[:nb_pieces]
-            print('Found nb pieces after manual setting: ' + str(len(contours)))
+            self.log('Found nb pieces after manual setting: ' + str(len(contours)))
         else:
             # Try to remove useless contours
             contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)
             max = contours[1].shape[0]
             contours = np.array([elt for elt in contours if elt.shape[0] > max / 3])
-            print('Found nb pieces after removing bad ones: ' + str(len(contours)))
+            self.log('Found nb pieces after removing bad ones: ' + str(len(contours)))
 
-        print('Smoothing edges...')
+        self.log('Smoothing edges...')
         if PREPROCESS_DEBUG_MODE == 1:
             show_contours(contours, self.img_bw)
 
@@ -292,13 +297,13 @@ class Extractor():
             # Number of pieces specified by user
             nb_pieces = int(sys.argv[2])
             contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)[:nb_pieces]
-            print('Found nb pieces after manual setting: ' + str(len(contours)))
+            self.log('Found nb pieces after manual setting: ' + str(len(contours)))
         else:
             # Try to remove useless contours
             contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)
             max = contours[1].shape[0]
             contours = np.array([elt for elt in contours if elt.shape[0] > max / 3])
-            print('Found nb pieces after removing bad ones: ' + str(len(contours)))
+            self.log('Found nb pieces after removing bad ones: ' + str(len(contours)))
         # TODO: Here we can add some smoothing again with skimage
 
         ### PREPROCESSING: the end
@@ -306,7 +311,8 @@ class Extractor():
         # In case with fail to find the pieces, we fill some holes and then try again
         # while True: # TODO Add this at the end of the project, it is a fallback tactic
         #     try:
-        puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5)
+        self.log('>>> START contour/corner detection')
+        puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5, viewer=self.viewer)
         # break
         # except (IndexError):
         #     fill_holes()
@@ -315,20 +321,19 @@ class Extractor():
         #         print('Could not find the pieces, exiting the app')
         #         sys.exit(1)
         #     print('Error while trying to find the pieces, trying again after filling some holes')
-        if self.pixmapWidget is not None:
-            self.pixmapWidget.add_image_widget("/tmp/contours.png", 0, 1)
+        # if self.viewer is not None:
+        #     self.viewer.addImage("Contours", "/tmp/contours.png")
 
-        fshift, magnitude = get_fourier(self.img_bw)
-        cv2.imwrite("/tmp/yolo.png", magnitude)
-        if self.pixmapWidget is not None:
-            self.pixmapWidget.add_image_widget("/tmp/yolo.png", 1, 0)
-
-        rows, cols = self.img_bw.shape
-        crow, ccol = int(rows / 2), int(cols / 2)
-        fshift[crow - 30:crow + 30, ccol - 30:ccol + 30] = 0
-        f_ishift = np.fft.ifftshift(fshift)
-        img_back = np.fft.ifft2(f_ishift)
-        img_back = np.abs(img_back)
-
-        cv2.imwrite("/tmp/yolo.png", img_back)
+        # fshift, magnitude = get_fourier(self.img_bw)
+        # cv2.imwrite("/tmp/yolo.png", magnitude)
+        # if self.viewer is not None:
+        #     self.viewer.add_image_widget("/tmp/yolo.png", 1, 0)
+        # rows, cols = self.img_bw.shape
+        # crow, ccol = int(rows / 2), int(cols / 2)
+        # fshift[crow - 30:crow + 30, ccol - 30:ccol + 30] = 0
+        # f_ishift = np.fft.ifftshift(fshift)
+        # img_back = np.fft.ifft2(f_ishift)
+        # img_back = np.abs(img_back)
+        #
+        # cv2.imwrite("/tmp/yolo.png", img_back)
         return puzzle_pieces
