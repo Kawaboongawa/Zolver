@@ -45,7 +45,10 @@ class Viewer(QMainWindow):
             self.zoomOutAct.setEnabled(True)
             self.normalSizeAct.setEnabled(True)
             self.openAct.setEnabled(False)
+
             self.solveAct.setEnabled(True)
+            self.solveGreenAct.setEnabled(True)
+
             self.addImage('Base image', fileName, addMenu=True)
 
     def addImage(self, name, fileName, display=True, addMenu=False):
@@ -92,10 +95,23 @@ class Viewer(QMainWindow):
 
     def solve(self):
         self.solveAct.setEnabled(False)
+        self.solveGreenAct.setEnabled(False)
+
         self.solveMenu = QMenu("&Zolver is running", self)
         self.menuBar().addMenu(self.solveMenu)
 
         self.thread = SolveThread(self.imgs[0], self)
+        self.thread.finished.connect(self.endSolve)
+        self.thread.start()
+
+    def solveGreen(self):
+        self.solveAct.setEnabled(False)
+        self.solveGreenAct.setEnabled(False)
+
+        self.solveMenu = QMenu("&Zolver is running", self)
+        self.menuBar().addMenu(self.solveMenu)
+
+        self.thread = SolveThread(self.imgs[0], self, green_screen=True)
         self.thread.finished.connect(self.endSolve)
         self.thread.start()
 
@@ -131,6 +147,8 @@ class Viewer(QMainWindow):
 
         self.solveAct = QAction("&Solve puzzle", self, shortcut="Ctrl+S", enabled=False, triggered=self.solve)
 
+        self.solveGreenAct = QAction("&Solve puzzle (Green Background)", self, shortcut="Alt+S", enabled=False, triggered=self.solveGreen)
+
         self.logsAct = QAction("&Logs", self, shortcut="Ctrl+L", triggered=self.showLogs)
 
 
@@ -139,6 +157,7 @@ class Viewer(QMainWindow):
         self.fileMenu = QMenu("&File", self)
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addAction(self.solveAct)
+        self.fileMenu.addAction(self.solveGreenAct)
         self.fileMenu.addAction(self.logsAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)

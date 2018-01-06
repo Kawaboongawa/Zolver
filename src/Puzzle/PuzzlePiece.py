@@ -38,9 +38,6 @@ def normalize_list(l, n):
 class PuzzlePiece():
     def __init__(self, edges, img_piece):
         self.position = (0, 0)
-        # Keep orientations in an array (Correct only for first piece then the
-        # values will be ovewritten)
-        self.relative_angles_ = []
         self.edges_ = edges
         self.img_piece_ = img_piece  # List of Pixels
         self.nBorders_ = self.number_of_border()
@@ -71,7 +68,6 @@ class PuzzlePiece():
 
     def is_border_aligned(self, p2):
         for e in self.edges_:
-            e2 = p2.edge_in_direction(e.direction)
             if e.type == TypeEdge.BORDER and p2.edge_in_direction(e.direction).type == TypeEdge.BORDER:
                 return True
         return False
