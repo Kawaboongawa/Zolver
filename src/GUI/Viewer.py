@@ -11,7 +11,7 @@ class Viewer(QMainWindow):
     def __init__(self):
         super(Viewer, self).__init__()
 
-        self.scaleFactor = 0.0
+        self.scaleFactor = 1.0
 
         self.currImg = 0
         self.imgs = []
@@ -38,8 +38,6 @@ class Viewer(QMainWindow):
     def open(self):
         fileName, _ = QFileDialog.getOpenFileName(self, "Open File", QDir.currentPath())
         if fileName:
-            self.scaleFactor = 1.0
-
             self.imageLabel.adjustSize()
             self.zoomInAct.setEnabled(True)
             self.zoomOutAct.setEnabled(True)
@@ -71,8 +69,8 @@ class Viewer(QMainWindow):
                     "Cannot load %s." % self.imgs[fileNameId])
             return
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
-        self.scaleFactor = 1.0
-        self.imageLabel.adjustSize()
+        self.scaleImage(1)
+        #self.imageLabel.adjustSize()
         self.currImg = fileNameId
         self.displayPrevAct.setEnabled(self.currImg != 0)
         self.displayNextAct.setEnabled(self.currImg + 1 != len(self.imgs))
