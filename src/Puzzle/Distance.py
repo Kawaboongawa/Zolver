@@ -181,11 +181,3 @@ def diff_full_compute(e1, e2):
     # if edge_color_score < 0.99:
     # show_multiple_images([rgbs1, rgbs2], edge_color_score, save=0)
     return sum
-
-
-    a, b, c, d = 5, 1, 5, 1  # TCMS
-    a, b, c, d = 0, 1, 1, 1  # TCMS
-    return a * diff_match_edges2(e1.shape, e2.shape) \
-           + b * diff_match_edges(e1.color[:, 0], e2.color[:, 0]) \
-           + c * diff_match_edges(e1.color[:, 1], e2.color[:, 1]) \
-           + d * diff_match_edges(e1.color[:, 2], e2.color[:, 2])
