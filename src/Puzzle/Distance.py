@@ -8,6 +8,22 @@ from skimage import color
 from colorsys import hls_to_rgb
 import matplotlib.pyplot as plt
 
+def dist(p1, p2):
+    return math.sqrt((p2[0] - p1[0]) **2 + (p1[1] - p2[1]) **2)
+
+def diff_edge_size(e1, e2):
+    e1_begin = e1.shape[0]
+    e1_end = e1.shape[-1]
+    e2_begin = e2.shape[0]
+    e2_end = e2.shape[-1]
+    dist_e1 = dist(e1_begin, e1_end)
+    dist_e2 = dist(e2_begin, e2_end)
+    res = math.fabs(dist_e1 - dist_e2)
+    val = (dist_e1 + dist_e2) / 2
+    return res < (val * 0.15) 
+    #print(dist_e1, dist_e2, res)
+    #if (res > dist_e1)
+
 def normalize_vect_len(e1, e2):
     longest = e1 if len(e1) > len(e2) else e2
     shortest = e2 if len(e1) > len(e2) else e1
@@ -109,6 +125,10 @@ def show_multiple_images(imgs, score, save=0):
 def diff_full_compute(e1, e2):
     rgbs1 = []
     rgbs2 = []
+    #return diff_edge_size(e1, e2)
+    if not diff_edge_size(e1, e2):
+        return float('inf')
+    
     e1_lab_colors = []
     for col in e1.color:
         rgb = colorsys.hls_to_rgb(col[0], col[1], col[2])

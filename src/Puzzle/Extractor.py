@@ -154,46 +154,9 @@ class Extractor():
             contours = np.array([elt for elt in contours if elt.shape[0] > max / 3])
             self.log('Found nb pieces after removing bad ones: ' + str(len(contours)))
 
-        self.log('Smoothing edges...')
-        if PREPROCESS_DEBUG_MODE == 1:
-            show_contours(contours, self.img_bw)
-
-        # Here we try to smooth the contour a bit
-        for i, _ in enumerate(contours):
-            index = 0
-            while index < len(contours[i]):
-                tuple = contours[i][index]
-                # Every time there is a loop with the pixels, we find and then remove the loop
-                sames = [i for i, elt in enumerate(contours[i])
-                         if (math.fabs(elt[0][0] - tuple[0][0]) < 2 and math.fabs(elt[0][1] - tuple[0][1]) < 2)]
-                if len(sames) > 1:
-                    indexLast = sames[-1]
-                    if indexLast - index < len(contours[i]) / 2:
-                        indexRemove = range(index + 1, indexLast)
-                        contours[i] = np.delete(contours[i], indexRemove, axis=0)
-                    # we remove all those indexes
-                index = index + 1
-
         if PREPROCESS_DEBUG_MODE == 1:
             show_contours(contours, self.img_bw) # final contours
 
-
-        # same as before, the smoothing might have reduced the size of fake pieces, this will remove them from the set
-        nb_pieces = None
-         #TEMPORARY TO AVOID DEBUG ORGINAL:
-        #if len(sys.argv) > 2: 
-        if len(sys.argv) < 0:
-            # Number of pieces specified by user
-            nb_pieces = int(sys.argv[2])
-            contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)[:nb_pieces]
-            self.log('Found nb pieces after manual setting: ' + str(len(contours)))
-        else:
-            # Try to remove useless contours
-            contours = sorted(np.array(contours), key=lambda x: x.shape[0], reverse=True)
-            max = contours[1].shape[0]
-            contours = np.array([elt for elt in contours if elt.shape[0] > max / 3])
-            self.log('Found nb pieces after removing bad ones: ' + str(len(contours)))
-        # TODO: Here we can add some smoothing again with skimage
 
         ### PREPROCESSING: the end
 
