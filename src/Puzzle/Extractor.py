@@ -33,8 +33,14 @@ class Extractor():
         self.path = path
         self.img = cv2.imread(self.path, cv2.IMREAD_COLOR)
         if green_screen:
-            remove_background(self.path)
+            divFactor = 1 / (self.img.shape[1] / 640)
+            print(self.img.shape)
+            print('Resizing with factor', divFactor)
+            self.img = cv2.resize(self.img, (0, 0), fx=divFactor, fy=divFactor)
+            cv2.imwrite("/tmp/resized.png", self.img)
+            remove_background("/tmp/resized.png")
             self.img_bw = cv2.imread("/tmp/green_background_removed.png", cv2.IMREAD_GRAYSCALE)
+            # rescale self.img and self.img_bw to 640
         else:
             self.img_bw = cv2.imread(self.path, cv2.IMREAD_GRAYSCALE)
         self.viewer = viewer

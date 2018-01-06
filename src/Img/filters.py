@@ -1,3 +1,4 @@
+import colorsys
 from colorsys import rgb_to_hls
 
 import cv2
@@ -505,9 +506,11 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
                     neighbors_color.append(img_piece_tiny[y, x])
                 rgb = flatten_colors(neighbors_color)
                 # if len(np.isnan(newElt).nonzero()[0]) == 0:
-                hsl = np.array(rgb_to_hls(rgb[0], rgb[1], rgb[2]))
+                # hsl = np.array(colorsys.rgb_to_hls(rgb[0], rgb[1], rgb[2]))
+                hsl = np.array(colorsys.rgb_to_hls(rgb[2] / 255.0, rgb[1] / 255.0, rgb[0] / 255.0))
                 color_edge.append(hsl)
                 out_color[p[1], p[0]] = rgb
+
             color_vect.append(np.array(color_edge))
 
         edges = []
@@ -568,6 +571,7 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
     for index, image in enumerate(list_img):
         pieces_img[(max_height * int(index / modulo)):(max_height * int(index / modulo) + image.shape[0]),
         (max_width * (index % modulo)):(max_width * (index % modulo) + image.shape[1])] = image
+
 
     cv2.imwrite("/tmp/color_border.png", out_color)
     cv2.imwrite(path, pieces_img)
