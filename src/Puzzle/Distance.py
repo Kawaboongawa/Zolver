@@ -127,20 +127,20 @@ def diff_full_compute(e1, e2):
         # Drop Luminance
         e2_lab_colors[-1] = [0, e2_lab_colors[-1][1], e2_lab_colors[-1][2]]
 
-    edge_shape_score = old_diff_match_edges(np.array(e1.shape), np.array(e2.shape))
-    edge_color_score = diff_colors(np.array(e1_lab_colors), np.array(e2_lab_colors))
-    edge_color_score2 = diff_colors(np.array(e1_lab_colors), np.array(e2_lab_colors[::-1]))
+    # edge_shape_score = old_diff_match_edges(np.array(e1.shape), np.array(e2.shape))
+    # edge_color_score = diff_colors(np.array(e1_lab_colors), np.array(e2_lab_colors))
+    # edge_color_score2 = diff_colors(np.array(e1_lab_colors), np.array(e2_lab_colors[::-1]))
 
     # Sigmoid
-    L = 10
-    K = -1.05
-    edge_color_score = 1 / (1 + math.exp(-L * (edge_color_score - 0.5)))
+    # L = 10
+    # K = -1.05
+    # edge_color_score = 1 / (1 + math.exp(-L * (edge_color_score - 0.5)))
     # edge_shape_score = (K * edge_shape_score) / (K - edge_shape_score + 1)
 
     # print(e1.type, e2.type, edge_color_score, edge_shape_score, (edge_color_score + edge_shape_score) / 2)
     # return edge_color_score
     #return edge_shape_score
-    score = (edge_color_score + edge_shape_score) / 2
+    # score = (edge_color_score + edge_shape_score) / 2
     # print('color:', edge_color_score, 'edge:', edge_shape_score)
     # print('score:', score)
 
