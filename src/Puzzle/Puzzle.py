@@ -149,8 +149,7 @@ class Puzzle():
 
             self.diff = self.compute_diffs(left_pieces, self.diff, best_p, edge_connected=block_best_e)
 
-            if export:
-                self.export_pieces('/tmp/stick{0:03d}'.format(len(self.connected_directions)) + ".png",
+            self.export_pieces('/tmp/stick{0:03d}'.format(len(self.connected_directions)) + ".png",
                                 '/tmp/colored{0:03d}'.format(len(self.connected_directions)) + ".png",
                                 name_colored='Step {0:03d}'.format(len(self.connected_directions)))
 

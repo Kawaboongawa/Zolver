@@ -122,11 +122,9 @@ def clamp(a, threshmin=-0.1, threshmax=0.1):
         else:
             a[ind] = 0
 
-
 COUNT = 0
 
-
-def get_relative_angles(cnt, export=False, norm=False, green=False):
+def get_relative_angles(cnt, export=False, norm=False, green=False, sigma=5):
     global COUNT
     COUNT = COUNT + 1
 
@@ -148,9 +146,6 @@ def get_relative_angles(cnt, export=False, norm=False, green=False):
         last = angle
 
     angles = np.diff(angles)
-    sigma = 10
-    if (green):
-        sigma = 5
     angles = scipy.ndimage.filters.gaussian_filter(angles, sigma)
 
     angles = np.roll(np.array(angles), -length)
@@ -345,92 +340,80 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
     corners = []
     edges = []
 
-    # Find relative angles
-    cnt_convert = [c[0] for c in cnt]
-    relative_angles = get_relative_angles(np.array(cnt_convert), export=True, green=green)
-
-    relative_angles = np.array(relative_angles)
-    relative_angles_inverse = -np.array(relative_angles)
-    
-    extr_tmp = detect_peaks(relative_angles, mph=0.3*np.max(relative_angles))
-    relative_angles = np.roll(relative_angles, int(len(relative_angles) / 2))
-    extr_tmp = np.append(extr_tmp, (detect_peaks(relative_angles, mph=0.3*max(relative_angles)) - int(len(relative_angles) / 2)) % len(relative_angles), axis=0)
-    relative_angles = np.roll(relative_angles, -int(len(relative_angles) / 2))
-    extr_tmp = np.unique(extr_tmp)
-
-    extr_tmp_inverse = detect_peaks(relative_angles_inverse, mph=0.3*np.max(relative_angles_inverse))
-    relative_angles_inverse = np.roll(relative_angles_inverse, int(len(relative_angles_inverse) / 2))
-    extr_tmp_inverse = np.append(extr_tmp_inverse, (detect_peaks(relative_angles_inverse, mph=0.3*max(relative_angles_inverse)) - int(len(relative_angles_inverse) / 2)) % len(relative_angles_inverse), axis=0)
-    relative_angles_inverse = np.roll(relative_angles_inverse, -int(len(relative_angles_inverse) / 2))
-    extr_tmp_inverse = np.unique(extr_tmp_inverse)
-
-    extr = extr_tmp
-    extr_inverse = extr_tmp_inverse
-
-    relative_angles = sklearn.preprocessing.normalize(relative_angles[:,np.newaxis], axis=0).ravel()
-
-    # Build list of permutations of 4 points
-    combs = itertools.permutations(extr, 4)
-    combs_l = list(combs)
     combs_final = []
-    OFFSET_LOW = len(relative_angles) / 8
-    OFFSET_HIGH = len(relative_angles) / 2
-    for icomb, comb in enumerate(combs_l):
-        if ((comb[0] > comb[1]) and (comb[1] > comb[2]) and (comb[2] > comb[3])
-            and ((comb[0] - comb[1]) > OFFSET_LOW) and ((comb[0] - comb[1]) < OFFSET_HIGH)
-            and ((comb[1] - comb[2]) > OFFSET_LOW) and ((comb[1] - comb[2]) < OFFSET_HIGH)
-            and ((comb[2] - comb[3]) > OFFSET_LOW) and ((comb[2] - comb[3]) < OFFSET_HIGH)
-            and ((comb[3] + (len(relative_angles) - comb[0])) > OFFSET_LOW) and ((comb[3] + (len(relative_angles) - comb[0])) < OFFSET_HIGH)):
-            if is_acceptable_comb((comb[3], comb[2], comb[1], comb[0]), extr, len(relative_angles)) and is_acceptable_comb((comb[3], comb[2], comb[1], comb[0]), extr_inverse, len(relative_angles)):
-                combs_final.append((comb[3], comb[2], comb[1], comb[0]))
-            
-    if len(combs_final) == 0:
-        print("ERROR NO COMBINATIONS FOUND, exporting graph...")
+    sigma = 5
+    while len(combs_final) == 0 and sigma < 30:
+        print("Smooth curve with sigma={}...".format(sigma))
 
-        plt.figure(1)
-        plt.subplot(211)
+        # Find relative angles
+        cnt_convert = [c[0] for c in cnt]
+        relative_angles = get_relative_angles(np.array(cnt_convert), export=True, green=green, sigma=sigma)
 
-        for e in extr:
-            plt.axvline(x=e, lw=0.2)
-
-        for e in extr_inverse:
-            plt.axvline(x=e, lw=0.2)
+        relative_angles = np.array(relative_angles)
+        relative_angles_inverse = -np.array(relative_angles)
         
-        plt.plot(relative_angles)
-        ax=plt.gca()
+        extr_tmp = detect_peaks(relative_angles, mph=0.3*np.max(relative_angles))
+        relative_angles = np.roll(relative_angles, int(len(relative_angles) / 2))
+        extr_tmp = np.append(extr_tmp, (detect_peaks(relative_angles, mph=0.3*max(relative_angles)) - int(len(relative_angles) / 2)) % len(relative_angles), axis=0)
+        relative_angles = np.roll(relative_angles, -int(len(relative_angles) / 2))
+        extr_tmp = np.unique(extr_tmp)
 
-        #plt.subplot(212)
-        #plt.imshow(piece_img)
-        #plt.axis("off")
+        extr_tmp_inverse = detect_peaks(relative_angles_inverse, mph=0.3*np.max(relative_angles_inverse))
+        relative_angles_inverse = np.roll(relative_angles_inverse, int(len(relative_angles_inverse) / 2))
+        extr_tmp_inverse = np.append(extr_tmp_inverse, (detect_peaks(relative_angles_inverse, mph=0.3*max(relative_angles_inverse)) - int(len(relative_angles_inverse) / 2)) % len(relative_angles_inverse), axis=0)
+        relative_angles_inverse = np.roll(relative_angles_inverse, -int(len(relative_angles_inverse) / 2))
+        extr_tmp_inverse = np.unique(extr_tmp_inverse)
 
-        plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png', dpi=900)
-        plt.clf()
-        plt.cla()
-        plt.close()
-        exit(1)
+        extr = extr_tmp
+        extr_inverse = extr_tmp_inverse
 
-    best_fit = combs_final[compute_comp(combs_final, relative_angles, method='flat')]
+        relative_angles = sklearn.preprocessing.normalize(relative_angles[:,np.newaxis], axis=0).ravel()
 
-    # Roll the values of relative angles for this combination
-    offset = len(relative_angles) - best_fit[3] - 1
-    relative_angles = np.roll(relative_angles, offset)
-    best_fit += offset
-    extr = (extr + offset) % len(relative_angles)
-    extr_inverse = (extr_inverse + offset) % len(relative_angles)
+        # Build list of permutations of 4 points
+        combs = itertools.permutations(extr, 4)
+        combs_l = list(combs)
+        OFFSET_LOW = len(relative_angles) / 8
+        OFFSET_HIGH = len(relative_angles) / 2
+        for icomb, comb in enumerate(combs_l):
+            if ((comb[0] > comb[1]) and (comb[1] > comb[2]) and (comb[2] > comb[3])
+                and ((comb[0] - comb[1]) > OFFSET_LOW) and ((comb[0] - comb[1]) < OFFSET_HIGH)
+                and ((comb[1] - comb[2]) > OFFSET_LOW) and ((comb[1] - comb[2]) < OFFSET_HIGH)
+                and ((comb[2] - comb[3]) > OFFSET_LOW) and ((comb[2] - comb[3]) < OFFSET_HIGH)
+                and ((comb[3] + (len(relative_angles) - comb[0])) > OFFSET_LOW) and ((comb[3] + (len(relative_angles) - comb[0])) < OFFSET_HIGH)):
+                if is_acceptable_comb((comb[3], comb[2], comb[1], comb[0]), extr, len(relative_angles)) and is_acceptable_comb((comb[3], comb[2], comb[1], comb[0]), extr_inverse, len(relative_angles)):
+                    combs_final.append((comb[3], comb[2], comb[1], comb[0]))
+        sigma += 1
+        if len(combs_final) == 0:
+            continue
 
-    types_pieces = []
-    for best_comb in [[0, best_fit[0]], [best_fit[0], best_fit[1]], [best_fit[1], best_fit[2]], [best_fit[2], best_fit[3]]]:
-        pos_peaks_inside = peaks_inside(best_comb, extr)
-        neg_peaks_inside = peaks_inside(best_comb, extr_inverse)
-        pos_peaks_inside.sort()
-        neg_peaks_inside.sort()
-        types_pieces.append(type_peak(pos_peaks_inside, neg_peaks_inside))
-        if (types_pieces[-1] == TypeEdge.UNDEFINED):
-            print("UNDEFINED FOUND - try to continue but something bad happened :(")
-            print(types_pieces[-1])
-            print(pos_peaks_inside)
-            print(neg_peaks_inside)
-    
+        best_fit = combs_final[compute_comp(combs_final, relative_angles, method='flat')]
+
+        # Roll the values of relative angles for this combination
+        offset = len(relative_angles) - best_fit[3] - 1
+        relative_angles = np.roll(relative_angles, offset)
+        best_fit += offset
+        extr = (extr + offset) % len(relative_angles)
+        extr_inverse = (extr_inverse + offset) % len(relative_angles)
+
+        types_pieces = []
+        b = False
+        for best_comb in [[0, best_fit[0]], [best_fit[0], best_fit[1]], [best_fit[1], best_fit[2]], [best_fit[2], best_fit[3]]]:
+            pos_peaks_inside = peaks_inside(best_comb, extr)
+            neg_peaks_inside = peaks_inside(best_comb, extr_inverse)
+            pos_peaks_inside.sort()
+            neg_peaks_inside.sort()
+            types_pieces.append(type_peak(pos_peaks_inside, neg_peaks_inside))
+            if (types_pieces[-1] == TypeEdge.UNDEFINED):
+                print("UNDEFINED FOUND - try to continue but something bad happened :(")
+                print(types_pieces[-1])
+                print(pos_peaks_inside)
+                print(neg_peaks_inside)
+                b = True
+                combs_final = []
+                break
+        if b:
+            continue
+
     if piece_img is not None:
         plt.figure(1)
         plt.subplot(211)
