@@ -146,8 +146,11 @@ def get_relative_angles(cnt, export=False, norm=False, green=False, sigma=5):
         last = angle
 
     angles = np.diff(angles)
-    angles = scipy.ndimage.filters.gaussian_filter(angles, sigma)
 
+    k = [0.33,0.33,0.33,0.33,0.33]
+    angles = scipy.ndimage.convolve(angles, k, mode='constant', cval=0.0)
+    angles = scipy.ndimage.filters.gaussian_filter(angles, sigma)
+    
     angles = np.roll(np.array(angles), -length)
     angles = angles[0:length]
     
