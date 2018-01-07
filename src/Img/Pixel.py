@@ -15,7 +15,8 @@ class Pixel:
 
     def translate(self, dx, dy):
         self.pos = (self.pos[0] + dx, self.pos[1] + dy)
-
+        return self.pos
+    
     def rotate(self, origin, angle):
         ox, oy = origin
         py, px = self.pos
