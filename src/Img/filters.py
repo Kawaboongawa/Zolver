@@ -169,37 +169,6 @@ def get_relative_angles(cnt, export=False, norm=False, green=False, sigma=5):
 
     return angles
 
-
-# Point farthest election
-def my_find_corners(img, cnt):
-    corners = []
-    elect = [0] * len(cnt)
-    for p in cnt:
-        l = np.array([x[0] for x in cnt])
-        res = my_dist(l, p)
-        ind = np.argmax(res)
-        elect[ind] += 1
-
-    corners = []
-    edges = []
-    indices = []
-    for i in range(4):
-        ind = np.argmax(elect)
-        value = cnt[ind][0]
-        corners.append(value)
-        indices.append(ind)
-        elect[max(ind - 10, 0):min(ind + 10, len(elect))] = [0] * (min(ind + 10, len(elect)) - max(ind - 10, 0))
-        # cv2.circle(img, tuple(value), 50, 255, -1)
-
-    indices.sort()
-
-    for i in range(3):
-        edges.append(cnt[indices[i]:indices[i + 1]])
-    edges.append(np.concatenate((cnt[indices[3]:], cnt[:indices[0]]), axis=0))
-
-    edges = [np.array([x[0] for x in e]) for e in edges]  # quick'n'dirty fix of the shape
-    return corners, edges
-
 # Determine if a point at index is a maximum local in radius range of relative_angles function
 def is_maximum_local(index, relative_angles, radius):
     start = max(0, index - radius)
@@ -418,30 +387,6 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
         if b:
             continue
 
-    if piece_img is not None:
-        plt.figure(1)
-        plt.subplot(211)
-        plt.axvline(x=0, lw=1, color='red')
-        plt.axvline(x=best_fit[0], lw=1, color='red')
-        plt.axvline(x=best_fit[1], lw=1, color='red')
-        plt.axvline(x=best_fit[2], lw=1, color='red')
-        plt.axvline(x=best_fit[3], lw=1, color='red')
-
-        for e in extr:
-            plt.axvline(x=e, lw=0.2)
-        plt.plot(relative_angles)
-        ax=plt.gca()
-        #ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.75))
-
-        plt.subplot(212)
-        plt.imshow(piece_img)
-        plt.axis("off")
-
-        plt.savefig("/tmp/extr" + str(COUNT) + ".png", format='png', dpi=900)
-        plt.clf()
-        plt.cla()
-        plt.close()
-
     best_fit_tmp = best_fit - offset
     for i in range(3):
         edges.append(cnt[best_fit_tmp[i]:best_fit_tmp[i + 1]])
@@ -464,7 +409,6 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
     for idx, cnt in enumerate(contours):
         
         corners, edges_shape, types_edges = my_find_corner_signature(img_bw, cnt, green)
-        #corners, edges_shape = my_find_corners(img_bw, cnt)
 
         mask_border = np.zeros_like(img_bw)
         mask_full = np.zeros_like(img_bw)
