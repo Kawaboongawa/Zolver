@@ -21,9 +21,9 @@ class Puzzle():
 
     def __init__(self, path, viewer=None, green_screen=False):
         self.pieces_ = None
-        factor = 1.04
+        factor = 0.85
         while self.pieces_ is None:
-            factor -= 0.2
+            factor -= 0.01
             self.extract = Extractor(path, viewer, green_screen, factor)
             self.pieces_ = self.extract.extract()
 

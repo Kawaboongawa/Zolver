@@ -386,6 +386,7 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
             continue
     
     if sigma >= 30:
+        print("Error sigma >= 30")
         return None, None, None
 
     best_fit_tmp = best_fit - offset
