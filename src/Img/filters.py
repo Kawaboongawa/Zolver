@@ -367,7 +367,6 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
         extr_inverse = (extr_inverse + offset) % len(relative_angles)
 
         types_pieces = []
-        b = False
         for best_comb in [[0, best_fit[0]], [best_fit[0], best_fit[1]], [best_fit[1], best_fit[2]], [best_fit[2], best_fit[3]]]:
             pos_peaks_inside = peaks_inside(best_comb, extr)
             neg_peaks_inside = peaks_inside(best_comb, extr_inverse)
@@ -379,13 +378,12 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
                 print(types_pieces[-1])
                 print(pos_peaks_inside)
                 print(neg_peaks_inside)
-                b = True
-                combs_final = []
-                break
-        if b:
-            continue
+                if green:
+                    combs_final = []
+                    break
+        
     
-    if sigma >= 12:
+    if green and sigma >= 12:
         print("Error sigma >= 12")
         return None, None, None
 
