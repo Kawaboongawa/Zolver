@@ -29,7 +29,7 @@ def show_contours(contours, imgRef):
     cv2.imwrite("/tmp/cont.png", whiteImg)
 
 class Extractor():
-    def __init__(self, path, viewer=None, green_screen=False):
+    def __init__(self, path, viewer=None, green_screen=False, factor=0.84):
         self.path = path
         self.img = cv2.imread(self.path, cv2.IMREAD_COLOR)
         if green_screen:
@@ -39,7 +39,7 @@ class Extractor():
             print('Resizing with factor', divFactor)
             self.img = cv2.resize(self.img, (0, 0), fx=divFactor, fy=divFactor)
             cv2.imwrite("/tmp/resized.png", self.img)
-            remove_background("/tmp/resized.png")
+            remove_background("/tmp/resized.png", factor=factor)
             self.img_bw = cv2.imread("/tmp/green_background_removed.png", cv2.IMREAD_GRAYSCALE)
             # rescale self.img and self.img_bw to 640
         else:
@@ -166,6 +166,11 @@ class Extractor():
         #     try:
         self.log('>>> START contour/corner detection')
         puzzle_pieces = export_contours(self.img, self.img_bw, contours, "/tmp/contours.png", 5, viewer=self.viewer, green=self.green_)
+        if puzzle_pieces is None:
+            # Export contours error
+            return None
+            
+
         # break
         # except (IndexError):
         #     fill_holes()

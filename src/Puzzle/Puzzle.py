@@ -20,10 +20,14 @@ class Puzzle():
             self.viewer.addLog(args)
 
     def __init__(self, path, viewer=None, green_screen=False):
-        self.extract = Extractor(path, viewer, green_screen)
-        self.pieces_ = self.extract.extract()
-        self.viewer = viewer
+        self.pieces_ = None
+        factor = 1.04
+        while self.pieces_ is None:
+            factor -= 0.2
+            self.extract = Extractor(path, viewer, green_screen, factor)
+            self.pieces_ = self.extract.extract()
 
+        self.viewer = viewer
 
         self.connected_directions = []
         self.conrner_pos = [(0, 0)]  # we start with a corner

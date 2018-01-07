@@ -384,6 +384,9 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
                 break
         if b:
             continue
+    
+    if sigma >= 30:
+        return None, None, None
 
     best_fit_tmp = best_fit - offset
     for i in range(3):
@@ -407,7 +410,9 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
     for idx, cnt in enumerate(contours):
         
         corners, edges_shape, types_edges = my_find_corner_signature(img_bw, cnt, green)
-
+        if corners is None:
+            return None
+        
         mask_border = np.zeros_like(img_bw)
         mask_full = np.zeros_like(img_bw)
         mask_full = cv2.drawContours(mask_full, contours, idx, 255, -1)
