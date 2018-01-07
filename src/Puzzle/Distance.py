@@ -20,7 +20,7 @@ def diff_edge_size(e1, e2):
     dist_e2 = dist(e2_begin, e2_end)
     res = math.fabs(dist_e1 - dist_e2)
     val = (dist_e1 + dist_e2) / 2
-    return res < (val * 0.15) 
+    return res < (val * 0.20) 
     #print(dist_e1, dist_e2, res)
     #if (res > dist_e1)
 

@@ -307,8 +307,6 @@ def type_peak(peaks_pos_inside, peaks_neg_inside):
     return TypeEdge.UNDEFINED
 
 def my_find_corner_signature(img, cnt, green=False, piece_img=None):
-    global COUNT
-    COUNT = COUNT + 1
 
     corners = []
     edges = []

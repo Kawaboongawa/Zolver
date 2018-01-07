@@ -33,6 +33,7 @@ class Extractor():
         self.path = path
         self.img = cv2.imread(self.path, cv2.IMREAD_COLOR)
         if green_screen:
+            print(green_screen)
             divFactor = 1 / (self.img.shape[1] / 640)
             print(self.img.shape)
             print('Resizing with factor', divFactor)
