@@ -313,12 +313,12 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
 
     combs_final = []
     sigma = 5
-    while len(combs_final) == 0 and sigma < 30:
+    while len(combs_final) == 0 and sigma < 12:
         print("Smooth curve with sigma={}...".format(sigma))
 
         # Find relative angles
         cnt_convert = [c[0] for c in cnt]
-        relative_angles = get_relative_angles(np.array(cnt_convert), export=True, green=green, sigma=sigma)
+        relative_angles = get_relative_angles(np.array(cnt_convert), export=False, green=green, sigma=sigma)
 
         relative_angles = np.array(relative_angles)
         relative_angles_inverse = -np.array(relative_angles)
@@ -385,8 +385,8 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
         if b:
             continue
     
-    if sigma >= 30:
-        print("Error sigma >= 30")
+    if sigma >= 12:
+        print("Error sigma >= 12")
         return None, None, None
 
     best_fit_tmp = best_fit - offset
