@@ -20,4 +20,4 @@ echo "Padding with white"
 convert init.png black.png +append init.png
 convert black.png init.png +append init.png
 
-convert -resize 50% init.png init.png
+convert -resize 250 init.png init.png
