@@ -31,7 +31,3 @@ class Pixel:
 def flatten_colors(pixels):
     colors = np.array(pixels)
     return np.median(colors, axis=0)
-
-def compare_colors(c1, c2):
-    diff = np.abs(c1 - c2)
-    return np.sum(diff)

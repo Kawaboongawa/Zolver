@@ -20,17 +20,11 @@ def diff_edge_size(e1, e2):
     dist_e2 = dist(e2_begin, e2_end)
     res = math.fabs(dist_e1 - dist_e2)
     val = (dist_e1 + dist_e2) / 2
-    return res < (val * 0.20) 
-    #print(dist_e1, dist_e2, res)
-    #if (res > dist_e1)
+    return res < (val * 0.20)
 
 def normalize_vect_len(e1, e2):
     longest = e1 if len(e1) > len(e2) else e2
     shortest = e2 if len(e1) > len(e2) else e1
-    # indexes = np.array(range(len(longest)))
-    # np.random.shuffle(indexes)
-    # indexes = indexes[:len(shortest)]
-    # longest = longest[sorted(indexes)]
     return shortest, longest
 
 
@@ -79,7 +73,6 @@ def old_diff_match_edges(e1, e2, reverse=True, thres=5, pad=False):
     return np.sum(d > thres) / e1.shape[0]
 
 def diff_colors(e1_lab_colors, e2_lab_colors, reverse=True, JNC=2.3, pad=False):
-    #print(e1_lab_colors.shape[0], e2_lab_colors.shape[0])
     # Swap values to have longer first
     if e2_lab_colors.shape[0] > e1_lab_colors.shape[0]:
         e1_lab_colors, e2_lab_colors = e2_lab_colors, e1_lab_colors
@@ -106,26 +99,9 @@ def show_image(img, ind=None, name='image', show=True):
     if show:
         plt.show()
 
-diffId = 0
-
-def show_multiple_images(imgs, score, save=0):
-    fig = plt.figure("Images")
-    for i, img in enumerate(imgs):
-        ax = fig.add_subplot(len(imgs), i + 1, 1)
-        ax.set_title(str(i) + ' : ' + str(score))
-        show_image(img, show=False)
-    if save == 1:
-        global diffId
-        fig.savefig("/tmp/diff" + str(diffId))
-        if diffId < 100:
-            diffId += 1
-    else:
-        plt.show()
-
 def diff_full_compute(e1, e2):
     rgbs1 = []
     rgbs2 = []
-    #return diff_edge_size(e1, e2)
     if not diff_edge_size(e1, e2):
         return float('inf')
     
@@ -147,23 +123,6 @@ def diff_full_compute(e1, e2):
         # Drop Luminance
         e2_lab_colors[-1] = [0, e2_lab_colors[-1][1], e2_lab_colors[-1][2]]
 
-    # edge_shape_score = old_diff_match_edges(np.array(e1.shape), np.array(e2.shape))
-    # edge_color_score = diff_colors(np.array(e1_lab_colors), np.array(e2_lab_colors))
-    # edge_color_score2 = diff_colors(np.array(e1_lab_colors), np.array(e2_lab_colors[::-1]))
-
-    # Sigmoid
-    # L = 10
-    # K = -1.05
-    # edge_color_score = 1 / (1 + math.exp(-L * (edge_color_score - 0.5)))
-    # edge_shape_score = (K * edge_shape_score) / (K - edge_shape_score + 1)
-
-    # print(e1.type, e2.type, edge_color_score, edge_shape_score, (edge_color_score + edge_shape_score) / 2)
-    # return edge_color_score
-    #return edge_shape_score
-    # score = (edge_color_score + edge_shape_score) / 2
-    # print('color:', edge_color_score, 'edge:', edge_shape_score)
-    # print('score:', score)
-
     def euclideanDistance(e1_lab_colors, e2_lab_colors):
         sum = 0
         max = 50
@@ -184,20 +143,5 @@ def diff_full_compute(e1, e2):
         for i in range(max):
             sum += dist_color(e1_lab_colors[int(t1 * i)], e2_lab_colors[int(t2 * i)])
         return sum
-    sum = euclideanDistance(e1_lab_colors, e2_lab_colors)
-    sum2 = euclideanDistance(e1_lab_colors, e2_lab_colors[::-1])
-    if sum2 < sum:
-        sum = sum2
-    # print('old', edge_color_score, 'new', sum)
 
-    for i, _ in enumerate(rgbs1):
-        rgbs1[i] = [rgbs1[i]]
-    for i, _ in enumerate(rgbs2):
-        rgbs2[i] = [rgbs2[i]]
-    rgbs1 = np.array(rgbs1, dtype=np.uint8)
-    rgbs2 = np.array(rgbs2, dtype=np.uint8)
-    rgbs2 = rgbs2[::-1]
-    # print(edge_color_score, sum)
-    # if edge_color_score < 0.99:
-    # show_multiple_images([rgbs1, rgbs2], edge_color_score, save=0)
-    return sum
+    return min(euclideanDistance(e1_lab_colors, e2_lab_colors), euclideanDistance(e1_lab_colors, e2_lab_colors[::-1]))

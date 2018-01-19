@@ -3,7 +3,6 @@ from Puzzle.PuzzlePiece import *
 
 from Puzzle.Extractor import Extractor
 from Puzzle.Mover import *
-from Img.filters import load_signatures
 from cv2 import cv2
 
 from Puzzle.Enums import *
@@ -54,7 +53,7 @@ class Puzzle():
 
         self.possible_dim = self.compute_possible_size(len(self.pieces_), len(border_pieces))
 
-            # Start by a corner piece
+        # Start by a corner piece
         for piece in border_pieces:
             if piece.number_of_border() > 1:
                 connected_pieces = [piece]
@@ -76,12 +75,6 @@ class Puzzle():
                 break
             start_piece.rotate_edges(1)
 
-        # coeff = [1, 1, 1, 1]
-        # for i, d in enumerate(directions):
-        #     if start_piece.edge_in_direction(d).connected:
-        #         coeff[i] = 0
-        # print(coeff)
-        # self.extremum = (- coeff[3], - coeff[2], coeff[1], coeff[0])
         self.extremum = (0, 0, 1, 1)
 
         self.strategy = Strategy.BORDER
@@ -89,14 +82,6 @@ class Puzzle():
         self.log('>>> START solve middle')
         self.strategy = Strategy.FILL
         self.solve(connected_pieces, non_border_pieces)
-
-
-        # Simple fill
-        # self.strategy = Strategy.FILL
-        # connected_pieces = [self.pieces_[0]]
-        # left_pieces = self.pieces_[1:]
-        # self.solve(connected_pieces, left_pieces)
-
 
         self.log('>>> SAVING result...')
         self.translate_puzzle()
@@ -129,9 +114,7 @@ class Puzzle():
         # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
 
     def solve(self, connected_pieces, left_pieces, border=False, export=False):
-        # angles = filter(lambda x: x.type == TypePiece.ANGLE, left_pieces)
-        # borders = filter(lambda x: x.type == TypePiece.BORDER, left_pieces)
-        # centers = filter(lambda x: x.type == TypePiece.CENTER, left_pieces)
+
         if len(self.connected_directions) == 0:
             self.connected_directions = [((0, 0), connected_pieces[0])] # ((x, y), p), x & y relative to the first piece, init with 1st piece
             self.diff = self.compute_diffs(left_pieces, self.diff, connected_pieces[0]) # edge on the border of the block -> edge on a left piece -> diff between edges
@@ -233,7 +216,6 @@ class Puzzle():
                                 direction_exposed = Directions(sub_tuple(c, block_c))
                                 edge_exposed = block_p.edge_in_direction(direction_exposed)
                                 edge = p.edge_in_direction(get_opposite_direction(direction_exposed))
-                                # print(edge_exposed.connected, edge.connected)
                                 if edge_exposed.connected or edge.connected or not edge.is_compatible(edge_exposed):
                                     diff_score = float('inf')
                                     break
@@ -390,8 +372,6 @@ class Puzzle():
         for piece in pieces:
             if piece != cur_piece:
                 for edge in piece.edges_:
-                    # if border and piece.nBorders_ < 2 and piece.borders_[(index_edge + 2) % 4]: # FIXME ?
-                    #     continue
                     if not compatible_edges(edge, cur_edge):
                         continue
                     if not edge.connected:
@@ -470,7 +450,6 @@ class Puzzle():
                         border_img[x, y, 1] = rgb[1]
                         border_img[x, y, 2] = rgb[0]
 
-        # cv2.circle(tests_img, tuple((int(puzzle_pieces[1].edges_[0][0][0]), int(centerY))), 10, 255, -1)
         cv2.imwrite(path_contour, border_img)
         cv2.imwrite(path_colored, colored_img)
         if self.viewer and display:

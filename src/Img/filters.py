@@ -14,114 +14,12 @@ from Img.Pixel import Pixel, flatten_colors
 from Puzzle.Edge import Edge
 from Puzzle.Enums import directions, TypeEdge
 from Puzzle.PuzzlePiece import PuzzlePiece
-from Puzzle.PuzzlePiece import normalize_edge, normalize_list
 import matplotlib.pyplot as plt
 import matplotlib
 import scipy, sklearn.preprocessing
 import itertools
 from scipy.spatial.distance import euclidean, chebyshev
 from Img.peak_detect import *
-
-def auto_canny(img, sigma=0.33):
-    # compute the median of the single channel pixel intensities
-    v = np.median(img)
-
-    # apply automatic Canny edge detection using the computed median
-    lower = int(max(0, (1.0 - sigma) * v))
-    upper = int(min(255, (1.0 + sigma) * v))
-    edges = cv2.Canny(img, 100, 200)
-    # return the edged image
-    return edges
-
-
-# fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
-# fgbg2 = cv2.createBackgroundSubtractorMOG2()
-# fgbg3 = cv2.bgsegm.createBackgroundSubtractorGMG()
-
-def edgedetect(channel):
-    sobelX = cv2.Sobel(channel, cv2.CV_16S, 1, 0)
-    sobelY = cv2.Sobel(channel, cv2.CV_16S, 0, 1)
-    sobel = np.hypot(sobelX, sobelY)
-
-    sobel[sobel > 255] = 255
-    return sobel
-    # Some values seem to go above 255. However RGB channels has to be within 0-255
-
-
-def findSignificantContours(img, edgeImg):
-    image, contours, heirarchy = cv2.findContours(edgeImg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Find level 1 contours
-    level1 = []
-    for i, tupl in enumerate(heirarchy[0]):
-        # Each array is in format (Next, Prev, First child, Parent)
-        # Filter the ones without parent
-        if tupl[3] == -1:
-            tupl = np.insert(tupl, 0, [i])
-            level1.append(tupl)
-    # From among them, find the contours with large surface area.
-    significant = []
-    tooSmall = edgeImg.size * 5 / 100  # If contour isn't covering 5% of total area of image then it probably is too small
-    for tupl in level1:
-        contour = contours[tupl[0]]
-        area = cv2.contourArea(contour)
-        if area > tooSmall:
-            significant.append([contour, area])
-
-            # Draw the contour on the original image
-            cv2.drawContours(img, [contour], 0, (0, 255, 0), 2, cv2.LINE_AA, maxLevel=1)
-
-    significant.sort(key=lambda x: x[1])
-    # print ([x[1] for x in significant]);
-    return [x[0] for x in significant]
-
-
-def findContourTest1(initial_img):
-    edged = cv2.Canny(initial_img, 10, 250)
-    cv2.imshow("Edges", edged)
-    # applying closing function
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
-    closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
-    cv2.imshow("Closed", closed)
-    # finding_contours
-    (cnts, _) = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    for c in cnts:
-        peri = cv2.arcLength(c, True)
-        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-        cv2.drawContours(initial_img, [approx], -1, (0, 255, 0), 2)
-    cv2.imshow("Output", initial_img)
-
-
-def find_corners(img):
-    corners = cv2.goodFeaturesToTrack(img, 10, 0.001, 20, blockSize=20)
-    corners = np.int0(corners)
-    for i in corners:
-        x, y = i.ravel()
-        cv2.circle(img, (x, y), 10, 255, -1)
-    return img
-
-
-# Not working at all
-def find_corners_mser(img):
-    mser = cv2.MSER_create()
-    regions, _ = mser.detectRegions(img)
-    hulls = [cv2.convexHull(p.reshape(-1, 1, 2)) for p in regions]
-    img = cv2.polylines(img, hulls, 1, (0, 255, 0))
-    return img
-
-
-def my_dist(x, y):
-    return np.sqrt(np.sum((x - y) ** 2, axis=1))
-
-
-def clamp(a, threshmin=-0.1, threshmax=0.1):
-    for ind, pt in enumerate(a):
-        if pt < threshmin:
-            a[ind] = -1
-        elif pt > threshmax:
-            a[ind] = 1
-        else:
-            a[ind] = 0
 
 COUNT = 0
 
@@ -246,7 +144,6 @@ def outdent_score(relative_angles):
 
 def compute_comp(combs_l, relative_angles, method='correlate'):
     # Combinations of 4 points
-    # print("Number combinations: ", len(combs_l))
     global COUNT
     MY_COUNT = 0
 
@@ -451,8 +348,6 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
                 for y, x in tuple(zip(*np.where(mask_around_tiny == 255))):
                     neighbors_color.append(img_piece_tiny[y, x])
                 rgb = flatten_colors(neighbors_color)
-                # if len(np.isnan(newElt).nonzero()[0]) == 0:
-                # hsl = np.array(colorsys.rgb_to_hls(rgb[0], rgb[1], rgb[2]))
                 hsl = np.array(colorsys.rgb_to_hls(rgb[2] / 255.0, rgb[1] / 255.0, rgb[0] / 255.0))
                 color_edge.append(hsl)
                 out_color[p[1], p[0]] = rgb
@@ -484,32 +379,7 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
         x, y, w, h = cv2.boundingRect(cnt)
         out2 = out[y:y + h, x:x + w]
 
-        # NEED COMPUTE CENTER FROM 4 CORNERS (barycentre)
-        # centerX = np.sum([x2[0] - x for x2 in corners]) / len(corners)
-        # centerY = np.sum([x2[1] - y for x2 in corners]) / len(corners)
-        # cv2.circle(out2, tuple((int(centerX), int(centerY))), 10, 255, -1)
-
-        # /!\ /!\ TESTING PURPOSE ROTATE RANDOM AMOUNT /!\ /!\
-        # out2 = imutils.rotate_bound(out2, random.randint(0, 360))
-
-        # cv2.circle(out2, (int(w / 2), int(h / 2)), 10, 255, -1)
-
-        # cv2.line(out2, tuple((int(centerX) - 1000, int(centerY) - 1000)), tuple((int(centerX) + 1000, int(centerY) + 1000)), 255, 5)
-        # cv2.line(out2, tuple((corners[0][0] - x, corners[0][1] - y)), tuple((int(centerX), int(centerY))), 255, 5)
-
-        # angle = np.degrees(angle_between((-1, 1, 0), (corners[0][0] - x - centerX, corners[0][1] - y - centerY, 0)))
-
-        # print((h, h, 0), (corners[0][0] - x - centerX, corners[0][1] - y - centerY, 0), angle)
-
-        #my_find_corner_signature(img_bw, cnt, out2)
-        
-        # rotated = imutils.rotate_bound(out2, angle)
         list_img.append(out2)
-
-    # Normalize all edges to min edge
-    #length = np.min([np.min([y.size for y in np.array(x.edges_)]) for x in puzzle_pieces])
-    #for p in puzzle_pieces:
-    #    p.normalize_edges(int(length / 3))
 
     max_height = max([x.shape[0] for x in list_img])
     max_width = max([x.shape[1] for x in list_img])
@@ -525,30 +395,3 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
         viewer.addImage("Extracted colored border", "/tmp/color_border.png")
 
     return puzzle_pieces
-
-
-def load_signatures(path):
-    holes, heads, borders = [], [], []
-    holes = [x for x in os.listdir(path) if "hole" in x]
-    heads = [x for x in os.listdir(path) if "head" in x]
-    borders = [x for x in os.listdir(path) if "border" in x]
-
-    holes = [pickle.load(open(os.path.join(path, f), "rb")) for f in holes]
-    heads = [pickle.load(open(os.path.join(path, f), "rb")) for f in heads]
-    borders = [pickle.load(open(os.path.join(path, f), "rb")) for f in borders]
-
-    return {'holes': np.average(holes, axis=0), 'heads': np.average(heads, axis=0),
-            'borders': np.average(borders, axis=0)}
-
-
-def display(img, name='image'):
-    cv2.imshow(name, img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def get_fourier(img):
-    f = np.fft.fft2(img)
-    fshift = np.fft.fftshift(f)
-    magnitude = 20 * np.log(np.abs(fshift))
-    return fshift, magnitude

@@ -47,7 +47,6 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
         for pix in p.img_piece_:
             x, y = pix.pos
             x, y = x - minX, y - minY
-            # print(x, y, img_p.shape)
             img_p[x, y] = pix.color
 
         #new bounding box
