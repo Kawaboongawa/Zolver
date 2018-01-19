@@ -11,16 +11,16 @@ def computeBezierPoint(points, t):
     tSquared = t * t 
     tCubed = tSquared * t 
 
-    cx = 3.0 * (points[1][0] - points[0][0]);
-    bx = 3.0 * (points[2][0] - points[1][0]) - cx;
-    ax = points[3][0] - points[0][0] - cx - bx;
+    cx = 3.0 * (points[1][0] - points[0][0])
+    bx = 3.0 * (points[2][0] - points[1][0]) - cx
+    ax = points[3][0] - points[0][0] - cx - bx
 
-    cy = 3.0 * (points[1][1] - points[0][1]);
-    by = 3.0 * (points[2][1] - points[1][1]) - cy;
-    ay = points[3][1] - points[0][1] - cy - by;
+    cy = 3.0 * (points[1][1] - points[0][1])
+    by = 3.0 * (points[2][1] - points[1][1]) - cy
+    ay = points[3][1] - points[0][1] - cy - by
 
-    x = (ax * tCubed) + (bx * tSquared) + (cx * t) + points[0][0];
-    y = (ay * tCubed) + (by * tSquared) + (cy * t) + points[0][1];
+    x = (ax * tCubed) + (bx * tSquared) + (cx * t) + points[0][0]
+    y = (ay * tCubed) + (by * tSquared) + (cy * t) + points[0][1]
 
     return (x,y)
 
@@ -39,7 +39,7 @@ def polygonCropImage(im,polygon,name):
     imArray = numpy.asarray(im)
 
     # create mask
-    #polygon = [(0,0),(0,200),(200,200)]
+    # polygon = [(0,0),(0,200),(200,200)]
     maskIm = Image.new('L', (imArray.shape[1], imArray.shape[0]), 0)
     ImageDraw.Draw(maskIm).polygon(polygon, outline=1, fill=1)
     mask = numpy.array(maskIm)
@@ -64,13 +64,13 @@ class PieceOutLine():
         self.h = height 
         self.arcRatio = ar
         self.connectRatio = cr
-        self.pointNum = 300;
+        self.pointNum = 300
          
     def genRightFemaleArc(self,istop):
         halfW = self.w * 0.5
         halfH = self.h * 0.5
         arcW = self.w * self.arcRatio 
-        connectW = self.h * self.connectRatio 
+        connectW = self.h * self.connectRatio
 
         top = (halfW,-halfH) 
         bottom = (halfW + arcW, -connectW * 0.5)
@@ -88,7 +88,7 @@ class PieceOutLine():
                 left.append((p[0],-p[1]))
             curvPoints = computerBezier(left, self.pointNum )
 
-        return curvPoints;
+        return curvPoints
 
     def genRightFemaleConnect(self,left):
         halfW = self.w * 0.5
@@ -142,7 +142,7 @@ class PieceOutLine():
                 left.append((-p[0],p[1]))
             curvPoints = computerBezier(left, self.pointNum )
 
-        return curvPoints;
+        return curvPoints
 
     def genBottomFemaleConnect(self,left):
         halfW = self.w * 0.5
@@ -180,7 +180,7 @@ class PieceOutLine():
         leftArc = self.genRightFemaleArc(True) 
         
         curvPoints = rightArc + right + left + leftArc
-        return curvPoints;
+        return curvPoints
 
     def genRightMale(self):
         halfW = self.w * 0.5
@@ -219,7 +219,7 @@ class PieceOutLine():
         leftArc = self.genBottomFemaleArc(True) 
         
         curvPoints = rightArc + right + left + leftArc
-        return curvPoints;
+        return curvPoints
 
     def genBottomMale(self):
         halfH = self.h * 0.5
@@ -253,7 +253,7 @@ class PieceOutLine():
     
     def genOutLine(self,pieceBorders):
         curvPoints = [ ] 
-        curvPoints.append((self.w * 0.5, self.h *0.5));
+        curvPoints.append((self.w * 0.5, self.h *0.5))
         func = [ 
                 { 
                     t_FEMALE:   self.genBottomFemale,
@@ -399,13 +399,13 @@ def createPuzzlePieces(name,row,col,outPrefix):
             cropPoints = [] 
             for p in curvPoints:
                 cropPoints.append((p[0] + center[0],p[1] + center[1]))
-            polygonCropImage(region,cropPoints,name + ".png");
+            polygonCropImage(region,cropPoints,name + ".png")
             
             for p in curvPoints:
                 outLinePoints.append((p[0] + j * w  + 0.5 * w ,p[1] + i * h + 0.5 * h))
     
     json +="\n}\n"
-    dataFile = open(outPrefix + "data.json" ,"w"); 
+    dataFile = open(outPrefix + "data.json" ,"w")
     dataFile.write(json)
     dataFile.flush()
     dataFile.close()
@@ -436,7 +436,7 @@ def createPuzzlePieces(name,row,col,outPrefix):
         px = im.size[0] - 0.5 * r
         outLinedraw.ellipse( (px - r, py - r, px + r, py + r ), fill=lineColor,outline = lineColor)
 
-    im.save(outPrefix + "outline.png");
+    im.save(outPrefix + "outline.png")
     #im.show()
 
 
@@ -453,7 +453,7 @@ def main():
         os.makedirs(outDir)
     
     outPrefix =outDir + "/piece_"
-    createPuzzlePieces(sys.argv[1],int(sys.argv[2]),int(sys.argv[3]),outPrefix);
+    createPuzzlePieces(sys.argv[1],int(sys.argv[2]),int(sys.argv[3]),outPrefix)
     
 
 if __name__ == "__main__":
