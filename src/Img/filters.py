@@ -2,13 +2,8 @@ import colorsys
 from colorsys import rgb_to_hls
 
 import cv2
-from scipy.signal import savgol_filter
 import numpy as np
-import scipy.misc
-import imutils
-import random
 import math, pickle, os
-import sklearn.preprocessing
 
 from Img.Pixel import Pixel, flatten_colors
 from Puzzle.Edge import Edge
@@ -18,12 +13,21 @@ import matplotlib.pyplot as plt
 import matplotlib
 import scipy, sklearn.preprocessing
 import itertools
-from scipy.spatial.distance import euclidean, chebyshev
 from Img.peak_detect import *
 
 COUNT = 0
 
-def get_relative_angles(cnt, export=False, norm=False, green=False, sigma=5):
+def get_relative_angles(cnt, export=False, sigma=5):
+    """
+        Get the relative angles of points of a contour 2 by 2
+
+        :param cnt: contour to analyze
+        :param export: export of the signature with pickle and figure
+        :param sigma: coefficient used in gaussian filter (the higher the smoother)
+        :type cnt: list of tuple of points
+        :return: list of angles
+    """
+
     global COUNT
     COUNT = COUNT + 1
 
@@ -52,9 +56,6 @@ def get_relative_angles(cnt, export=False, norm=False, green=False, sigma=5):
     
     angles = np.roll(np.array(angles), -length)
     angles = angles[0:length]
-    
-    # clamp(angles)
-    # angles = sklearn.preprocessing.binarize(np.array(angles).reshape((len(cnt) - 1, 1)), threshold=0.1)
 
     if export:
         pickle.dump(angles, open("/tmp/save" + str(COUNT) + ".p", "wb"))
@@ -67,8 +68,16 @@ def get_relative_angles(cnt, export=False, norm=False, green=False, sigma=5):
 
     return angles
 
-# Determine if a point at index is a maximum local in radius range of relative_angles function
 def is_maximum_local(index, relative_angles, radius):
+    """
+        Determine if a point at index is a maximum local in radius range of relative_angles function
+
+        :param index: index of the point to check in relative_angles list
+        :param relative_angles: list of angles
+        :param radius: radius used to check neighbors
+        :return: Boolean
+    """
+
     start = max(0, index - radius)
     end = min(relative_angles.shape[0] - 1, index + radius)
     for i in range(start, end + 1):
@@ -76,8 +85,14 @@ def is_maximum_local(index, relative_angles, radius):
             return False
     return True
 
-# Longest area < 0
 def longest_peak(relative_angles):
+    """
+        Find the longest area < 0
+
+        :param relative_angles: list of angles
+        :return: coordinates of the area
+    """
+
     length = relative_angles.shape[0]
     longest = (0, 0)
     j = 0
@@ -88,18 +103,19 @@ def longest_peak(relative_angles):
             longest = (j, i)
     return longest
 
-# Distance of each points to the line formed by first and last points
 def distance_signature(relative_angles):
+    """
+        Distance of each points to the line formed by first and last points
+
+        :param relative_angles: list of angles
+        :return: List of floats
+    """
+
     length = relative_angles.shape[0]
     
     l1 = np.array([0, relative_angles[0]])
     l2 = np.array([length - 1, relative_angles[-1]])
     
-    '''
-    #TESTS FOR LINE FLAT
-    l1 = np.array([0, 0])
-    l2 = np.array([length - 1, 0])
-    '''
     signature = np.zeros((length, 1))
 
     for i in range(length):
@@ -108,8 +124,14 @@ def distance_signature(relative_angles):
     
     return signature
 
-# Flat score
 def flat_score(relative_angles):
+    """
+        Compute the flat score of relative_angles
+
+        :param relative_angles: list of angles
+        :return: List of floats
+    """
+
     length = relative_angles.shape[0]
     distances = distance_signature(relative_angles)
     diff = 0
@@ -117,8 +139,14 @@ def flat_score(relative_angles):
         diff = max(diff, abs(distances[i]))
     return diff
 
-# Compute score for indent part
 def indent_score(relative_angles):
+    """
+        Compute score for indent part
+
+        :param relative_angles: list of angles
+        :return: List of floats
+    """
+
     length = relative_angles.shape[0]
     peak = longest_peak(relative_angles)
 
@@ -138,11 +166,25 @@ def indent_score(relative_angles):
         return flat_score(relative_angles)
     return flat_score(shape)
 
-# Compute score for outdent part
 def outdent_score(relative_angles):
+    """
+        Compute score for outdent part
+
+        :param relative_angles: list of angles
+        :return: List of floats
+    """
+
     return indent_score(-relative_angles)
 
 def compute_comp(combs_l, relative_angles, method='correlate'):
+    """
+        Compute score for each combinations of 4 points and return the index of the best
+
+        :param combs_l: list of combinations of 4 points
+        :param relative_angles: List of angles
+        :return: Int
+    """
+
     # Combinations of 4 points
     global COUNT
     MY_COUNT = 0
@@ -174,6 +216,14 @@ def compute_comp(combs_l, relative_angles, method='correlate'):
     return np.argmin(np.array(results_glob))
 
 def peaks_inside(comb, peaks):
+    """
+        Check the number of peaks inside comb
+
+        :param comb: Tuple of coordinates
+        :param peaks: List of peaks to check
+        :return: Int
+    """
+
     cpt = []
 
     if len(comb) == 0:
@@ -185,16 +235,42 @@ def peaks_inside(comb, peaks):
     return cpt
 
 def is_pattern(comb, peaks):
+    """
+        Check if the peaks formed an outdent or an indent pattern
+
+        :param comb: Tuple of coordinates
+        :param peaks: List of peaks
+        :return: Int
+    """
+
     cpt = len(peaks_inside(comb, peaks))
     return cpt == 0 or cpt == 2 or cpt == 3
 
 def is_acceptable_comb(combs, peaks, length):
+    """
+        Check if a combination is composed of acceptable patterns.
+        Used to filter the obviously bad combinations quickly.
+
+        :param comb: Tuple of coordinates
+        :param peaks: List of peaks
+        :param length: Length of the signature (used for offset computation)
+        :return: Boolean
+    """
+
     offset =  length - combs[3] - 1
     combs_tmp = combs + offset
     peaks_tmp = (peaks + offset) % length
     return is_pattern([0, combs_tmp[0]], peaks_tmp) and is_pattern([combs_tmp[0], combs_tmp[1]], peaks_tmp) and is_pattern([combs_tmp[1], combs_tmp[2]], peaks_tmp) and is_pattern([combs_tmp[2], combs_tmp[3]], peaks_tmp)
 
 def type_peak(peaks_pos_inside, peaks_neg_inside):
+    """
+        Determine the type of lists of pos and neg peaks
+
+        :param peaks_pos_inside: List of positive peaks
+        :param peaks_neg_inside: List of negative peaks
+        :return: TypeEdge
+    """
+
     if len(peaks_pos_inside) == 0 and len(peaks_neg_inside) == 0:
         return TypeEdge.BORDER
     if len(peaks_inside(peaks_pos_inside, peaks_neg_inside)) == 2:
@@ -203,7 +279,15 @@ def type_peak(peaks_pos_inside, peaks_neg_inside):
         return TypeEdge.HEAD
     return TypeEdge.UNDEFINED
 
-def my_find_corner_signature(img, cnt, green=False, piece_img=None):
+def my_find_corner_signature(cnt, green=False):
+    """
+        Determine the corner/edge positions by analyzing contours.
+
+        :param cnt: contour to analyze
+        :param green: boolean used to activate green background mode
+        :type cnt: list of tuple of points
+        :return: Corners coordinates, Edges lists of points, type of pieces
+    """
 
     corners = []
     edges = []
@@ -215,7 +299,7 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
 
         # Find relative angles
         cnt_convert = [c[0] for c in cnt]
-        relative_angles = get_relative_angles(np.array(cnt_convert), export=False, green=green, sigma=sigma)
+        relative_angles = get_relative_angles(np.array(cnt_convert), export=False, sigma=sigma)
 
         relative_angles = np.array(relative_angles)
         relative_angles_inverse = -np.array(relative_angles)
@@ -295,17 +379,36 @@ def my_find_corner_signature(img, cnt, green=False, piece_img=None):
 
 
 def angle_between(v1, v2):
+    """
+        Return the angles between two tuples
+
+        :param v1: first tuple of coordinates
+        :param v2: second tuple of coordinates
+        :return: distance Float
+    """
+
     return math.atan2(-v1[1], v1[0]) - math.atan2(-v2[1], v2[0])
 
-# Return puzzle Piece array
 def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=False):
+    """
+        Find the corners/shapes of all contours and build an array of puzzle Pieces
+
+        :param img: matrix of the img
+        :param img_bw: matrix of the img in black and white
+        :param contours: lists of tuples of coordinates of contours
+        :param path: Path used to export pieces img
+        :path viewer: Object used for GUI display
+        :param green: boolean used to activate green background mode
+        :return: puzzle Piece array
+    """
+
     puzzle_pieces = []
     list_img = []
     out_color = np.zeros_like(img)
 
     for idx, cnt in enumerate(contours):
         
-        corners, edges_shape, types_edges = my_find_corner_signature(img_bw, cnt, green)
+        corners, edges_shape, types_edges = my_find_corner_signature(cnt, green)
         if corners is None:
             return None
         
