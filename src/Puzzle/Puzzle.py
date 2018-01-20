@@ -1,4 +1,4 @@
-from Puzzle.Distance import diff_match_edges, diff_match_edges2, diff_full_compute
+from Puzzle.Distance import diff_match_edges, diff_full_compute
 from Puzzle.PuzzlePiece import *
 
 from Puzzle.Extractor import Extractor
