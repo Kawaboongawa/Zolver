@@ -4,6 +4,8 @@ from Puzzle.Puzzle import Puzzle
 
 
 class SolveThread(QThread):
+    """ Main thread used to launch the puzzle solving """
+
     def __init__(self, path, viewer, green_screen=False):
         QThread.__init__(self)
         self.path = path

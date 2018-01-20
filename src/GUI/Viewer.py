@@ -8,6 +8,8 @@ from GUI.SolveThread import SolveThread
 
 
 class Viewer(QMainWindow):
+    """ Main viewer window """
+
     def __init__(self):
         super(Viewer, self).__init__()
 
@@ -60,7 +62,6 @@ class Viewer(QMainWindow):
 
     def addLog(self, args):
         self.logs.append(' '.join(map(str, args)))
-
 
     def displayImage(self, fileNameId):
         image = QImage(self.imgs[fileNameId])
@@ -127,29 +128,17 @@ class Viewer(QMainWindow):
         self.logWindow = ScrollMessageBox((str(x) for x in self.logs))
         self.logWindow.exec_()
 
-
     def createActions(self):
         self.openAct = QAction("&Open...", self, shortcut="Ctrl+O", triggered=self.open)
-
         self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q", triggered=self.close)
-
         self.zoomInAct = QAction("Zoom &In (25%)", self, shortcut="Up", enabled=False, triggered=self.zoomIn)
-
         self.zoomOutAct = QAction("Zoom &Out (25%)", self, shortcut="Down", enabled=False, triggered=self.zoomOut)
-
         self.normalSizeAct = QAction("&Normal Size", self, shortcut="Ctrl+N", enabled=False, triggered=self.normalSize)
-
         self.displayPrevAct = QAction("&Previous image", self, shortcut="Left", enabled=False, triggered=self.displayPrev)
-
         self.displayNextAct = QAction("&Next image", self, shortcut="Right", enabled=False, triggered=self.displayNext)
-
         self.solveAct = QAction("&Solve puzzle", self, shortcut="Ctrl+S", enabled=False, triggered=self.solve)
-
         self.solveGreenAct = QAction("&Solve puzzle (Green Background)", self, shortcut="Alt+S", enabled=False, triggered=self.solveGreen)
-
         self.logsAct = QAction("&Logs", self, shortcut="Ctrl+L", triggered=self.showLogs)
-
-
 
     def createMenus(self):
         self.fileMenu = QMenu("&File", self)
