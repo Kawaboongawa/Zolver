@@ -9,18 +9,26 @@ from Img.filters import *
 PREPROCESS_DEBUG_MODE = 0
 
 def show_image(img, ind=None, name='image', show=True):
+    """ Helper used for matplotlib image display """
+
     plt.axis("off")
     plt.imshow(img)
     if show:
         plt.show()
 
 def show_contours(contours, imgRef):
+    """ Helper used for matplotlib contours display """
+
     whiteImg = np.zeros(imgRef.shape)
     cv2.drawContours(whiteImg, contours, -1, (255, 0, 0), 1, maxLevel=1)
     show_image(whiteImg)
     cv2.imwrite("/tmp/cont.png", whiteImg)
 
 class Extractor():
+    """
+        Class used for preprocessing and pieces extraction
+    """
+
     def __init__(self, path, viewer=None, green_screen=False, factor=0.84):
         self.path = path
         self.img = cv2.imread(self.path, cv2.IMREAD_COLOR)
@@ -40,11 +48,18 @@ class Extractor():
         self.green_ = green_screen
 
     def log(self, *args):
+        """ Helper function to log informations to the GUI """
+
         print(' '.join(map(str, args)))
         if self.viewer:
             self.viewer.addLog(args)
 
     def extract(self):
+        """
+            Perform the preprocessing of the image and call functions to extract
+            informations of the pieces.
+        """
+
         kernel = np.ones((3, 3), np.uint8)
 
         cv2.imwrite("/tmp/binarized.png", self.img_bw)
@@ -54,14 +69,19 @@ class Extractor():
         ### Implementation of random functions, actual preprocessing is down below
 
         def fill_holes():
-            # filling contours found (and thus potentially holes in pieces)
+            """ filling contours found (and thus potentially holes in pieces) """
+
             _, contour, _ = cv2.findContours(self.img_bw, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
             for cnt in contour:
                 cv2.drawContours(self.img_bw, [cnt], 0, 255, -1)
 
         def apply_morpho():
+            """
+                Apply morphological operations on base image.
+                nbMorpho is updated with empiric values, they can obviously be changed
+            """
+
             morph = self.img.copy()
-            # nbMorpho is updated with empiric values, they can obviously be changed
             nbMorph = 3
             if self.img.shape[0] * self.img.shape[1] < 1000 * 2000:
                 nbMorph = 1
@@ -87,6 +107,8 @@ class Extractor():
             return
 
         def real_preprocessing():
+            """ Apply morphological operations on base image. """
+
             element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
             self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, element)                
             self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, element)
