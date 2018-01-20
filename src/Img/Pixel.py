@@ -41,7 +41,7 @@ class Pixel:
     
     def rotate(self, origin, angle):
         """
-            Rotate the pixel around `origin` by `angle degrees`
+            Rotate the pixel around `origin` by `angle` degrees
 
             :param origin: Coordinates of points used to rotate around
             :param angle: number of degrees

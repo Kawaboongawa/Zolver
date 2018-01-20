@@ -5,6 +5,14 @@ import math
 import numpy as np
 
 def rotate(origin, point, angle):
+    """
+        Rotate the pixel around `origin` by `angle` degrees
+
+        :param origin: Coordinates of points used to rotate around
+        :param angle: number of degrees
+        :return: Nothing
+    """
+
     ox, oy = origin
     px, py = point
 
@@ -17,6 +25,16 @@ def rotate(origin, point, angle):
 
 
 def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
+    """
+        Stick an edge of a piece to the bloc of already resolved pieces
+
+        :param bloc_p: bloc of pieces already solved
+        :param bloc_e: bloc of edges already solved
+        :param p: piece to add to the bloc
+        :param e: edge to stick
+        :return: Nothing
+    """
+
     vec_bloc = np.subtract(bloc_e.shape[0], bloc_e.shape[-1])
     vec_piece = np.subtract(e.shape[0], e.shape[-1])
 

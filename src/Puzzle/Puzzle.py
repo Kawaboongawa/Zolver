@@ -13,7 +13,13 @@ from Puzzle.tuple_helper import equals_tuple, add_tuple, sub_tuple, is_neigbhor,
 
 
 class Puzzle():
+    """
+        Class used to store all informations about the puzzle
+    """
+
     def log(self, *args):
+        """ Helper to log informations to the GUI """
+
         print(' '.join(map(str, args)))
         if self.viewer:
             self.viewer.addLog(args)
