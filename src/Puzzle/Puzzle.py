@@ -25,6 +25,8 @@ class Puzzle():
             self.viewer.addLog(args)
 
     def __init__(self, path, viewer=None, green_screen=False):
+        """ Extract informations of pieces in the img at `path` and start computation of the solution """
+
         self.pieces_ = None
         factor = 0.40
         while self.pieces_ is None:
@@ -35,14 +37,12 @@ class Puzzle():
         self.viewer = viewer
 
         self.connected_directions = []
-        self.conrner_pos = [(0, 0)]  # we start with a corner
         self.diff = {}
         self.edge_to_piece = {}
 
         for p in self.pieces_:
             for e in p.edges_:
                 self.edge_to_piece[e] = p
-
 
         self.extremum = (-1, -1, 1, 1)
         self.log('>>> START solving puzzle')
@@ -70,7 +70,7 @@ class Puzzle():
         self.export_pieces('/tmp/stick{0:03d}'.format(1) + ".png",
                            '/tmp/colored{0:03d}'.format(1) + ".png",
                            'Border types'.format(1),
-                           'Step {0:03d}'.format(1), display_boder=True)
+                           'Step {0:03d}'.format(1), display_border=True)
 
         self.log('>>> START solve border')
         start_piece = connected_pieces[0]
@@ -119,7 +119,16 @@ class Puzzle():
         # +--+--+--+
         # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
 
-    def solve(self, connected_pieces, left_pieces, border=False, export=False):
+    def solve(self, connected_pieces, left_pieces, border=False):
+        """
+            Solve the puzzle by finding the optimal piece in left_pieces matching the edges
+            available in connected_pieces
+
+            :param connected_pieces: pieces already connected to the puzzle
+            :param left_pieces: remaining pieces to place in the puzzle
+            :param border: Boolean to determine if the strategy is border
+            :return: List of connected pieces
+        """
 
         if len(self.connected_directions) == 0:
             self.connected_directions = [((0, 0), connected_pieces[0])] # ((x, y), p), x & y relative to the first piece, init with 1st piece
@@ -150,6 +159,16 @@ class Puzzle():
 
 
     def compute_diffs(self, left_pieces, diff, new_connected, edge_connected=None):
+        """
+            Compute the diff between the left pieces edges and the new_connected piece edges
+            by sticking them and compute the distance
+
+            :param left_pieces: remaining pieces to place in the puzzle
+            :param diff: pre computed diff between edges to speed up the process
+            :param new_connected: Connected pieces to test for a match
+            :return: updated diff matrix
+        """
+
         # Remove former edge from the bloc border
         if edge_connected is not None:
             del diff[edge_connected]
@@ -187,6 +206,8 @@ class Puzzle():
 
 
     def fallback(self, diff, connected_direction, left_piece, strat=Strategy.NAIVE):
+        """ If a strategy does not work fallback to another one """
+
         self.log('Fail to solve the puzzle with', self.strategy, 'falling back to', strat)
         old_strat = self.strategy
         self.strategy = Strategy.NAIVE
@@ -195,6 +216,15 @@ class Puzzle():
         return best_bloc_e, best_e
 
     def best_diff(self, diff, connected_direction, left_piece):
+        """
+            Find the best matching edge for a piece edge
+
+            :param diff: pre computed diff between edges to speed up the process
+            :param connected_direction: Direction of the edge to connect
+            :param left_piece: Piece to connect
+            :return: the best edge found in the bloc
+        """
+
         best_bloc_e, best_e, best_p, min_diff = None, None, None, float('inf')
         minX, minY, maxX, maxY = self.extremum
 
@@ -291,7 +321,8 @@ class Puzzle():
 
 
     def add_to_diffs(self, left_pieces):
-        # build the list of edge to test
+        """ build the list of edge to test """
+
         edges_to_test = []
         for piece in left_pieces:
             for edge in piece.edges_:
@@ -314,24 +345,27 @@ class Puzzle():
 
 
     def update_direction(self, e, best_p, best_e):
+        """ Update the direction of the edge after matching it """
+
         opp = get_opposite_direction(e.direction)
         step = step_direction(opp, best_e.direction)
         for edge in best_p.edges_:
             edge.direction = rotate_direction(edge.direction, step)
 
     def connect_piece(self, connected_directions, curr_p, dir, best_p):
+        """
+            Then we need to search the other pieces already in the puzzle that are going to be also connected:
+            +--+--+--+
+            |  | X| O|
+            +--+--+--+
+            |  | X| X|
+            +--+--+--+
+            |  |  |  |
+            +--+--+--+
 
-        # Then we need to search the other pieces already in the puzzle that are going to be also connected:
-        # +--+--+--+
-        # |  | X| O|
-        # +--+--+--+
-        # |  | X| X|
-        # +--+--+--+
-        # |  |  |  |
-        # +--+--+--+
-        #
-        # For example if I am going to put a piece at the marker 'O' only one edge will be connected to the piece
-        # therefore we need to search the adjacent pieces and connect them properly
+            For example if I am going to put a piece at the marker 'O' only one edge will be connected to the piece
+            therefore we need to search the adjacent pieces and connect them properly
+        """
 
         old_coord = list(filter(lambda x: x[1] == curr_p, connected_directions))[0][0]
         new_coord = add_tuple(old_coord, dir.value)
@@ -349,8 +383,6 @@ class Puzzle():
                             break
         connected_directions.append((new_coord, best_p))
 
-
-
         minX, minY, maxX, maxY = self.extremum
         coeff = [1, 1, 1, 1]
         for i, d in enumerate(directions):
@@ -367,42 +399,9 @@ class Puzzle():
 
         self.log('Placed:', best_p.type, 'at', new_coord)
 
-    def stick_best(self, cur_piece, cur_edge, pieces, border=False):
-        if cur_edge.connected:
-            return
-
-        def compatible_edges(e1, e2):
-            return (e1.type == TypeEdge.HOLE and e2.type == TypeEdge.HEAD) or (e1.type == TypeEdge.HEAD and e2.type == TypeEdge.HOLE)
-
-        edges_to_test = []
-        for piece in pieces:
-            if piece != cur_piece:
-                for edge in piece.edges_:
-                    if not compatible_edges(edge, cur_edge):
-                        continue
-                    if not edge.connected:
-                        edges_to_test.append((piece, edge))
-
-        diff = []
-        for piece, edge in edges_to_test:
-            # Stick pieces to test distance
-            for e in piece.edges_:
-                e.backup_shape()
-            stick_pieces(cur_piece, cur_edge, piece, edge)
-            diff.append(1 * diff_match_edges(edge.shape, cur_edge.shape))
-
-            for e in piece.edges_:
-                e.restore_backup_shape()
-
-
-        # Stick the best piece found
-        best_p, best_e = edges_to_test[np.argmin(diff)]
-        stick_pieces(cur_piece, cur_edge, best_p, best_e, final_stick=True)
-
-        return best_p, best_e
-
     def translate_puzzle(self):
-        # Translate all pieces to the top left corner to be sure the puzzle is in the image
+        """ Translate all pieces to the top left corner to be sure the puzzle is in the image """
+
         minX = sys.maxsize
         minY = sys.maxsize
         for p in self.pieces_:
@@ -422,7 +421,15 @@ class Puzzle():
             for p in piece.img_piece_:
                 p.translate(minX, minY)
 
-    def export_pieces(self, path_contour, path_colored, name_contour=None, name_colored=None, display=True, display_boder=False):
+    def export_pieces(self, path_contour, path_colored, name_contour=None, name_colored=None, display=True, display_border=False):
+        """
+            Export the contours and the colored image
+
+            :param path_contour: Path used to export contours
+            :param path_colored: Path used to export the colored image
+            :return: the best edge found in the bloc
+        """
+
         minX, minY = float('inf'), float('inf')
         maxX, maxY = -float('inf'), -float('inf')
         for piece in self.pieces_:
@@ -432,7 +439,6 @@ class Puzzle():
                 maxX, maxY = max(maxX, x), max(maxY, y)
 
         colored_img = np.zeros((maxX - minX, maxY - minY, 3))
-
         border_img = np.zeros((maxX - minX, maxY - minY, 3))
 
         for piece in self.pieces_:
@@ -459,12 +465,17 @@ class Puzzle():
         cv2.imwrite(path_contour, border_img)
         cv2.imwrite(path_colored, colored_img)
         if self.viewer and display:
-            if display_boder:
+            if display_border:
                 self.viewer.addImage(name_contour, path_contour, display=False)
             self.viewer.addImage(name_colored, path_colored)
 
 
     def compute_possible_size(self, nb_piece, nb_border):
+        """
+            Compute all possible size of the puzzle based on the number
+            of pieces and the number of border pieces
+        """
+
         nb_edge_border = nb_border - 4
         nb_middle = nb_piece - nb_border
         possibilities = []
@@ -476,7 +487,9 @@ class Puzzle():
         return possibilities
 
 
-    def corner_place_fit_size(self, c,update_dim=False):
+    def corner_place_fit_size(self, c, update_dim=False):
+        """ Update the possible dimensions of the puzzle when a corner is placed """
+
         def almost_equals(idx, target, val):
             return val[idx] == target or val[idx] == -target
 
@@ -506,6 +519,8 @@ class Puzzle():
         return False
 
     def is_edge_at_corner_place(self, c):
+        """ Determine of an edge is at a corner place """
+
         if len(self.possible_dim) == 1:
             # We have already picked a dimension
             return (c[0] == 0 or c[0] == self.possible_dim[0][0] or c[0] == -self.possible_dim[0][0]) and \
