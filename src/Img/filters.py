@@ -289,13 +289,18 @@ def my_find_corner_signature(cnt, green=False):
         :return: Corners coordinates, Edges lists of points, type of pieces
     """
 
-    corners = []
     edges = []
-
     combs_final = []
+    types_pieces = []
     sigma = 5
-    while len(combs_final) == 0 and sigma < 12:
+    max_sigma = 12
+    if not green:
+        sigma = 5
+        max_sigma = 12
+    while sigma < max_sigma:
         print("Smooth curve with sigma={}...".format(sigma))
+
+        tmp_combs_final = []
 
         # Find relative angles
         cnt_convert = [c[0] for c in cnt]
@@ -333,12 +338,12 @@ def my_find_corner_signature(cnt, green=False):
                 and ((comb[2] - comb[3]) > OFFSET_LOW) and ((comb[2] - comb[3]) < OFFSET_HIGH)
                 and ((comb[3] + (len(relative_angles) - comb[0])) > OFFSET_LOW) and ((comb[3] + (len(relative_angles) - comb[0])) < OFFSET_HIGH)):
                 if is_acceptable_comb((comb[3], comb[2], comb[1], comb[0]), extr, len(relative_angles)) and is_acceptable_comb((comb[3], comb[2], comb[1], comb[0]), extr_inverse, len(relative_angles)):
-                    combs_final.append((comb[3], comb[2], comb[1], comb[0]))
+                    tmp_combs_final.append((comb[3], comb[2], comb[1], comb[0]))
         sigma += 1
-        if len(combs_final) == 0:
+        if len(tmp_combs_final) == 0:
             continue
 
-        best_fit = combs_final[compute_comp(combs_final, relative_angles, method='flat')]
+        best_fit = tmp_combs_final[compute_comp(tmp_combs_final, relative_angles, method='flat')]
 
         # Roll the values of relative angles for this combination
         offset = len(relative_angles) - best_fit[3] - 1
@@ -347,22 +352,24 @@ def my_find_corner_signature(cnt, green=False):
         extr = (extr + offset) % len(relative_angles)
         extr_inverse = (extr_inverse + offset) % len(relative_angles)
 
-        types_pieces = []
+        tmp_types_pieces = []
+        no_undefined = True
         for best_comb in [[0, best_fit[0]], [best_fit[0], best_fit[1]], [best_fit[1], best_fit[2]], [best_fit[2], best_fit[3]]]:
             pos_peaks_inside = peaks_inside(best_comb, extr)
             neg_peaks_inside = peaks_inside(best_comb, extr_inverse)
             pos_peaks_inside.sort()
             neg_peaks_inside.sort()
-            types_pieces.append(type_peak(pos_peaks_inside, neg_peaks_inside))
-            if (types_pieces[-1] == TypeEdge.UNDEFINED):
+            tmp_types_pieces.append(type_peak(pos_peaks_inside, neg_peaks_inside))
+            if (tmp_types_pieces[-1] == TypeEdge.UNDEFINED):
                 print("UNDEFINED FOUND - try to continue but something bad happened :(")
-                print(types_pieces[-1])
-                print(pos_peaks_inside)
-                print(neg_peaks_inside)
-                if green:
-                    combs_final = []
-                    break
+                print(tmp_types_pieces[-1])
+                no_undefined = False
         
+        combs_final = tmp_combs_final
+        types_pieces = tmp_types_pieces
+
+        if no_undefined:
+            break
     
     if green and sigma >= 12:
         print("Error sigma >= 12")
