@@ -60,7 +60,6 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
 
         
         #rotation center
-        #ox, oy = bloc_e.shape[0]
         img_p = np.full((maxX - minX + 1, maxY - minY + 1, 3), -1)
         for pix in p.img_piece_:
             x, y = pix.pos

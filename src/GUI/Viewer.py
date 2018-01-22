@@ -38,6 +38,9 @@ class Viewer(QMainWindow):
         self.resize(500, 400)
 
     def open(self):
+        '''
+        Callback for image opening
+        '''
         fileName, _ = QFileDialog.getOpenFileName(self, "Open File", QDir.currentPath())
         if fileName:
             self.imageLabel.adjustSize()
@@ -52,6 +55,14 @@ class Viewer(QMainWindow):
             self.addImage('Base image', fileName, addMenu=True)
 
     def addImage(self, name, fileName, display=True, addMenu=False):
+        '''
+        Add an image to the list of image
+
+        :param name: The displayed name
+        :param fileName: The path to the image
+        :param display: Change the current image to the added one
+        :param addMenu: Add the image directly to the menu
+        '''
         self.imgs.append(fileName)
         self.img_names.append(name)
         id = len(self.imgs) - 1
@@ -61,9 +72,18 @@ class Viewer(QMainWindow):
             self.displayImage(id)
 
     def addLog(self, args):
+        '''
+        Add a phrase to the logs
+        :param args: The new log line
+        :return:
+        '''
         self.logs.append(' '.join(map(str, args)))
 
     def displayImage(self, fileNameId):
+        '''
+        Display an image in the GUI
+        :param fileNameId: The image ID
+        '''
         image = QImage(self.imgs[fileNameId])
         if image.isNull():
             QMessageBox.information(self, "Image Viewer",
@@ -77,22 +97,40 @@ class Viewer(QMainWindow):
         self.displayNextAct.setEnabled(self.currImg + 1 != len(self.imgs))
 
     def displayNext(self):
+        '''
+        Callback to display the next image
+        '''
         self.displayImage(self.currImg + 1)
 
     def displayPrev(self):
+        '''
+        Callback to display the previous image
+        '''
         self.displayImage(self.currImg - 1)
 
     def zoomIn(self):
+        '''
+        Callback to zoom in in the image
+        '''
         self.scaleImage(1.2)
 
     def zoomOut(self):
+        '''
+        Callback to zoom out in the image
+        '''
         self.scaleImage(0.8)
 
     def normalSize(self):
+        '''
+        Callback to reset the zoom of the image
+        '''
         self.imageLabel.adjustSize()
         self.scaleFactor = 1.0
 
     def solve(self):
+        '''
+        Callback to start resolution
+        '''
         self.solveAct.setEnabled(False)
         self.solveGreenAct.setEnabled(False)
 
@@ -104,6 +142,9 @@ class Viewer(QMainWindow):
         self.thread.start()
 
     def solveGreen(self):
+        '''
+        Callback to start resolution using green background preprocessing
+        '''
         self.solveAct.setEnabled(False)
         self.solveGreenAct.setEnabled(False)
 
@@ -115,6 +156,9 @@ class Viewer(QMainWindow):
         self.thread.start()
 
     def endSolve(self):
+        '''
+        Callback at the end of the solving
+        '''
         for id, n in enumerate(self.img_names):
             if id == 0:
                 continue
@@ -122,13 +166,24 @@ class Viewer(QMainWindow):
         self.solveMenu.setEnabled(False)
 
     def addOption(self, n, id):
+        '''
+        Add an option to the menu
+        :param n: Name
+        :param id: Image id
+        '''
         self.imageMenu.addAction(QAction('&' + n, self, triggered=lambda: self.displayImage(id)))
 
     def showLogs(self):
+        '''
+        Display the log window
+        '''
         self.logWindow = ScrollMessageBox((str(x) for x in self.logs))
         self.logWindow.exec_()
 
     def createActions(self):
+        '''
+        Bind button with callbacks
+        '''
         self.openAct = QAction("&Open...", self, shortcut="Ctrl+O", triggered=self.open)
         self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q", triggered=self.close)
         self.zoomInAct = QAction("Zoom &In (25%)", self, shortcut="Up", enabled=False, triggered=self.zoomIn)
@@ -141,6 +196,9 @@ class Viewer(QMainWindow):
         self.logsAct = QAction("&Logs", self, shortcut="Ctrl+L", triggered=self.showLogs)
 
     def createMenus(self):
+        '''
+        Create all the GUI buttons
+        '''
         self.fileMenu = QMenu("&File", self)
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addAction(self.solveAct)
@@ -165,6 +223,10 @@ class Viewer(QMainWindow):
 
 
     def scaleImage(self, factor):
+        '''
+        Scale the image with a factor
+        :param factor: The scale factor
+        '''
         self.scaleFactor *= factor
         self.imageLabel.resize(self.scaleFactor * self.imageLabel.pixmap().size())
 
@@ -175,4 +237,10 @@ class Viewer(QMainWindow):
         self.zoomOutAct.setEnabled(self.scaleFactor > 0.01)
 
     def adjustScrollBar(self, scrollBar, factor):
+        '''
+        Adjust the scrollbar size
+        :param scrollBar: The widget
+        :param factor: The factor
+        :return:
+        '''
         scrollBar.setValue(int(factor * scrollBar.value() + ((factor - 1) * scrollBar.pageStep()/2)))
