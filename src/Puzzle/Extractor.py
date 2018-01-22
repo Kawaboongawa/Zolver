@@ -46,6 +46,7 @@ class Extractor():
             self.img_bw = cv2.imread(self.path, cv2.IMREAD_GRAYSCALE)
         self.viewer = viewer
         self.green_ = green_screen
+        self.kernel_ = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 
     def log(self, *args):
         """ Helper function to log informations to the GUI """
@@ -75,49 +76,25 @@ class Extractor():
             for cnt in contour:
                 cv2.drawContours(self.img_bw, [cnt], 0, 255, -1)
 
-        def apply_morpho():
-            """
-                Apply morphological operations on base image.
-                nbMorpho is updated with empiric values, they can obviously be changed
-            """
-
-            morph = self.img.copy()
-            nbMorph = 3
-            if self.img.shape[0] * self.img.shape[1] < 1000 * 2000:
-                nbMorph = 1
-            if self.img.shape[0] * self.img.shape[1] > 3000 * 3000:
-                nbMorph = 5
-            for r in range(nbMorph):
-                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
-                morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, kernel)
-                morph = cv2.morphologyEx(morph, cv2.MORPH_OPEN, kernel)
-
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-            mgrad = cv2.morphologyEx(morph, cv2.MORPH_GRADIENT, kernel)
-            self.img_bw = np.max(mgrad, axis=2)  # BGR 2 GRAY
-
-            def f(x):
-                if x < 5:
-                    return 0
-                else:
-                    return 255
-            f = np.vectorize(f)
-            for i, tab in enumerate(self.img_bw):
-                self.img_bw[i] = f(self.img_bw[i])
-            return
+        def generated_preprocesing():
+            ret, self.img_bw = cv2.threshold(self.img_bw, 254, 255, cv2.THRESH_BINARY_INV)
+            cv2.imwrite("/tmp/otsu_binarized.png", self.img_bw)
+            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, kernel)                
+            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, kernel)
+            
+           
+                
 
         def real_preprocessing():
             """ Apply morphological operations on base image. """
-
-            element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, element)                
-            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, element)
+            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, kernel)                
+            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, kernel)
 
         ### PREPROCESSING: starts there
 
         # With this we apply morphologic operations (CLOSE, OPEN and GRADIENT)
         if not self.green_:
-            apply_morpho()
+            generated_preprocesing()
         else:
             real_preprocessing()
         # These prints are activated only if the PREPROCESS_DEBUG_MODE variable at the top is set to 1
