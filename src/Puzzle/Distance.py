@@ -19,16 +19,14 @@ def dist(p1, p2):
 
     return math.sqrt((p2[0] - p1[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
-def diff_edge_size(e1, e2):
+def dist_edge(e1, e2):
     """
-        Compute the size difference between two edges.
-        Return a boolean to determine if the difference is > 20%
+        Compute the size difference between two edges
 
         :param e1: Matrix of coordinates of points composing the first edge
         :param e2: Matrix of coordinates of points composing the second edge
-        :return: Boolean
+        :return: Float
     """
-
     e1_begin = e1.shape[0]
     e1_end = e1.shape[-1]
     e2_begin = e2.shape[0]
@@ -37,7 +35,18 @@ def diff_edge_size(e1, e2):
     dist_e2 = dist(e2_begin, e2_end)
     res = math.fabs(dist_e1 - dist_e2)
     val = (dist_e1 + dist_e2) / 2
-    return res < (val * 0.20)
+    return res, val
+    
+def have_edges_similar_length(e1, e2, percent):
+    """
+        Return a boolean to determine if the difference between two edges is > 20%
+
+        :param e1: Matrix of coordinates of points composing the first edge
+        :param e2: Matrix of coordinates of points composing the second edge
+        :return: Boolean
+    """
+    res, val = dist_edge(e1, e2)    
+    return res < (val * percent)
 
 def normalize_vect_len(e1, e2):
     """
@@ -84,9 +93,9 @@ def diff_full_compute(e1, e2):
 
     rgbs1 = []
     rgbs2 = []
-    if not diff_edge_size(e1, e2):
+    if not have_edges_similar_length(e1, e2, 0.20):
         return float('inf')
-    
+
     e1_lab_colors = []
     for col in e1.color:
         rgb = colorsys.hls_to_rgb(col[0], col[1], col[2])
