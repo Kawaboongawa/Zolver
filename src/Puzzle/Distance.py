@@ -91,10 +91,9 @@ def diff_full_compute(e1, e2):
         :return: distance Float
     """
 
+    shapevalue, distvalue = dist_edge(e1, e2) 
     rgbs1 = []
     rgbs2 = []
-    if not have_edges_similar_length(e1, e2, 0.20):
-        return float('inf')
 
     e1_lab_colors = []
     for col in e1.color:
@@ -134,5 +133,5 @@ def diff_full_compute(e1, e2):
         for i in range(max):
             sum += dist_color(e1_lab_colors[int(t1 * i)], e2_lab_colors[int(t2 * i)])
         return sum
-
-    return min(euclideanDistance(e1_lab_colors, e2_lab_colors), euclideanDistance(e1_lab_colors, e2_lab_colors[::-1]))
+    val = min(euclideanDistance(e1_lab_colors, e2_lab_colors), euclideanDistance(e1_lab_colors, e2_lab_colors[::-1]))
+    return val * (1.0 + math.sqrt(shapevalue))

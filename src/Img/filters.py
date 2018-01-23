@@ -296,8 +296,8 @@ def my_find_corner_signature(cnt, green=False):
     max_sigma = 12
     if not green:
         sigma = 5
-        max_sigma = 12
-    while sigma < max_sigma:
+        max_sigma = 15
+    while sigma <= max_sigma:
         print("Smooth curve with sigma={}...".format(sigma))
 
         tmp_combs_final = []
@@ -305,7 +305,6 @@ def my_find_corner_signature(cnt, green=False):
         # Find relative angles
         cnt_convert = [c[0] for c in cnt]
         relative_angles = get_relative_angles(np.array(cnt_convert), export=False, sigma=sigma)
-
         relative_angles = np.array(relative_angles)
         relative_angles_inverse = -np.array(relative_angles)
         
@@ -330,7 +329,7 @@ def my_find_corner_signature(cnt, green=False):
         combs = itertools.permutations(extr, 4)
         combs_l = list(combs)
         OFFSET_LOW = len(relative_angles) / 8
-        OFFSET_HIGH = len(relative_angles) / 2
+        OFFSET_HIGH = len(relative_angles) / 2.0
         for icomb, comb in enumerate(combs_l):
             if ((comb[0] > comb[1]) and (comb[1] > comb[2]) and (comb[2] > comb[3])
                 and ((comb[0] - comb[1]) > OFFSET_LOW) and ((comb[0] - comb[1]) < OFFSET_HIGH)
@@ -361,8 +360,6 @@ def my_find_corner_signature(cnt, green=False):
             neg_peaks_inside.sort()
             tmp_types_pieces.append(type_peak(pos_peaks_inside, neg_peaks_inside))
             if (tmp_types_pieces[-1] == TypeEdge.UNDEFINED):
-                print("UNDEFINED FOUND - try to continue but something bad happened :(")
-                print(tmp_types_pieces[-1])
                 no_undefined = False
         
         combs_final = tmp_combs_final
@@ -371,6 +368,10 @@ def my_find_corner_signature(cnt, green=False):
         if no_undefined:
             break
     
+    if (len(types_pieces) != 0 and types_pieces[-1] == TypeEdge.UNDEFINED):
+        print("UNDEFINED FOUND - try to continue but something bad happened :(")
+        print(tmp_types_pieces[-1])
+
     if green and sigma >= 12:
         print("Error sigma >= 12")
         return None, None, None

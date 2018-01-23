@@ -79,8 +79,8 @@ class Extractor():
         def generated_preprocesing():
             ret, self.img_bw = cv2.threshold(self.img_bw, 254, 255, cv2.THRESH_BINARY_INV)
             cv2.imwrite("/tmp/otsu_binarized.png", self.img_bw)
-            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, kernel)                
-            self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, kernel)
+            #self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, kernel, iterations=2)                
+            #self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, kernel, iterations=2)
             
            
                 
