@@ -369,7 +369,7 @@ def createPuzzlePieces(name,row,col,outPrefix):
     im = Image.open(name).convert("RGBA")
     #arcRatio = 0.0001
     #connectRatio = 0.2
-    arcRatio = 0.07
+    arcRatio = 0.01
     connectRatio = 0.3
     r = 3
 
