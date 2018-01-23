@@ -4,7 +4,7 @@ HOW
 2) Do:
 > python piece_maker.py my_image.png 4 4
 3) Do:
-> ./script.sh _pieces/my_image
+> ./script.sh _pieces/my_image 4
 
 WHY
 ~~~
