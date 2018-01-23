@@ -1,4 +1,4 @@
-from Puzzle.Distance import diff_match_edges, diff_full_compute
+from Puzzle.Distance import diff_match_edges, real_edge_compute, generated_edge_compute
 from Puzzle.PuzzlePiece import *
 
 from Puzzle.Extractor import Extractor
@@ -35,7 +35,7 @@ class Puzzle():
             self.pieces_ = self.extract.extract()
 
         self.viewer = viewer
-
+        self.green_ = green_screen
         self.connected_directions = []
         self.diff = {}
         self.edge_to_piece = {}
@@ -196,8 +196,10 @@ class Puzzle():
                 for e2 in piece.edges_:
                     e2.backup_shape()
                 stick_pieces(new_connected, e, piece, edge)
-                diff_e[edge] = diff_full_compute(edge, e)
-
+                if self.green_:
+                    diff_e[edge] = real_edge_compute(edge, e)
+                else:
+                    diff_e[edge] = generated_edge_compute(edge, e)
                 for e2 in piece.edges_:
                     e2.restore_backup_shape()
 
@@ -336,8 +338,10 @@ class Puzzle():
                 for e2 in piece.edges_:
                     e2.backup_shape()
                 stick_pieces(self.edge_to_piece[e], e, piece, edge)
-                diff_e[edge] = diff_full_compute(edge, e)
-
+                if self.green_:
+                    diff_e[edge] = real_edge_compute(edge, e)
+                else:
+                    diff_e[edge] = generated_edge_compute(edge, e)
                 for e2 in piece.edges_:
                     e2.restore_backup_shape()
 

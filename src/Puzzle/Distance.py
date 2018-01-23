@@ -82,16 +82,110 @@ def diff_match_edges(e1, e2, reverse=True):
         diff += (x2 - x1) ** 2
     return diff / len(shortest)
 
-def diff_full_compute(e1, e2):
+def diff_match_edges2(e1, e2, reverse=True, thres=5, pad=False):
     """
-        Return the distance between colors of two edges.
+    Return the distance between two edges by performing a simple norm on each points.
+
+        :param e1: Matrix of coordinates of points composing the first edge
+        :param e2: Matrix of coordinates of points composing the second edge
+        :param reverse: Optional parameter to reverse the second edge
+        :return: distance Float
+    """
+    if e2.shape[0] > e1.shape[0]:
+        e1, e2 = e2, e1
+    
+    if pad:
+        pad_length = (e1.shape[0] - e2.shape[0]) // 2
+        pad_left, pad_right = pad_length, (pad_length if pad_length * 2 == (e1.shape[0] - e2.shape[0]) else pad_length + 1)
+
+        # Pad the shortest with 0
+        e2 = np.lib.pad(e2, ((pad_left, pad_right), (0, 0)), 'constant', constant_values=(0, 0))
+    else:
+        # No padding just cut longest to match shortest length
+        e1 = e1[:e2.shape[0]]
+
+    if reverse:
+        e2 = np.flip(e2, 0)
+    d = np.linalg.norm(e1 - e2, axis=1)
+    return np.sum(d > thres) / e1.shape[0]
+
+def euclideanDistance(e1_lab_colors, e2_lab_colors):
+    sum = 0
+    max = 50
+    len1 = len(e1_lab_colors)
+    len2 = len(e2_lab_colors)
+    if len1 < len2:
+        max = len1
+    else:
+        max = len2
+    t1 = len1 / max
+    t2 = len2 / max
+
+    def dist_color(tuple1, tuple2):
+        return np.sqrt((tuple1[0] - tuple2[0]) ** 2
+                        + (tuple1[1] - tuple2[1]) ** 2
+                        + (tuple1[2] - tuple2[2]) ** 2)
+
+    for i in range(max):
+        sum += dist_color(e1_lab_colors[int(t1 * i)], e2_lab_colors[int(t2 * i)])
+    return sum
+
+def real_edge_compute(e1, e2):
+    """
+        Return the distance between colors of two edges for real puzzle.
 
         :param e1: Edge object
         :param e2: Edge object
         :return: distance Float
     """
+    
+    rgbs1 = []
+    rgbs2 = []
+    if not have_edges_similar_length(e1, e2, 0.20):
+        return float('inf')
 
+    e1_lab_colors = []
+    for col in e1.color:
+        rgb = colorsys.hls_to_rgb(col[0], col[1], col[2])
+        rgb = [x * 255.0 for x in rgb]
+        rgbs1.append(rgb)
+        e1_lab_colors.append(color.rgb2lab([[[rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0]]])[0][0])
+        # Drop luminance
+        e1_lab_colors[-1] = [0, e1_lab_colors[-1][1], e1_lab_colors[-1][2]]
+
+    e2_lab_colors = []
+    for col in e2.color:
+        rgb = colorsys.hls_to_rgb(col[0], col[1], col[2])
+        rgb = [x * 255.0 for x in rgb]
+        rgbs2.append(rgb)
+        e2_lab_colors.append(color.rgb2lab([[[rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0]]])[0][0])
+        # Drop Luminance
+        e2_lab_colors[-1] = [0, e2_lab_colors[-1][1], e2_lab_colors[-1][2]]
+
+    return min(euclideanDistance(e1_lab_colors, e2_lab_colors), euclideanDistance(e1_lab_colors, e2_lab_colors[::-1]))
+
+
+def generated_edge_compute(e1, e2):
+    """
+        Return the distance between colors of two edges for generated puzzle.
+
+        :param e1: Edge object
+        :param e2: Edge object
+        :return: distance Float
+    """
+    #edge size
     shapevalue, distvalue = dist_edge(e1, e2) 
+
+    #edges diff
+
+    edge_shape_score = diff_match_edges2(np.array(e1.shape), np.array(e2.shape))
+     # Sigmoid
+    L = 10
+    K = -1.05
+    #edge_color_score = 1 / (1 + math.exp(-L * (edge_color_score - 0.5)))
+    edge_shape_score = (K * edge_shape_score) / (K - edge_shape_score + 1)
+
+    #colors
     rgbs1 = []
     rgbs2 = []
 
@@ -113,25 +207,5 @@ def diff_full_compute(e1, e2):
         # Drop Luminance
         e2_lab_colors[-1] = [0, e2_lab_colors[-1][1], e2_lab_colors[-1][2]]
 
-    def euclideanDistance(e1_lab_colors, e2_lab_colors):
-        sum = 0
-        max = 50
-        len1 = len(e1_lab_colors)
-        len2 = len(e2_lab_colors)
-        if len1 < len2:
-            max = len1
-        else:
-            max = len2
-        t1 = len1 / max
-        t2 = len2 / max
-
-        def dist_color(tuple1, tuple2):
-            return np.sqrt((tuple1[0] - tuple2[0]) ** 2
-                           + (tuple1[1] - tuple2[1]) ** 2
-                           + (tuple1[2] - tuple2[2]) ** 2)
-
-        for i in range(max):
-            sum += dist_color(e1_lab_colors[int(t1 * i)], e2_lab_colors[int(t2 * i)])
-        return sum
     val = min(euclideanDistance(e1_lab_colors, e2_lab_colors), euclideanDistance(e1_lab_colors, e2_lab_colors[::-1]))
-    return val * (1.0 + math.sqrt(shapevalue))
+    return val * (1.0 + math.sqrt(shapevalue)) * (1.0 + edge_shape_score * 0.01)
