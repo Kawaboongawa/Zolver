@@ -12,4 +12,5 @@ rm -r _pieces/out
 python piece_maker.py out.png ${c} ${c}
 ./script.sh _pieces/out ${c}
 python ../../src/main_no_gui.py init.png
-feh /tmp/colored.png
+cp /tmp/colored.png resolved.png
+feh resolved.png
