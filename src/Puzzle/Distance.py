@@ -208,4 +208,4 @@ def generated_edge_compute(e1, e2):
         e2_lab_colors[-1] = [0, e2_lab_colors[-1][1], e2_lab_colors[-1][2]]
 
     val = min(euclideanDistance(e1_lab_colors, e2_lab_colors), euclideanDistance(e1_lab_colors, e2_lab_colors[::-1]))
-    return val * (1.0 + math.sqrt(shapevalue)) * (1.0 + edge_shape_score * 0.01)
+    return val * (1.0 + math.sqrt(shapevalue) * 0.3) * (1.0 + edge_shape_score * 0.001)

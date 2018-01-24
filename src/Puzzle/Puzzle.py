@@ -199,7 +199,7 @@ class Puzzle():
                 if self.green_:
                     diff_e[edge] = real_edge_compute(edge, e)
                 else:
-                    diff_e[edge] = real_edge_compute(edge, e)
+                    diff_e[edge] = generated_edge_compute(edge, e)
                 for e2 in piece.edges_:
                     e2.restore_backup_shape()
 
@@ -341,7 +341,7 @@ class Puzzle():
                 if self.green_:
                     diff_e[edge] = real_edge_compute(edge, e)
                 else:
-                    diff_e[edge] = real_edge_compute(edge, e)
+                    diff_e[edge] = generated_edge_compute(edge, e)
                 for e2 in piece.edges_:
                     e2.restore_backup_shape()
 
