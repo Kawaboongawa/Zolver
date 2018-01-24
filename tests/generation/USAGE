@@ -1,13 +1,10 @@
-HOW
-~~~
-1) Add your squared image in this directory
-2) Do:
-> python piece_maker.py my_image.png 4 4
-3) Do:
-> ./script.sh _pieces/my_image 4
+HOW TO
+~~~~~~
 
-WHY
-~~~
-- 1) is needed because hey logic.
-- 2) creates images in _pieces/image_name/
-- 3) builds the final image from the images in _peices/image_name/
+./script-remove_white.sh my_image.png
+
+You can also modify the number of columns / rows in the generated puzzle with:
+
+./script-remove_white.sh my_image.png 4
+
+Default is 5.
