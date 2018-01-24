@@ -372,10 +372,6 @@ def my_find_corner_signature(cnt, green=False):
         print("UNDEFINED FOUND - try to continue but something bad happened :(")
         print(tmp_types_pieces[-1])
 
-    if green and sigma >= 12:
-        print("Error sigma >= 12")
-        return None, None, None
-
     best_fit_tmp = best_fit - offset
     for i in range(3):
         edges.append(cnt[best_fit_tmp[i]:best_fit_tmp[i + 1]])
