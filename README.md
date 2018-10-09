@@ -9,23 +9,13 @@ developed by 4 EPITA students. It aims to solve computer generated and real jigs
 
 A short video presentation is available [here](https://www.youtube.com/watch?v=Oq36FtMg0-k)
 
-A generated jigsaw puzzle
+A jigsaw puzzle
 <p align="center">
 <img src="resources/jigsaw-samples/van-gogh.png" width="600">
 </p>
 Zolver reconstruction
 <p align="center">
 <img src="resources/jigsaw-solved/van-gogh.png" width="500">
-</p>
-
-
-A real jigsaw puzzle
-<p align="center">
-<img src="resources/jigsaw-samples/chien_rouge_20_1.jpg" width="600">
-</p>
-Zolver reconstruction
-<p align="center">
-<img src="resources/jigsaw-solved/chien_rouge_20_1.jpg" width="500">
 </p>
 
 ## Requirements
