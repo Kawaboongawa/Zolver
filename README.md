@@ -20,7 +20,9 @@ Zolver reconstruction
 
 ## Requirements
 
-- numpy>=1.11.0
+This projects was developped with Linux distribution. Windows compatibility is absolutely not guaranteed.
+
+- numpy==1.15.0
 - scipy==1.0.0
 - opencv_python==3.3.0.10
 - scikit_image==0.13.1
@@ -29,6 +31,11 @@ Zolver reconstruction
 - PyQt5>=5.0
 - skimage
 - scikit_learn>=0.18.1
+
+As this project has a lot of requirements. To avoid compability issues, we recommend setting up a virtual environment and then 
+using the command :
+
+"pip install -r requirements.txt"
 
 ## Usage
 ### With GUI
