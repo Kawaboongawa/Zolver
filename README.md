@@ -29,7 +29,6 @@ This projects was developped with Linux distribution. Windows compatibility is a
 - matplotlib==2.1.0
 - Pillow
 - PyQt5>=5.0
-- skimage
 - scikit_learn>=0.18.1
 
 As this project has a lot of requirements. To avoid compability issues, we recommend setting up a virtual environment and then 
