@@ -27,7 +27,7 @@ def is_neighbor(c1, c2, dir):
         return False
 
 
-def corner_puzzle_alignement(c, corner_pos):
+def corner_puzzle_alignment(c, corner_pos):
     for c2, p2 in corner_pos:
         if c2[0] == c[0] or c2[1] == c[1]:
             return True  # Add more orientation check

@@ -13,7 +13,7 @@ from Puzzle.tuple_helper import (
     add_tuple,
     sub_tuple,
     is_neighbor,
-    corner_puzzle_alignement,
+    corner_puzzle_alignment,
     display_dim,
 )
 
@@ -132,7 +132,7 @@ class Puzzle:
         # +--+--+--+
         # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
 
-    def solve(self, connected_pieces, left_pieces, border=False):
+    def solve(self, connected_pieces, left_pieces):
         """
         Solve the puzzle by finding the optimal piece in left_pieces matching the edges
         available in connected_pieces
@@ -355,7 +355,7 @@ class Puzzle:
                         )
 
                         if p.type == TypePiece.ANGLE:
-                            if not corner_puzzle_alignement(c, self.corner_pos):
+                            if not corner_puzzle_alignment(c, self.corner_pos):
                                 diff_score = float("inf")
                             elif not self.corner_place_fit_size(c):
                                 diff_score = float("inf")
