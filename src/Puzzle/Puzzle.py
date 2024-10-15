@@ -185,8 +185,8 @@ class Puzzle:
             )
 
             self.export_pieces(
-                "/tmp/stick{0:03d}".format(len(self.connected_directions)) + ".png",
-                "/tmp/colored{0:03d}".format(len(self.connected_directions)) + ".png",
+                "/tmp/stick{0:03d}.png".format(len(self.connected_directions)),
+                "/tmp/colored{0:03d}.png".format(len(self.connected_directions)),
                 name_colored="Step {0:03d}".format(len(self.connected_directions)),
             )
 
