@@ -392,8 +392,7 @@ class Puzzle:
                     if diff_score < min_diff:
                         best_bloc_e, best_e, min_diff = block_e, e, diff_score
             return best_bloc_e, best_e
-        else:
-            return None, None
+        return None, None
 
     def add_to_diffs(self, left_pieces):
         """build the list of edge to test"""
