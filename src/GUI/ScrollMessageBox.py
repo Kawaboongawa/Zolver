@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMessageBox, QScrollArea, QWidget, QVBoxLayout, QLab
 
 
 class ScrollMessageBox(QMessageBox):
-    """ QMessageBox used to display the logs informations of the program """
+    """QMessageBox used to display the logs informations of the program"""
 
     def __init__(self, l, *args, **kwargs):
         QMessageBox.__init__(self, *args, **kwargs)
