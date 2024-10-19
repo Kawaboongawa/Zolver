@@ -7,9 +7,14 @@ from .Extractor import Extractor
 from .Mover import stick_pieces
 
 from .Enums import (
-    Directions, Strategy, TypePiece, TypeEdge,
-    get_opposite_direction, step_direction, rotate_direction,
-    directions
+    Directions,
+    Strategy,
+    TypePiece,
+    TypeEdge,
+    get_opposite_direction,
+    step_direction,
+    rotate_direction,
+    directions,
 )
 
 from .tuple_helper import (
