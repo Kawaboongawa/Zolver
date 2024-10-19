@@ -3,7 +3,7 @@ from Puzzle.PuzzlePiece import *
 
 from Puzzle.Extractor import Extractor
 from Puzzle.Mover import *
-from cv2 import cv2
+import cv2
 
 from Puzzle.Enums import *
 import sys

@@ -1,4 +1,4 @@
-from cv2 import cv2
+import cv2
 import sys
 import numpy as np
 from Img.GreenScreen import *
@@ -73,7 +73,7 @@ class Extractor:
         def fill_holes():
             """filling contours found (and thus potentially holes in pieces)"""
 
-            _, contour, _ = cv2.findContours(
+            contour, _ = cv2.findContours(
                 self.img_bw, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
             )
             for cnt in contour:
@@ -116,7 +116,7 @@ class Extractor:
                 "Binarized treshold", "/tmp/binarized_treshold_filled.png"
             )
 
-        self.img_bw, contours, hier = cv2.findContours(
+        contours, hier = cv2.findContours(
             self.img_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
         )
         self.log("Found nb pieces: " + str(len(contours)))
@@ -136,10 +136,10 @@ class Extractor:
         else:
             # Try to remove useless contours
             contours = sorted(
-                np.array(contours), key=lambda x: x.shape[0], reverse=True
+                contours, key=lambda x: x.shape[0], reverse=True
             )
             max = contours[1].shape[0]
-            contours = np.array([elt for elt in contours if elt.shape[0] > max / 3])
+            contours = [elt for elt in contours if elt.shape[0] > max / 3]
             self.log("Found nb pieces after removing bad ones: " + str(len(contours)))
 
         if PREPROCESS_DEBUG_MODE == 1:

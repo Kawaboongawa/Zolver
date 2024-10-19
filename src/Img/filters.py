@@ -112,18 +112,18 @@ def distance_signature(relative_angles):
     :param relative_angles: list of angles
     :return: List of floats
     """
+    flat_angles = relative_angles.flatten()
+    length = flat_angles.shape[0]
 
-    length = relative_angles.shape[0]
-
-    l1 = np.array([0, relative_angles[0]])
-    l2 = np.array([length - 1, relative_angles[-1]])
+    l1 = np.array([0, flat_angles[0]])
+    l2 = np.array([length - 1, flat_angles[-1]])
+    assert np.linalg.norm(l2 - l1) != 0
 
     signature = np.zeros((length, 1))
 
     for i in range(length):
-        assert np.linalg.norm(l2 - l1) != 0
         signature[i] = np.linalg.norm(
-            np.cross(l2 - l1, l1 - np.array([i, relative_angles[i]]))
+            np.cross(l2 - l1, l1 - np.array([i, flat_angles[i]]))
         ) / np.linalg.norm(l2 - l1)
 
     return signature
@@ -214,20 +214,18 @@ def compute_comp(combs_l, relative_angles, method="correlate"):
             if method == "flat":
                 hole = indent_score(
                     np.ravel(np.array(relative_angles_tmp[comb[0] : comb[1]]))
-                )
+                )[0]
                 head = outdent_score(
                     np.ravel(np.array(relative_angles_tmp[comb[0] : comb[1]]))
-                )
+                )[0]
                 border = flat_score(
                     np.ravel(np.array(relative_angles_tmp[comb[0] : comb[1]]))
-                )
-
+                )[0]
             if hole != border:
-                results_comp.append(np.min([hole, head]))
+                results_comp.append(min(hole, head))
             else:
                 results_comp.append(border)
-
-        results_glob.append(np.sum(results_comp))
+        results_glob.append(np.sum(np.array(results_comp)))
     return np.argmin(np.array(results_glob))
 
 
