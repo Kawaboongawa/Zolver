@@ -1,8 +1,7 @@
 import colorsys
-
+import math
 
 import numpy as np
-import math
 from skimage import color
 
 

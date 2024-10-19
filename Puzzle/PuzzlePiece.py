@@ -1,4 +1,4 @@
-from Puzzle.Enums import TypeEdge, TypePiece, rotate_direction
+from .Enums import TypeEdge, TypePiece, rotate_direction
 
 
 class PuzzlePiece:

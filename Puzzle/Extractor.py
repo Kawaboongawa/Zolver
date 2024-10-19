@@ -1,8 +1,12 @@
-import cv2
 import sys
+
+import cv2
 import numpy as np
-from Img.GreenScreen import *
-from Img.filters import *
+import matplotlib.pyplot as plt
+
+from Img.GreenScreen import remove_background
+from Img.filters import export_contours
+
 
 PREPROCESS_DEBUG_MODE = 0
 

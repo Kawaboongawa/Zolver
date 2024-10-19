@@ -1,5 +1,5 @@
 import numpy as np
-from Puzzle.Enums import TypeEdge, Directions
+from .Enums import TypeEdge, Directions
 
 
 class Edge:

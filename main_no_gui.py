@@ -1,6 +1,9 @@
-from Puzzle.Puzzle import Puzzle
-import matplotlib.pyplot as plt
 import argparse
+
+import matplotlib.pyplot as plt
+
+from Puzzle.Puzzle import Puzzle
+
 
 parser = argparse.ArgumentParser(description="Solve Puzzles!")
 parser.add_argument(

@@ -1,8 +1,9 @@
-from Puzzle.PuzzlePiece import *
-from Img.filters import angle_between
-from Img.Pixel import *
 import math
+
 import numpy as np
+
+from Img.filters import angle_between
+from Img.Pixel import Pixel
 
 
 def rotate(origin, point, angle):

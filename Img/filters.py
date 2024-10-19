@@ -1,18 +1,20 @@
 import itertools
 import colorsys
-import cv2
-import numpy as np
 import math
 import pickle
 
-from Img.Pixel import Pixel, flatten_colors
-from Puzzle.Edge import Edge
-from Puzzle.Enums import directions, TypeEdge
-from Puzzle.PuzzlePiece import PuzzlePiece
+import numpy as np
+import cv2
 import matplotlib.pyplot as plt
 import scipy
 import sklearn.preprocessing
-from Img.peak_detect import *
+
+from .Pixel import Pixel, flatten_colors
+from Puzzle.Edge import Edge
+from Puzzle.Enums import directions, TypeEdge
+from Puzzle.PuzzlePiece import PuzzlePiece
+from .peak_detect import detect_peaks
+
 
 COUNT = 0
 
