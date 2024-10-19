@@ -1,5 +1,6 @@
-import math
 import numpy as np
+
+import math
 
 
 class Pixel:
@@ -14,7 +15,7 @@ class Pixel:
 
     def apply(self, img, dx=0, dy=0):
         """
-        Apply the pixel to an img wihth an optional translation
+        Apply the pixel to an img with an optional translation
 
         :param img: image to apply the pixel
         :param dx: used for X axis translation

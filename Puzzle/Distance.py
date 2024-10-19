@@ -1,11 +1,12 @@
 import colorsys
-
+import math
 
 import numpy as np
-import math
 from skimage import color
+from numba import njit
 
 
+@njit
 def dist(p1, p2):
     """
     Compute euclidean distance

@@ -1,8 +1,12 @@
-import cv2
 import sys
+
+import cv2
 import numpy as np
-from Img.GreenScreen import *
-from Img.filters import *
+import matplotlib.pyplot as plt
+
+from Img.GreenScreen import remove_background
+from Img.filters import export_contours
+
 
 PREPROCESS_DEBUG_MODE = 0
 
@@ -135,9 +139,7 @@ class Extractor:
             self.log("Found nb pieces after manual setting: " + str(len(contours)))
         else:
             # Try to remove useless contours
-            contours = sorted(
-                contours, key=lambda x: x.shape[0], reverse=True
-            )
+            contours = sorted(contours, key=lambda x: x.shape[0], reverse=True)
             max = contours[1].shape[0]
             contours = [elt for elt in contours if elt.shape[0] > max / 3]
             self.log("Found nb pieces after removing bad ones: " + str(len(contours)))

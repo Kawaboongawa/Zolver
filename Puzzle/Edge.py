@@ -1,5 +1,6 @@
 import numpy as np
-from Puzzle.Enums import TypeEdge, Directions
+
+from .Enums import TypeEdge, Directions
 
 
 class Edge:
@@ -9,30 +10,19 @@ class Edge:
     """
 
     def __init__(
-        self, shape, color, type=TypeEdge.HOLE, connected=False, direction=Directions.N
+        self,
+        shape,
+        color,
+        edge_type=TypeEdge.HOLE,
+        connected=False,
+        direction=Directions.N,
     ):
         self.shape = shape
         self.shape_backup = shape
         self.color = color
-        self.type = type
+        self.type = edge_type
         self.connected = connected
         self.direction = direction
-
-    def is_border(self, threshold):
-        """
-        Fast check to determine of the edge is a border.
-
-        :param threshold: distance threshold
-        :return: Boolean
-        """
-
-        def dist_to_line(p1, p2, p3):
-            return np.linalg.norm(np.cross(p2 - p1, p1 - p3)) / np.linalg.norm(p2 - p1)
-
-        total_dist = sum(
-            [dist_to_line(self.shape[0], self.shape[-1], p) for p in self.shape]
-        )
-        return total_dist < threshold
 
     def backup_shape(self):
         """Copy the shape for backup"""

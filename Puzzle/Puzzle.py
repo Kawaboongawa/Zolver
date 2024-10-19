@@ -1,14 +1,23 @@
-from Puzzle.Distance import real_edge_compute, generated_edge_compute
-from Puzzle.PuzzlePiece import *
-
-from Puzzle.Extractor import Extractor
-from Puzzle.Mover import *
+import sys
+import numpy as np
 import cv2
 
-from Puzzle.Enums import *
-import sys
+from .Distance import real_edge_compute, generated_edge_compute
+from .Extractor import Extractor
+from .Mover import stick_pieces
 
-from Puzzle.tuple_helper import (
+from .Enums import (
+    Directions,
+    Strategy,
+    TypePiece,
+    TypeEdge,
+    get_opposite_direction,
+    step_direction,
+    rotate_direction,
+    directions,
+)
+
+from .tuple_helper import (
     equals_tuple,
     add_tuple,
     sub_tuple,

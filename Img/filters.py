@@ -1,18 +1,22 @@
 import itertools
 import colorsys
-import cv2
-import numpy as np
 import math
 import pickle
+from multiprocessing import Pool, cpu_count
 
-from Img.Pixel import Pixel, flatten_colors
-from Puzzle.Edge import Edge
-from Puzzle.Enums import directions, TypeEdge
-from Puzzle.PuzzlePiece import PuzzlePiece
+import numpy as np
+import cv2
 import matplotlib.pyplot as plt
 import scipy
 import sklearn.preprocessing
-from Img.peak_detect import *
+from numba import njit
+
+from .Pixel import Pixel, flatten_colors
+from Puzzle.Edge import Edge
+from Puzzle.Enums import directions, TypeEdge
+from Puzzle.PuzzlePiece import PuzzlePiece
+from .peak_detect import detect_peaks
+
 
 COUNT = 0
 
@@ -355,9 +359,6 @@ def my_find_corner_signature(cnt, green=False):
             % len(relative_angles_inverse),
             axis=0,
         )
-        relative_angles_inverse = np.roll(
-            relative_angles_inverse, -int(len(relative_angles_inverse) / 2)
-        )
         extr_tmp_inverse = np.unique(extr_tmp_inverse)
 
         extr = extr_tmp
@@ -448,6 +449,7 @@ def my_find_corner_signature(cnt, green=False):
     return best_fit, edges, types_pieces[1:]
 
 
+@njit
 def angle_between(v1, v2):
     """
     Return the angles between two tuples
@@ -477,8 +479,11 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
     list_img = []
     out_color = np.zeros_like(img)
 
+    with Pool(cpu_count()) as p:
+        signatures = p.starmap(my_find_corner_signature, zip(contours, itertools.repeat(green)))
+
     for idx, cnt in enumerate(contours):
-        corners, edges_shape, types_edges = my_find_corner_signature(cnt, green)
+        corners, edges_shape, types_edges = signatures[idx]
         if corners is None:
             return None
 
@@ -551,17 +556,16 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
 
             color_vect.append(np.array(color_edge))
 
-        edges = []
-        cpt = 0
-        for s, c in zip(edges_shape, color_vect):
-            edges.append(Edge(s, c, type=types_edges[cpt]))
-            cpt += 1
-
-        for i, e in enumerate(edges):
-            e.direction = directions[i]
-            if e.type == TypeEdge.BORDER:
-                e.connected = True
-
+        edges = [
+            Edge(
+                s,
+                c,
+                edge_type=types_edges[i],
+                direction=directions[i],
+                connected=types_edges[i] == TypeEdge.BORDER,
+            )
+            for i, (s, c) in enumerate(zip(edges_shape, color_vect))
+        ]
         puzzle_pieces.append(PuzzlePiece(edges, pixels))
 
         mask_border = np.zeros_like(img_bw)

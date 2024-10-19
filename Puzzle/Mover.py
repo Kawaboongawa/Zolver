@@ -1,10 +1,13 @@
-from Puzzle.PuzzlePiece import *
-from Img.filters import angle_between
-from Img.Pixel import *
 import math
+
 import numpy as np
+from numba import njit
+
+from Img.filters import angle_between
+from Img.Pixel import Pixel
 
 
+@njit
 def rotate(origin, point, angle):
     """
     Rotate the pixel around `origin` by `angle` degrees
@@ -19,16 +22,6 @@ def rotate(origin, point, angle):
 
     qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
     qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-    if qx != qx or qy != qy:
-        print(
-            "NAN DETECTED: {} {} {} {} {}".format(
-                ox,
-                oy,
-                px,
-                py,
-                qx,
-            )
-        )
 
     return qx, qy
 
