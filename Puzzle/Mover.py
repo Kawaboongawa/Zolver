@@ -13,23 +13,20 @@ def rotate(origin, point, angle):
 
     :param origin: Coordinates of points used to rotate around
     :param angle: number of degrees
-    :return: Nothing
+    :return: Coordinates after rotation
     """
 
     ox, oy = origin
     px, py = point
-
     qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
     qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-
     return qx, qy
 
 
-def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
+def stick_pieces(bloc_e, p, e, final_stick=False):
     """
     Stick an edge of a piece to the bloc of already resolved pieces
 
-    :param bloc_p: bloc of pieces already solved
     :param bloc_e: bloc of edges already solved
     :param p: piece to add to the bloc
     :param e: edge to stick
@@ -64,29 +61,25 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
             img_p[x - minX, y - minY] = c
 
         # new bounding box
+        b_e0, b_e1 = bloc_e.shape[0][0], bloc_e.shape[0][1]
+        rotated = [
+            rotate((b_e1, b_e0), (x, y), angle)
+            for x in [minX, maxX]
+            for y in [minY, maxY]
+        ]
+        rotatedX = [p[0] for p in rotated]
+        rotatedY = [p[1] for p in rotated]
         minX2, minY2, maxX2, maxY2 = (
-            float("inf"),
-            float("inf"),
-            -float("inf"),
-            -float("inf"),
+            int(min(rotatedX)),
+            int(min(rotatedY)),
+            int(max(rotatedX)),
+            int(max(rotatedY)),
         )
-        for x in [minX, maxX]:
-            for y in [minY, maxY]:
-                x2, y2 = rotate((bloc_e.shape[0][1], bloc_e.shape[0][0]), (x, y), angle)
-                x2, y2 = int(x2), int(y2)
-                minX2, minY2, maxX2, maxY2 = (
-                    min(minX2, x2),
-                    min(minY2, y2),
-                    max(maxX2, x2),
-                    max(maxY2, y2),
-                )
 
         pixels = {}
         for px in range(minX2, maxX2 + 1):
             for py in range(minY2, maxY2 + 1):
-                qx, qy = rotate(
-                    (bloc_e.shape[0][1], bloc_e.shape[0][0]), (px, py), -angle
-                )
+                qx, qy = rotate((b_e1, b_e0), (px, py), -angle)
                 qx, qy = int(qx), int(qy)
                 if (
                     minX <= qx <= maxX
