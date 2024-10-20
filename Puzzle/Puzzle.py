@@ -40,7 +40,7 @@ class Puzzle:
             self.viewer.addLog(args)
 
     def __init__(self, path, viewer=None, green_screen=False):
-        """Extract informations of pieces in the img at `path` and start computation of the solution"""
+        """Extract information of pieces in the img at `path` and start computation of the solution"""
 
         self.pieces_ = None
         factor = 0.40
@@ -140,6 +140,15 @@ class Puzzle:
         # |  |  |  |
         # +--+--+--+
         # Etc until the puzzle is complete i.e. there is no pieces left on left_pieces.
+
+    def get_bbox(self):
+        bboxes = [p.get_bbox() for p in self.pieces_]
+        return (
+            min(bbox[0] for bbox in bboxes),
+            min(bbox[1] for bbox in bboxes),
+            max(bbox[2] for bbox in bboxes),
+            max(bbox[3] for bbox in bboxes),
+        )
 
     def solve(self, connected_pieces, left_pieces):
         """
@@ -505,9 +514,8 @@ class Puzzle:
                 for ip, _ in enumerate(e.shape):
                     e.shape[ip] += (-minX, -minY)
 
-        for piece in self.pieces_:
-            for p in piece.img_piece_:
-                p.translate(minX, minY)
+        for p in self.pieces_:
+            p.translate(minX, minY)
 
     def export_pieces(
         self,
@@ -525,45 +533,54 @@ class Puzzle:
         :param path_colored: Path used to export the colored image
         :return: the best edge found in the bloc
         """
+        if not (self.viewer and display):
+            return
 
-        minX, minY = float("inf"), float("inf")
-        maxX, maxY = -float("inf"), -float("inf")
-        for piece in self.pieces_:
-            for p in piece.img_piece_:
-                x, y = p.pos
-                minX, minY = min(minX, x), min(minY, y)
-                maxX, maxY = max(maxX, x), max(maxY, y)
+        minX, minY, maxX, maxY = self.get_bbox()
 
         colored_img = np.zeros((maxX - minX, maxY - minY, 3))
         border_img = np.zeros((maxX - minX, maxY - minY, 3))
 
         for piece in self.pieces_:
-            for p in piece.img_piece_:
-                p.apply(colored_img, dx=-minX, dy=-minY)
-            # Contours
-            for e in piece.edges_:
-                for y, x in e.shape:
-                    y, x = y - minY, x - minX
-                    if 0 <= y < border_img.shape[1] and 0 <= x < border_img.shape[0]:
-                        rgb = (0, 0, 0)
-                        if e.type == TypeEdge.HOLE:
-                            rgb = (102, 178, 255)
-                        if e.type == TypeEdge.HEAD:
-                            rgb = (255, 255, 102)
-                        if e.type == TypeEdge.UNDEFINED:
-                            rgb = (255, 0, 0)
-                        if e.connected:
-                            rgb = (0, 255, 0)
-                        border_img[x, y, 0] = rgb[2]
-                        border_img[x, y, 1] = rgb[1]
-                        border_img[x, y, 2] = rgb[0]
+            tmp = [
+                (x - minX, y - minY, c)
+                for (x, y), c in piece.pixels.items()
+                if 0 <= x - minX < colored_img.shape[0]
+                and 0 <= y - minY < colored_img.shape[1]
+            ]
+            x, y, c = (
+                list(map(lambda e: e[0], tmp)),
+                list(map(lambda e: e[1], tmp)),
+                list(map(lambda e: e[2], tmp)),
+            )
+            colored_img[x, y] = c
 
-        cv2.imwrite(path_contour, border_img)
-        cv2.imwrite(path_colored, colored_img)
-        if self.viewer and display:
             if display_border:
+                # Contours
+                for e in piece.edges_:
+                    for y, x in e.shape:
+                        y, x = y - minY, x - minX
+                        if (
+                            0 <= y < border_img.shape[1]
+                            and 0 <= x < border_img.shape[0]
+                        ):
+                            rgb = (0, 0, 0)
+                            if e.type == TypeEdge.HOLE:
+                                rgb = (102, 178, 255)
+                            if e.type == TypeEdge.HEAD:
+                                rgb = (255, 255, 102)
+                            if e.type == TypeEdge.UNDEFINED:
+                                rgb = (255, 0, 0)
+                            if e.connected:
+                                rgb = (0, 255, 0)
+                            border_img[x, y, 0] = rgb[2]
+                            border_img[x, y, 1] = rgb[1]
+                            border_img[x, y, 2] = rgb[0]
+                cv2.imwrite(path_contour, border_img)
                 self.viewer.addImage(name_contour, path_contour, display=False)
-            self.viewer.addImage(name_colored, path_colored)
+
+        cv2.imwrite(path_colored, colored_img)
+        self.viewer.addImage(name_colored, path_colored)
 
     def compute_possible_size(self, nb_piece, nb_border):
         """
