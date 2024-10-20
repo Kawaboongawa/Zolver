@@ -4,7 +4,6 @@ import numpy as np
 from numba import njit
 
 from Img.filters import angle_between
-from Img.Pixel import Pixel
 
 
 @njit
@@ -56,28 +55,13 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
 
     if final_stick:
         # prev bounding box
-        minX, minY, maxX, maxY = (
-            float("inf"),
-            float("inf"),
-            -float("inf"),
-            -float("inf"),
-        )
-        for i, pixel in enumerate(p.img_piece_):
-            x, y = p.img_piece_[i].translate(translation[1], translation[0])
-            minX, minY, maxX, maxY = (
-                min(minX, x),
-                min(minY, y),
-                max(maxX, x),
-                max(maxY, y),
-            )
-            # pixel.rotate(bloc_e.shape[0], -angle)
+        p.translate(translation[1], translation[0])
+        minX, minY, maxX, maxY = p.get_bbox()
 
         # rotation center
         img_p = np.full((maxX - minX + 1, maxY - minY + 1, 3), -1)
-        for pix in p.img_piece_:
-            x, y = pix.pos
-            x, y = x - minX, y - minY
-            img_p[x, y] = pix.color
+        for (x, y), c in p.pixels.items():
+            img_p[x - minX, y - minY] = c
 
         # new bounding box
         minX2, minY2, maxX2, maxY2 = (
@@ -97,7 +81,7 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
                     max(maxY2, y2),
                 )
 
-        pixels = []
+        pixels = {}
         for px in range(minX2, maxX2 + 1):
             for py in range(minY2, maxY2 + 1):
                 qx, qy = rotate(
@@ -109,6 +93,5 @@ def stick_pieces(bloc_p, bloc_e, p, e, final_stick=False):
                     and minY <= qy <= maxY
                     and img_p[qx - minX, qy - minY][0] != -1
                 ):
-                    pixels.append(Pixel((px, py), img_p[qx - minX, qy - minY]))
-
-        p.img_piece_ = pixels
+                    pixels[(px, py)] = img_p[qx - minX, qy - minY]
+        p.pixels = pixels

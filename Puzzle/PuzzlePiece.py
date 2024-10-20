@@ -9,12 +9,20 @@ class PuzzlePiece:
     of the piece.
     """
 
-    def __init__(self, edges, img_piece):
+    def __init__(self, edges, pixels):
         self.position = (0, 0)
         self.edges_ = edges
-        self.img_piece_ = img_piece  # List of Pixels
+        self.pixels = pixels
         self.nBorders_ = self.number_of_border()
         self.type = TypePiece(self.nBorders_)
+
+    def get_bbox(self):
+        x = list(map(lambda p: p[0], self.pixels))
+        y = list(map(lambda p: p[1], self.pixels))
+        return min(x), min(y), max(x), max(y)
+
+    def translate(self, dx, dy):
+        self.pixels = {(x + dx, y + dy): c for (x, y), c in self.pixels.items()}
 
     def number_of_border(self):
         """Fast computations of the nunmber of borders"""

@@ -11,7 +11,6 @@ import scipy
 import sklearn.preprocessing
 from numba import njit
 
-from .Pixel import Pixel, flatten_colors
 from Puzzle.Edge import Edge
 from Puzzle.Enums import directions, TypeEdge
 from Puzzle.PuzzlePiece import PuzzlePiece
@@ -480,7 +479,9 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
     out_color = np.zeros_like(img)
 
     with Pool(cpu_count()) as p:
-        signatures = p.starmap(my_find_corner_signature, zip(contours, itertools.repeat(green)))
+        signatures = p.starmap(
+            my_find_corner_signature, zip(contours, itertools.repeat(green))
+        )
 
     for idx, cnt in enumerate(contours):
         corners, edges_shape, types_edges = signatures[idx]
@@ -495,9 +496,9 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
         img_piece = np.zeros_like(img)
         img_piece[mask_full == 255] = img[mask_full == 255]
 
-        pixels = []
-        for x, y in tuple(zip(*np.where(mask_full == 255))):
-            pixels.append(Pixel((x, y), img_piece[x, y]))
+        pixels = {
+            (x, y): img_piece[x, y] for x, y in tuple(zip(*np.where(mask_full == 255)))
+        }
 
         color_vect = []
 
@@ -544,10 +545,11 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
                     mask_around_tiny, mask_around_tiny, mask=mask_full_tiny
                 )
 
-                neighbors_color = []
-                for y, x in tuple(zip(*np.where(mask_around_tiny == 255))):
-                    neighbors_color.append(img_piece_tiny[y, x])
-                rgb = flatten_colors(neighbors_color)
+                neighbors_color = [
+                    img_piece_tiny[y, x]
+                    for y, x in tuple(zip(*np.where(mask_around_tiny == 255)))
+                ]
+                rgb = np.median(neighbors_color, axis=0)
                 hsl = np.array(
                     colorsys.rgb_to_hls(rgb[2] / 255.0, rgb[1] / 255.0, rgb[0] / 255.0)
                 )
