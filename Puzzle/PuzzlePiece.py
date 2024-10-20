@@ -25,7 +25,7 @@ class PuzzlePiece:
         self.pixels = {(x + dx, y + dy): c for (x, y), c in self.pixels.items()}
 
     def number_of_border(self):
-        """Fast computations of the nunmber of borders"""
+        """Fast computations of the number of borders"""
 
         return len(list(filter(lambda x: x.type == TypeEdge.BORDER, self.edges_)))
 

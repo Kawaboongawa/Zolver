@@ -188,7 +188,7 @@ class Puzzle:
                 self.edge_to_piece[best_e],
             )
 
-            stick_pieces(block_best_p, block_best_e, best_p, best_e, final_stick=True)
+            stick_pieces(block_best_e, best_p, best_e, final_stick=True)
 
             self.update_direction(block_best_e, best_p, best_e)
             self.connect_piece(
@@ -247,7 +247,7 @@ class Puzzle:
                     continue
                 for e2 in piece.edges_:
                     e2.backup_shape()
-                stick_pieces(new_connected, e, piece, edge)
+                stick_pieces(e, piece, edge)
                 if self.green_:
                     diff_e[edge] = real_edge_compute(edge, e)
                 else:
@@ -427,7 +427,7 @@ class Puzzle:
                     continue
                 for e2 in piece.edges_:
                     e2.backup_shape()
-                stick_pieces(self.edge_to_piece[e], e, piece, edge)
+                stick_pieces(e, piece, edge)
                 if self.green_:
                     diff_e[edge] = real_edge_compute(edge, e)
                 else:

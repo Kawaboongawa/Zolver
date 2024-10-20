@@ -20,20 +20,11 @@ Zolver reconstruction
 
 ## Requirements
 
-This projects was developped on Linux distribution. Windows compatibility is absolutely not guaranteed.
+This projects was developed on Linux distribution. Windows compatibility is absolutely not guaranteed.
 
-- numpy==1.15.0
-- scipy==1.0.0
-- opencv_python==3.3.0.10
-- scikit_image==0.13.1
-- matplotlib==2.1.0
-- Pillow
-- PyQt5>=5.0
-- scikit_learn>=0.18.1
+To avoid compatibility issues, we recommend setting up a virtual environment and then using the command :
 
-To avoid compability issues, we recommend setting up a virtual environment and then using the command :
-
-"pip install -r requirements.txt"
+`pip install -r requirements.txt`
 
 ## Usage
 ### With GUI
@@ -41,8 +32,10 @@ Use `python3 main.py`
 
 
 ### Without GUI
-Use `python3 main_no_gui.py path/to/image`
-
+Use `python3 main_no_gui.py {-p} {-g} path/to/image`
+Options:
+- `-g`: enable green background
+- `-p`: enable profiling
 
 ## Zolver overview
 
