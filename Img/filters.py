@@ -8,7 +8,6 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import scipy
-import sklearn.preprocessing
 from numba import njit
 
 from Puzzle.Edge import Edge
@@ -297,6 +296,12 @@ def type_peak(peaks_pos_inside, peaks_neg_inside):
     return TypeEdge.UNDEFINED
 
 
+def normalized(a, axis=-1, order=2):
+    l2 = np.atleast_1d(np.linalg.norm(a, ord=order, axis=axis))
+    l2[l2 == 0] = 1
+    return a / np.expand_dims(l2, axis)
+
+
 def my_find_corner_signature(cnt, green=False):
     """
     Determine the corner/edge positions by analyzing contours.
@@ -363,9 +368,7 @@ def my_find_corner_signature(cnt, green=False):
         extr = extr_tmp
         extr_inverse = extr_tmp_inverse
 
-        relative_angles = sklearn.preprocessing.normalize(
-            relative_angles[:, np.newaxis], axis=0
-        ).ravel()
+        relative_angles = normalized(relative_angles[:, np.newaxis], axis=0).ravel()
 
         # Build list of permutations of 4 points
         combs = itertools.permutations(extr, 4)

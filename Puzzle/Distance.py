@@ -7,7 +7,7 @@ from numba import njit
 
 @njit
 def rgb2lab(r, g, b, drop_l=False):
-    """ Fast Implementation of rgb2lab function (skimage too slow) """
+    """Fast Implementation of rgb2lab function (skimage too slow)"""
 
     r = r / 255
     r = (((r + 0.055) / 1.055) ** 2.4 if r > 0.04045 else r / 12.92) * 100
@@ -20,25 +20,21 @@ def rgb2lab(r, g, b, drop_l=False):
 
     X = (r * 0.4124) + (g * 0.3576) + (b * 0.1805)
     X = round(X, 4) / 95.047
-    X = X ** 0.3333333333333333 if X > 0.008856 else (7.787 * X) + (16.0 / 116.0)
+    X = X**0.3333333333333333 if X > 0.008856 else (7.787 * X) + (16.0 / 116.0)
 
     Y = r * 0.2126 + g * 0.7152 + b * 0.0722
     Y = round(Y, 4) / 100.0
-    Y = Y ** 0.3333333333333333 if Y > 0.008856 else (7.787 * Y) + (16.0 / 116.0)
+    Y = Y**0.3333333333333333 if Y > 0.008856 else (7.787 * Y) + (16.0 / 116.0)
 
     Z = r * 0.0193 + g * 0.1192 + b * 0.9505
     Z = round(Z, 4) / 108.883
-    Z = Z ** 0.3333333333333333 if Z > 0.008856 else (7.787 * Z) + (16.0 / 116.0)
+    Z = Z**0.3333333333333333 if Z > 0.008856 else (7.787 * Z) + (16.0 / 116.0)
 
     L = (116.0 * Y) - 16
     a = 500.0 * (X - Y)
     b = 200.0 * (Y - Z)
 
-    return (
-        round(L, 4) if not drop_l else 0.0,
-        round(a, 4),
-        round(b, 4)
-    )
+    return (round(L, 4) if not drop_l else 0.0, round(a, 4), round(b, 4))
 
 
 @njit
