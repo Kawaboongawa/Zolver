@@ -5,6 +5,7 @@ import cv2
 from .Distance import real_edge_compute, generated_edge_compute
 from .Extractor import Extractor
 from .Mover import stick_pieces
+from .utils import rotate
 
 from .Enums import (
     Directions,
@@ -148,6 +149,23 @@ class Puzzle:
             min(bbox[1] for bbox in bboxes),
             max(bbox[2] for bbox in bboxes),
             max(bbox[3] for bbox in bboxes),
+        )
+
+    def rotate_bbox(self, angle, around):
+        # Rotate corners only to optimize
+        minX, minY, maxX, maxY = self.get_bbox()
+        rotated = [
+            rotate((x, y), angle, around)
+            for x in [minX, maxX]
+            for y in [minY, maxY]
+        ]
+        rotatedX = [p[0] for p in rotated]
+        rotatedY = [p[1] for p in rotated]
+        return (
+            int(min(rotatedX)),
+            int(min(rotatedY)),
+            int(max(rotatedX)),
+            int(max(rotatedY)),
         )
 
     def solve(self, connected_pieces, left_pieces):
@@ -537,11 +555,11 @@ class Puzzle:
             return
 
         minX, minY, maxX, maxY = self.get_bbox()
-
         colored_img = np.zeros((maxX - minX, maxY - minY, 3))
         border_img = np.zeros((maxX - minX, maxY - minY, 3))
 
         for piece in self.pieces_:
+            # Reframe piece pixels to (0, 0)
             tmp = [
                 (x - minX, y - minY, c)
                 for (x, y), c in piece.pixels.items()
@@ -549,8 +567,8 @@ class Puzzle:
                 and 0 <= y - minY < colored_img.shape[1]
             ]
             x, y, c = (
-                list(map(lambda e: e[0], tmp)),
-                list(map(lambda e: e[1], tmp)),
+                list(map(lambda e: int(e[0]), tmp)),
+                list(map(lambda e: int(e[1]), tmp)),
                 list(map(lambda e: e[2], tmp)),
             )
             colored_img[x, y] = c

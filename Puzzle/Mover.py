@@ -1,26 +1,6 @@
-import math
-
 import numpy as np
-from numba import njit
 
-from Img.filters import angle_between
-
-
-@njit
-def rotate(origin, point, angle):
-    """
-    Rotate the pixel around `origin` by `angle` degrees
-
-    :param origin: Coordinates of points used to rotate around
-    :param angle: number of degrees
-    :return: Coordinates after rotation
-    """
-
-    ox, oy = origin
-    px, py = point
-    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
-    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-    return qx, qy
+from .utils import rotate, angle_between
 
 
 def stick_pieces(bloc_e, p, e, final_stick=False):
@@ -32,7 +12,6 @@ def stick_pieces(bloc_e, p, e, final_stick=False):
     :param e: edge to stick
     :return: Nothing
     """
-
     vec_bloc = np.subtract(bloc_e.shape[0], bloc_e.shape[-1])
     vec_piece = np.subtract(e.shape[0], e.shape[-1])
 
@@ -48,38 +27,28 @@ def stick_pieces(bloc_e, p, e, final_stick=False):
     # Then rotate piece of `angle` degrees centered on the corner
     for edge in p.edges_:
         for i, point in enumerate(edge.shape):
-            edge.shape[i] = rotate(bloc_e.shape[0], point, -angle)
+            edge.shape[i] = rotate(point, -angle, bloc_e.shape[0])
 
     if final_stick:
-        # prev bounding box
-        p.translate(translation[1], translation[0])
-        minX, minY, maxX, maxY = p.get_bbox()
-
-        # rotation center
-        img_p = np.full((maxX - minX + 1, maxY - minY + 1, 3), -1)
-        for (x, y), c in p.pixels.items():
-            img_p[x - minX, y - minY] = c
-
-        # new bounding box
+        # Rotation origin
         b_e0, b_e1 = bloc_e.shape[0][0], bloc_e.shape[0][1]
-        rotated = [
-            rotate((b_e1, b_e0), (x, y), angle)
-            for x in [minX, maxX]
-            for y in [minY, maxY]
-        ]
-        rotatedX = [p[0] for p in rotated]
-        rotatedY = [p[1] for p in rotated]
-        minX2, minY2, maxX2, maxY2 = (
-            int(min(rotatedX)),
-            int(min(rotatedY)),
-            int(max(rotatedX)),
-            int(max(rotatedY)),
-        )
 
+        # Translate piece pixels to desired location
+        p.translate(translation[1], translation[0])
+
+        # Bounding boxes of origin/target space
+        minX, minY, maxX, maxY = p.get_bbox()
+        minX2, minY2, maxX2, maxY2 = p.rotate_bbox(angle, (b_e1, b_e0))
+
+        # Recreate image from pixels
+        img_p = p.get_image()
+
+        # Retrieve new pixels by rotated target space into origin space
         pixels = {}
         for px in range(minX2, maxX2 + 1):
             for py in range(minY2, maxY2 + 1):
-                qx, qy = rotate((b_e1, b_e0), (px, py), -angle)
+                # Rotate back to origin space
+                qx, qy = rotate((px, py), -angle, (b_e1, b_e0))
                 qx, qy = int(qx), int(qy)
                 if (
                     minX <= qx <= maxX

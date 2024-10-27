@@ -1,4 +1,7 @@
+import numpy as np
+
 from .Enums import TypeEdge, TypePiece, rotate_direction
+from .utils import rotate
 
 
 class PuzzlePiece:
@@ -19,10 +22,37 @@ class PuzzlePiece:
     def get_bbox(self):
         x = list(map(lambda p: p[0], self.pixels))
         y = list(map(lambda p: p[1], self.pixels))
-        return min(x), min(y), max(x), max(y)
+        return int(min(x)), int(min(y)), int(max(x)), int(max(y))
+
+    def rotate_bbox(self, angle, around):
+        # Rotate corners only to optimize
+        minX, minY, maxX, maxY = self.get_bbox()
+        rotated = [
+            rotate((x, y), angle, around)
+            for x in [minX, maxX]
+            for y in [minY, maxY]
+        ]
+        rotatedX = [p[0] for p in rotated]
+        rotatedY = [p[1] for p in rotated]
+        return (
+            int(min(rotatedX)),
+            int(min(rotatedY)),
+            int(max(rotatedX)),
+            int(max(rotatedY)),
+        )
 
     def translate(self, dx, dy):
         self.pixels = {(x + dx, y + dy): c for (x, y), c in self.pixels.items()}
+
+    def rotate(self, angle, around):
+        self.pixels = {rotate((x, y), angle, around, to_int=True): c for (x, y), c in self.pixels.items()}
+
+    def get_image(self):
+        minX, minY, maxX, maxY = self.get_bbox()
+        img_p = np.full((maxX - minX + 1, maxY - minY + 1, 3), -1)
+        for (x, y), c in self.pixels.items():
+            img_p[x - minX, y - minY] = c
+        return img_p
 
     def number_of_border(self):
         """Fast computations of the number of borders"""

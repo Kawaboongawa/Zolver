@@ -1,9 +1,12 @@
 from PIL import Image
+from numba import njit
+
 
 GREEN_RANGE_MIN_HSV = (100, 200, 70)
 GREEN_RANGE_MAX_HSV = (185, 255, 255)
 
 
+@njit
 def rgb_to_hsv(r, g, b):
     """
     Convert a color from rgb space to hsv

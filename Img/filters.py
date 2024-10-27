@@ -439,9 +439,9 @@ def my_find_corner_signature(cnt, green=False):
 
     best_fit_tmp = best_fit - offset
     for i in range(3):
-        edges.append(cnt[best_fit_tmp[i] : best_fit_tmp[i + 1]])
+        edges.append(cnt[best_fit_tmp[i]:best_fit_tmp[i + 1]])
     edges.append(
-        np.concatenate((cnt[best_fit_tmp[3] :], cnt[: best_fit_tmp[0]]), axis=0)
+        np.concatenate((cnt[best_fit_tmp[3]:], cnt[:best_fit_tmp[0]]), axis=0)
     )
 
     edges = [
@@ -449,19 +449,6 @@ def my_find_corner_signature(cnt, green=False):
     ]  # quick'n'dirty fix of the shape
     types_pieces.append(types_pieces[0])
     return best_fit, edges, types_pieces[1:]
-
-
-@njit
-def angle_between(v1, v2):
-    """
-    Return the angles between two tuples
-
-    :param v1: first tuple of coordinates
-    :param v2: second tuple of coordinates
-    :return: distance Float
-    """
-
-    return math.atan2(-v1[1], v1[0]) - math.atan2(-v2[1], v2[0])
 
 
 def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=False):
