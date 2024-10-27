@@ -95,6 +95,7 @@ class Puzzle:
 
         self.log(">>> START solve border")
         start_piece = connected_pieces[0]
+        start_piece.coord = (0, 0)
         self.corner_pos = [((0, 0), start_piece)]  # we start with a corner
 
         for i in range(4):
@@ -155,9 +156,7 @@ class Puzzle:
         # Rotate corners only to optimize
         minX, minY, maxX, maxY = self.get_bbox()
         rotated = [
-            rotate((x, y), angle, around)
-            for x in [minX, maxX]
-            for y in [minY, maxY]
+            rotate((x, y), angle, around) for x in [minX, maxX] for y in [minY, maxY]
         ]
         rotatedX = [p[0] for p in rotated]
         rotatedY = [p[1] for p in rotated]
@@ -512,7 +511,8 @@ class Puzzle:
         else:
             self.update_dimension()
 
-        self.log("Placed:", best_p.type, "at", new_coord)
+        best_p.coord = (new_coord[1], new_coord[0])
+        self.log("Placed:", best_p.type, "at", best_p.coord)
 
     def translate_puzzle(self):
         """Translate all pieces to the top left corner to be sure the puzzle is in the image"""

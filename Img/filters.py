@@ -8,7 +8,6 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import scipy
-from numba import njit
 
 from Puzzle.Edge import Edge
 from Puzzle.Enums import directions, TypeEdge
@@ -439,9 +438,9 @@ def my_find_corner_signature(cnt, green=False):
 
     best_fit_tmp = best_fit - offset
     for i in range(3):
-        edges.append(cnt[best_fit_tmp[i]:best_fit_tmp[i + 1]])
+        edges.append(cnt[best_fit_tmp[i] : best_fit_tmp[i + 1]])
     edges.append(
-        np.concatenate((cnt[best_fit_tmp[3]:], cnt[:best_fit_tmp[0]]), axis=0)
+        np.concatenate((cnt[best_fit_tmp[3] :], cnt[: best_fit_tmp[0]]), axis=0)
     )
 
     edges = [

@@ -28,9 +28,7 @@ class PuzzlePiece:
         # Rotate corners only to optimize
         minX, minY, maxX, maxY = self.get_bbox()
         rotated = [
-            rotate((x, y), angle, around)
-            for x in [minX, maxX]
-            for y in [minY, maxY]
+            rotate((x, y), angle, around) for x in [minX, maxX] for y in [minY, maxY]
         ]
         rotatedX = [p[0] for p in rotated]
         rotatedY = [p[1] for p in rotated]
@@ -41,11 +39,18 @@ class PuzzlePiece:
             int(max(rotatedY)),
         )
 
+    def get_center(self):
+        minX, minY, maxX, maxY = self.get_bbox()
+        return ((minX + maxX) // 2, (minY + maxY) // 2)
+
     def translate(self, dx, dy):
         self.pixels = {(x + dx, y + dy): c for (x, y), c in self.pixels.items()}
 
     def rotate(self, angle, around):
-        self.pixels = {rotate((x, y), angle, around, to_int=True): c for (x, y), c in self.pixels.items()}
+        self.pixels = {
+            rotate((x, y), angle, around, to_int=True): c
+            for (x, y), c in self.pixels.items()
+        }
 
     def get_image(self):
         minX, minY, maxX, maxY = self.get_bbox()
