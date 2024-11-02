@@ -27,7 +27,9 @@ if args.profile:
     from pstats import SortKey
 
     with cProfile.Profile() as pr:
-        Puzzle(args.file, green_screen=args.green_screen)
+        puzzle = Puzzle(args.file, green_screen=args.green_screen)
+        puzzle.solve_puzzle()
+
         s = io.StringIO()
         ps = pstats.Stats(pr, stream=s).sort_stats(SortKey.CUMULATIVE)
         ps.print_stats(50)

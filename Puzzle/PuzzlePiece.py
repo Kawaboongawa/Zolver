@@ -18,6 +18,7 @@ class PuzzlePiece:
         self.pixels = pixels
         self.nBorders_ = self.number_of_border()
         self.type = TypePiece(self.nBorders_)
+        self.is_border = self.number_of_border() > 0
 
     def get_bbox(self):
         x = list(map(lambda p: p[0], self.pixels))

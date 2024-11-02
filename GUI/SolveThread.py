@@ -13,4 +13,5 @@ class SolveThread(QThread):
         self.green_screen = green_screen
 
     def run(self):
-        Puzzle(self.path, self.viewer, self.green_screen)
+        puzzle = Puzzle(self.path, self.viewer, self.green_screen)
+        puzzle.solve_puzzle()

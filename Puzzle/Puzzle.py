@@ -50,39 +50,34 @@ class Puzzle:
             self.extract = Extractor(path, viewer, green_screen, factor)
             self.pieces_ = self.extract.extract()
 
+        self.border_pieces = [p for p in self.pieces_ if p.is_border]
+        self.non_border_pieces = [p for p in self.pieces_ if not p.is_border]
         self.viewer = viewer
         self.green_ = green_screen
         self.connected_directions = []
         self.diff = {}
-        self.edge_to_piece = {}
-
-        for p in self.pieces_:
-            for e in p.edges_:
-                self.edge_to_piece[e] = p
-
-        self.extremum = (-1, -1, 1, 1)
-        self.log(">>> START solving puzzle")
-
-        border_pieces = []
-        non_border_pieces = []
-        connected_pieces = []
-        # Separate border pieces from the other
-        for piece in self.pieces_:
-            if piece.number_of_border():
-                border_pieces.append(piece)
-            else:
-                non_border_pieces.append(piece)
+        self.edge_to_piece = {e: p for p in self.pieces_ for e in p.edges_}
 
         self.possible_dim = self.compute_possible_size(
-            len(self.pieces_), len(border_pieces)
+            len(self.pieces_), len(self.border_pieces)
         )
+        self.extremum = (-1, -1, 1, 1)
+
+    def solve_puzzle(self):
+        self.log(">>> START solving puzzle")
+
+        # Separate border pieces from the other
+        connected_pieces = []
+        border_pieces = self.border_pieces.copy()
+        non_border_pieces = self.non_border_pieces.copy()
 
         # Start by a corner piece
         for piece in border_pieces:
             if piece.number_of_border() > 1:
-                connected_pieces = [piece]
+                connected_pieces.append(piece)
                 border_pieces.remove(piece)
                 break
+
         self.log("Number of border pieces: ", len(border_pieces) + 1)
 
         self.export_pieces(
@@ -600,7 +595,7 @@ class Puzzle:
         cv2.imwrite(path_colored, colored_img)
         self.viewer.addImage(name_colored, path_colored)
 
-    def compute_possible_size(self, nb_piece, nb_border):
+    def compute_possible_size(self, nb_piece, nb_border) -> list[tuple]:
         """
         Compute all possible size of the puzzle based on the number
         of pieces and the number of border pieces

@@ -509,23 +509,23 @@ def export_contours(img, img_bw, contours, path, modulo, viewer=None, green=Fals
             mask_full_tiny, mask_full_tiny, mask=mask_inv_border_tiny
         )
 
+        # Find mean color around edge
         for i in range(4):
             color_edge = []
             for ip, p in enumerate(edges_shape[i]):
-                CIRCLE_SIZE = 5
                 if ip != 0:
                     p2 = edges_shape[i][ip - 1]
                     cv2.circle(
                         mask_around_tiny,
                         (p2[0] - x_bound, p2[1] - y_bound),
-                        CIRCLE_SIZE,
+                        5,
                         0,
                         -1,
                     )
                 cv2.circle(
                     mask_around_tiny,
                     (p[0] - x_bound, p[1] - y_bound),
-                    CIRCLE_SIZE,
+                    5,
                     255,
                     -1,
                 )
