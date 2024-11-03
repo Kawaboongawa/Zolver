@@ -238,11 +238,12 @@ class Puzzle:
             del diff[edge_connected]
 
         # build the list of edge to test
-        edges_to_test = []
-        for piece in left_pieces:
-            for edge in piece.edges_:
-                if not edge.connected:
-                    edges_to_test.append((piece, edge))
+        edges_to_test = [
+            (piece, edge)
+            for piece in left_pieces
+            for edge in piece.edges_
+            if not edge.connected
+        ]
 
         # Remove the edge of the new piece from the bloc border diffs
         for e in new_connected.edges_:
@@ -384,11 +385,11 @@ class Puzzle:
                             get_opposite_direction(direction_exposed)
                         )
 
-                        if p.type == TypePiece.ANGLE:
-                            if not corner_puzzle_alignment(c, self.corner_pos):
-                                diff_score = float("inf")
-                            elif not self.corner_place_fit_size(c):
-                                diff_score = float("inf")
+                        if p.type == TypePiece.ANGLE and (
+                            not corner_puzzle_alignment(c, self.corner_pos)
+                            or not self.corner_place_fit_size(c)
+                        ):
+                            diff_score = float("inf")
                         if p.type == TypePiece.BORDER and self.is_edge_at_corner_place(
                             c
                         ):
@@ -427,11 +428,12 @@ class Puzzle:
     def add_to_diffs(self, left_pieces):
         """build the list of edge to test"""
 
-        edges_to_test = []
-        for piece in left_pieces:
-            for edge in piece.edges_:
-                if not edge.connected:
-                    edges_to_test.append((piece, edge))
+        edges_to_test = [
+            (piece, edge)
+            for piece in left_pieces
+            for edge in piece.edges_
+            if not edge.connected
+        ]
 
         for e, diff_e in self.diff.items():
             for piece, edge in edges_to_test:
@@ -623,8 +625,8 @@ class Puzzle:
         def almost_equals(idx, target, val):
             return val[idx] == target or val[idx] == -target
 
+        # We have already picked a dimension
         if len(self.possible_dim) == 1:
-            # We have already picked a dimension
             return (
                 c[0] == 0
                 or c[0] == self.possible_dim[0][0]
@@ -634,35 +636,35 @@ class Puzzle:
                 or c[1] == self.possible_dim[0][1]
                 or c[0] == -self.possible_dim[0][1]
             )
-        else:
-            if c[0] == 0:
-                filtered = list(
-                    filter(lambda x: almost_equals(1, c[1], x), self.possible_dim)
-                )
-                if len(filtered):
-                    if update_dim and len(filtered) != len(self.possible_dim):
-                        self.log(
-                            "Update possible dimensions with corner place:",
-                            display_dim(filtered),
-                        )
-                        self.possible_dim = filtered
-                    return True
-                else:
-                    return False
-            elif c[1] == 0:
-                filtered = list(
-                    filter(lambda x: almost_equals(0, c[0], x), self.possible_dim)
-                )
-                if len(filtered):
-                    if update_dim and len(filtered) != len(self.possible_dim):
-                        self.log(
-                            "Update possible dimensions with corner place:",
-                            display_dim(filtered),
-                        )
-                        self.possible_dim = filtered
-                    return True
-                else:
-                    return False
+
+        if c[0] == 0:
+            filtered = list(
+                filter(lambda x: almost_equals(1, c[1], x), self.possible_dim)
+            )
+            if len(filtered):
+                if update_dim and len(filtered) != len(self.possible_dim):
+                    self.log(
+                        "Update possible dimensions with corner place:",
+                        display_dim(filtered),
+                    )
+                    self.possible_dim = filtered
+                return True
+            else:
+                return False
+        elif c[1] == 0:
+            filtered = list(
+                filter(lambda x: almost_equals(0, c[0], x), self.possible_dim)
+            )
+            if len(filtered):
+                if update_dim and len(filtered) != len(self.possible_dim):
+                    self.log(
+                        "Update possible dimensions with corner place:",
+                        display_dim(filtered),
+                    )
+                    self.possible_dim = filtered
+                return True
+            else:
+                return False
         return False
 
     def is_edge_at_corner_place(self, c):

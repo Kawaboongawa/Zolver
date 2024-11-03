@@ -21,7 +21,6 @@ def show_image(img, ind=None, name="image", show=True):
 
 def show_contours(contours, imgRef):
     """Helper used for matplotlib contours display"""
-
     whiteImg = np.zeros(imgRef.shape)
     cv2.drawContours(whiteImg, contours, -1, (255, 0, 0), 1, maxLevel=1)
     show_image(whiteImg)

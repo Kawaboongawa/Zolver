@@ -1,15 +1,38 @@
-import colorsys
 import math
 
 import numpy as np
 from numba import njit
 
 
-@njit
+@njit(cache=True)
+def rgb2hsl(r, g, b):
+    r /= 255
+    g /= 255
+    b /= 255
+    minimum = min(r, g, b)
+    maximum = max(r, g, b)
+    med = (maximum + minimum) / 2
+    h, l, s = med, med, med
+    if maximum == minimum:
+        return 0, 0, l
+
+    d = maximum - minimum
+    s = d / (2 - maximum - minimum) if l > 0.5 else d / (maximum + minimum)
+    if maximum == r:
+        h = (g - b) / d + (6 if g < b else 0)
+    elif maximum == g:
+        h = (b - r) / d + 2
+    elif maximum == b:
+        h = (r - g) / d + 4
+    return h / 6, s, l
+
+
+@njit(cache=True)
 def rgb2lab(r, g, b, drop_l=False):
     """Fast Implementation of rgb2lab function (skimage too slow)"""
+    exp = 1 / 3
 
-    r = r / 255
+    r /= 255
     r = (((r + 0.055) / 1.055) ** 2.4 if r > 0.04045 else r / 12.92) * 100
 
     g = g / 255
@@ -18,26 +41,26 @@ def rgb2lab(r, g, b, drop_l=False):
     b = b / 255
     b = (((b + 0.055) / 1.055) ** 2.4 if b > 0.04045 else b / 12.92) * 100
 
-    X = r * 0.4124 + g * 0.3576 + b * 0.1805
-    X = round(X, 4) / 95.047
-    X = X**0.3333333333333333 if X > 0.008856 else (7.787 * X) + (16.0 / 116.0)
+    x = r * 0.4124 + g * 0.3576 + b * 0.1805
+    x = round(x, 4) / 95.047
+    x = x**exp if x > 0.008856 else (7.787 * x) + (16.0 / 116.0)
 
-    Y = r * 0.2126 + g * 0.7152 + b * 0.0722
-    Y = round(Y, 4) / 100.0
-    Y = Y**0.3333333333333333 if Y > 0.008856 else (7.787 * Y) + (16.0 / 116.0)
+    y = r * 0.2126 + g * 0.7152 + b * 0.0722
+    y = round(y, 4) / 100.0
+    y = y**exp if y > 0.008856 else (7.787 * y) + (16.0 / 116.0)
 
-    Z = r * 0.0193 + g * 0.1192 + b * 0.9505
-    Z = round(Z, 4) / 108.883
-    Z = Z**0.3333333333333333 if Z > 0.008856 else (7.787 * Z) + (16.0 / 116.0)
+    z = r * 0.0193 + g * 0.1192 + b * 0.9505
+    z = round(z, 4) / 108.883
+    z = z**exp if z > 0.008856 else (7.787 * z) + (16.0 / 116.0)
 
-    L = (116.0 * Y) - 16
-    a = 500.0 * (X - Y)
-    b = 200.0 * (Y - Z)
+    L = (116.0 * y) - 16
+    a = 500.0 * (x - y)
+    b = 200.0 * (y - z)
 
-    return (round(L, 4) if not drop_l else 0.0, round(a, 4), round(b, 4))
+    return round(L, 4) if not drop_l else 0.0, round(a, 4), round(b, 4)
 
 
-@njit
+@njit(cache=True)
 def dist(p1, p2):
     """
     Compute euclidean distance
@@ -49,7 +72,7 @@ def dist(p1, p2):
     return math.sqrt((p2[0] - p1[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
 
-@njit
+@njit(cache=True)
 def dist_edge(e1_begin, e1_end, e2_begin, e2_end):
     """
     Compute the size difference between two edges
@@ -65,7 +88,7 @@ def dist_edge(e1_begin, e1_end, e2_begin, e2_end):
     return res, val
 
 
-@njit
+@njit(cache=True)
 def have_edges_similar_length(e1_begin, e1_end, e2_begin, e2_end, percent):
     """
     Return a boolean to determine if the difference between two edges is > 20%
@@ -150,7 +173,7 @@ def diff_match_edges2(e1, e2, reverse=True, thres=5, pad=False):
     return np.sum(d > thres) / e1.shape[0]
 
 
-@njit
+@njit(cache=True)
 def dist_color(t1_0, t1_1, t1_2, t2_0, t2_1, t2_2):
     return np.sqrt((t1_0 - t2_0) ** 2 + (t1_1 - t2_1) ** 2 + (t1_2 - t2_2) ** 2)
 
@@ -169,10 +192,37 @@ def euclidean_distance(e1_lab_colors, e2_lab_colors):
     )
 
 
+@njit(cache=True)
+def hue2rgb(p, q, t):
+    if t < 0:
+        t += 1
+    if t > 1:
+        t -= 1
+    if t < 1 / 6:
+        return p + (q - p) * 6 * t
+    if t < 1 / 2:
+        return q
+    if t < 2 / 3:
+        return p + (q - p) * (2 / 3 - t) * 6
+    return p
+
+
+@njit(cache=True)
+def hsl2rgb(h, s, l):
+    if s == 0:
+        return l, l, l
+    q = l * (1 + s) if l < 0.5 else l + s - l * s
+    p = 2 * l - q
+    return (
+        hue2rgb(p, q, h + 1.0 / 3) * 255,
+        hue2rgb(p, q, h) * 255,
+        hue2rgb(p, q, h - 1.0 / 3) * 255,
+    )
+
+
 def get_colors(edge):
     return [
-        rgb2lab(*colorsys.hls_to_rgb(col[0], col[1], col[2]), drop_l=True)
-        for col in edge.color
+        rgb2lab(*hsl2rgb(col[0], col[1], col[2]), drop_l=True) for col in edge.color
     ]
 
 
