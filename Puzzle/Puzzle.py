@@ -1,6 +1,7 @@
-import sys
-import numpy as np
 import cv2
+import numpy as np
+import os
+import sys
 
 from .Distance import real_edge_compute, generated_edge_compute
 from .Extractor import Extractor
@@ -81,8 +82,8 @@ class Puzzle:
         self.log("Number of border pieces: ", len(border_pieces) + 1)
 
         self.export_pieces(
-            "/tmp/stick{0:03d}".format(1) + ".png",
-            "/tmp/colored{0:03d}".format(1) + ".png",
+            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "stick{0:03d}".format(1) + ".png"),
+            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored{0:03d}".format(1) + ".png"),
             "Border types".format(),
             "Step {0:03d}".format(1),
             display_border=True,
@@ -111,7 +112,7 @@ class Puzzle:
 
         self.log(">>> SAVING result...")
         self.translate_puzzle()
-        self.export_pieces("/tmp/stick.png", "/tmp/colored.png", display=False)
+        self.export_pieces(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "stick.png"), os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored.png"), display=False)
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
         # The first piece has an orientation like that:
@@ -215,8 +216,8 @@ class Puzzle:
             )
 
             self.export_pieces(
-                "/tmp/stick{0:03d}.png".format(len(self.connected_directions)),
-                "/tmp/colored{0:03d}.png".format(len(self.connected_directions)),
+                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "stick{0:03d}.png".format(len(self.connected_directions))),
+                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored{0:03d}.png".format(len(self.connected_directions))),
                 name_colored="Step {0:03d}".format(len(self.connected_directions)),
             )
 

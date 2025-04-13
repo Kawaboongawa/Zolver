@@ -1,11 +1,19 @@
 import argparse
+import atexit
 import multiprocessing as mp
+import os
+import tempfile
 
 import matplotlib.pyplot as plt
 
 from Puzzle.Puzzle import Puzzle
 
+# Create and use temporary directory
+temp_dir = tempfile.TemporaryDirectory()
+os.environ["ZOLVER_TEMP_DIR"] = temp_dir.name
+atexit.register(temp_dir.cleanup)
 
+# Parse arguments
 parser = argparse.ArgumentParser(description="Solve Puzzles!")
 parser.add_argument(
     "-g", "--green_screen", help="enable green background removing", action="store_true"

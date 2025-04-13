@@ -1,5 +1,6 @@
 from PIL import Image
 from numba import njit
+import os
 
 
 GREEN_RANGE_MIN_HSV = (100, 200, 70)
@@ -84,4 +85,4 @@ def remove_background(path, factor=0.84):
             else:
                 pix[x, y] = (255, 255, 255)
 
-    im.save("/tmp/green_background_removed.png")
+    im.save(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "green_background_removed.png"))
