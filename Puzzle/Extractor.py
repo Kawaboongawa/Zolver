@@ -3,6 +3,7 @@ import sys
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 from Img.GreenScreen import remove_background
 from Img.filters import export_contours
@@ -24,7 +25,7 @@ def show_contours(contours, imgRef):
     whiteImg = np.zeros(imgRef.shape)
     cv2.drawContours(whiteImg, contours, -1, (255, 0, 0), 1, maxLevel=1)
     show_image(whiteImg)
-    cv2.imwrite("/tmp/cont.png", whiteImg)
+    cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "cont.png"), whiteImg)
 
 
 class Extractor:
@@ -41,10 +42,10 @@ class Extractor:
             print(self.img.shape)
             print("Resizing with factor", divFactor)
             self.img = cv2.resize(self.img, (0, 0), fx=divFactor, fy=divFactor)
-            cv2.imwrite("/tmp/resized.png", self.img)
-            remove_background("/tmp/resized.png", factor=factor)
+            cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "resized.png"), self.img)
+            remove_background(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "resized.png"), factor=factor)
             self.img_bw = cv2.imread(
-                "/tmp/green_background_removed.png", cv2.IMREAD_GRAYSCALE
+                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "green_background_removed.png"), cv2.IMREAD_GRAYSCALE
             )
             # rescale self.img and self.img_bw to 640
         else:
@@ -67,9 +68,9 @@ class Extractor:
 
         kernel = np.ones((3, 3), np.uint8)
 
-        cv2.imwrite("/tmp/binarized.png", self.img_bw)
+        cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized.png"), self.img_bw)
         if self.viewer is not None:
-            self.viewer.addImage("Binarized", "/tmp/binarized.png")
+            self.viewer.addImage("Binarized", os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized.png"))
 
         ### Implementation of random functions, actual preprocessing is down below
 
@@ -86,7 +87,7 @@ class Extractor:
             ret, self.img_bw = cv2.threshold(
                 self.img_bw, 254, 255, cv2.THRESH_BINARY_INV
             )
-            cv2.imwrite("/tmp/otsu_binarized.png", self.img_bw)
+            cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "otsu_binarized.png"), self.img_bw)
             self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, kernel)
             self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, kernel)
 
@@ -113,10 +114,10 @@ class Extractor:
         if PREPROCESS_DEBUG_MODE == 1:
             show_image(self.img_bw)
 
-        cv2.imwrite("/tmp/binarized_treshold_filled.png", self.img_bw)
+        cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized_treshold_filled.png"), self.img_bw)
         if self.viewer is not None:
             self.viewer.addImage(
-                "Binarized treshold", "/tmp/binarized_treshold_filled.png"
+                "Binarized treshold", os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized_treshold_filled.png")
             )
 
         contours, hier = cv2.findContours(
@@ -156,7 +157,7 @@ class Extractor:
             self.img,
             self.img_bw,
             contours,
-            "/tmp/contours.png",
+            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "contours.png"),
             5,
             viewer=self.viewer,
             green=self.green_,
