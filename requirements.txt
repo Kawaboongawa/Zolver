@@ -1,6 +1,6 @@
-numpy==2.0.2
+numpy>=2.0.2
 scipy==1.14.1
 opencv-python==4.10.0.84
 matplotlib==3.9.2
 PyQt5==5.15.11
-numba==0.60.0
+numba>=0.60.0
