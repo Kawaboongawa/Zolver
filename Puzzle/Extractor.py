@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+import streamlit as st
+
 from Img.GreenScreen import remove_background
 from Img.filters import export_contours
 
@@ -33,7 +35,7 @@ class Extractor:
     Class used for preprocessing and pieces extraction
     """
 
-    def __init__(self, path, viewer=None, green_screen=False, factor=0.84):
+    def __init__(self, path, green_screen=False, factor=0.84):
         self.path = path
         self.img = cv2.imread(self.path, cv2.IMREAD_COLOR)
         if green_screen:
@@ -50,15 +52,12 @@ class Extractor:
             # rescale self.img and self.img_bw to 640
         else:
             self.img_bw = cv2.imread(self.path, cv2.IMREAD_GRAYSCALE)
-        self.viewer = viewer
         self.green_ = green_screen
         self.kernel_ = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 
     def log(self, *args):
         """Helper function to log informations to the GUI"""
         print(" ".join(map(str, args)))
-        if self.viewer:
-            self.viewer.addLog(args)
 
     def extract(self):
         """
@@ -68,12 +67,11 @@ class Extractor:
 
         kernel = np.ones((3, 3), np.uint8)
 
-        cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized.png"), self.img_bw)
-        if self.viewer is not None:
-            self.viewer.addImage("Binarized", os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized.png"))
+        bw_path = os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized.png")
+        cv2.imwrite(bw_path, self.img_bw)
+        st.image(bw_path, caption="Binarized")
 
         ### Implementation of random functions, actual preprocessing is down below
-
         def fill_holes():
             """filling contours found (and thus potentially holes in pieces)"""
 
@@ -87,7 +85,10 @@ class Extractor:
             ret, self.img_bw = cv2.threshold(
                 self.img_bw, 254, 255, cv2.THRESH_BINARY_INV
             )
-            cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "otsu_binarized.png"), self.img_bw)
+            otsu_bin_path = os.path.join(os.environ["ZOLVER_TEMP_DIR"], "otsu_binarized.png")
+            cv2.imwrite(otsu_bin_path, self.img_bw)
+            st.image(otsu_bin_path, caption="Otsu Binarized")
+
             self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_CLOSE, kernel)
             self.img_bw = cv2.morphologyEx(self.img_bw, cv2.MORPH_OPEN, kernel)
 
@@ -114,11 +115,9 @@ class Extractor:
         if PREPROCESS_DEBUG_MODE == 1:
             show_image(self.img_bw)
 
-        cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized_treshold_filled.png"), self.img_bw)
-        if self.viewer is not None:
-            self.viewer.addImage(
-                "Binarized treshold", os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized_treshold_filled.png")
-            )
+        bin_thres_path = os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized_threshold_filled.png")
+        cv2.imwrite(bin_thres_path, self.img_bw)
+        st.image(bin_thres_path, caption="Binarized Threshold Filled")
 
         contours, hier = cv2.findContours(
             self.img_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
@@ -159,7 +158,6 @@ class Extractor:
             contours,
             os.path.join(os.environ["ZOLVER_TEMP_DIR"], "contours.png"),
             5,
-            viewer=self.viewer,
             green=self.green_,
         )
         if puzzle_pieces is None:

@@ -24,11 +24,14 @@ This projects was developed on Linux distribution. Windows compatibility is abso
 
 To avoid compatibility issues, we recommend setting up a virtual environment and then using the command :
 
-`pip install -r requirements.txt`
+`pip install uv`
+
+`uv sync`
 
 ## Usage
 ### With GUI
-Use `python3 main.py`
+
+`uv run streamlit run main.py`
 
 
 ### Without GUI
