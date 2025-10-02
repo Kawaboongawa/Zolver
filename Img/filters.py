@@ -60,9 +60,17 @@ def get_relative_angles(cnt, export=False, sigma=5):
     angles = angles[0:length]
 
     if export:
-        pickle.dump(angles, open(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "save" + str(COUNT) + ".p"), "wb"))
+        pickle.dump(
+            angles,
+            open(
+                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "save" + str(COUNT) + ".p"),
+                "wb",
+            ),
+        )
         plt.plot(np.append(angles, angles))
-        plt.savefig(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "fig" + str(COUNT) + ".png"))
+        plt.savefig(
+            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "fig" + str(COUNT) + ".png")
+        )
         plt.clf()
         plt.cla()
         plt.close()
@@ -588,7 +596,12 @@ def export_contours(
             ] = image
         cv2.imwrite(path, pieces_img)
     if viewer:
-        cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "color_border.png"), out_color)
-        viewer.addImage("Extracted colored border", os.path.join(os.environ["ZOLVER_TEMP_DIR"], "color_border.png"))
+        cv2.imwrite(
+            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "color_border.png"), out_color
+        )
+        viewer.addImage(
+            "Extracted colored border",
+            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "color_border.png"),
+        )
 
     return puzzle_pieces

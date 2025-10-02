@@ -3,6 +3,8 @@ import numpy as np
 import os
 import sys
 
+import streamlit as st
+
 from .Distance import real_edge_compute, generated_edge_compute
 from .Extractor import Extractor
 from .Mover import stick_pieces
@@ -35,25 +37,20 @@ class Puzzle:
     """
 
     def log(self, *args):
-        """Helper to log informations to the GUI"""
-
         print(" ".join(map(str, args)))
-        if self.viewer:
-            self.viewer.addLog(args)
 
-    def __init__(self, path, viewer=None, green_screen=False):
+    def __init__(self, path, green_screen=False):
         """Extract information of pieces in the img at `path` and start computation of the solution"""
 
         self.pieces_ = None
         factor = 0.40
         while self.pieces_ is None:
             factor += 0.01
-            self.extract = Extractor(path, viewer, green_screen, factor)
+            self.extract = Extractor(path, green_screen, factor)
             self.pieces_ = self.extract.extract()
 
         self.border_pieces = [p for p in self.pieces_ if p.is_border]
         self.non_border_pieces = [p for p in self.pieces_ if not p.is_border]
-        self.viewer = viewer
         self.green_ = green_screen
         self.connected_directions = []
         self.diff = {}
@@ -82,8 +79,12 @@ class Puzzle:
         self.log("Number of border pieces: ", len(border_pieces) + 1)
 
         self.export_pieces(
-            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "stick{0:03d}".format(1) + ".png"),
-            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored{0:03d}".format(1) + ".png"),
+            os.path.join(
+                os.environ["ZOLVER_TEMP_DIR"], "stick{0:03d}".format(1) + ".png"
+            ),
+            os.path.join(
+                os.environ["ZOLVER_TEMP_DIR"], "colored{0:03d}".format(1) + ".png"
+            ),
             "Border types".format(),
             "Step {0:03d}".format(1),
             display_border=True,
@@ -112,7 +113,11 @@ class Puzzle:
 
         self.log(">>> SAVING result...")
         self.translate_puzzle()
-        self.export_pieces(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "stick.png"), os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored.png"), display=False)
+        self.export_pieces(
+            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "stick.png"),
+            os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored.png"),
+            display=False,
+        )
 
         # Two sets of pieces: Already connected ones and pieces remaining to connect to the others
         # The first piece has an orientation like that:
@@ -216,8 +221,14 @@ class Puzzle:
             )
 
             self.export_pieces(
-                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "stick{0:03d}.png".format(len(self.connected_directions))),
-                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored{0:03d}.png".format(len(self.connected_directions))),
+                os.path.join(
+                    os.environ["ZOLVER_TEMP_DIR"],
+                    "stick{0:03d}.png".format(len(self.connected_directions)),
+                ),
+                os.path.join(
+                    os.environ["ZOLVER_TEMP_DIR"],
+                    "colored{0:03d}.png".format(len(self.connected_directions)),
+                ),
                 name_colored="Step {0:03d}".format(len(self.connected_directions)),
             )
 
@@ -549,8 +560,6 @@ class Puzzle:
         :param path_colored: Path used to export the colored image
         :return: the best edge found in the bloc
         """
-        if not (self.viewer and display):
-            return
 
         minX, minY, maxX, maxY = self.get_bbox()
         colored_img = np.zeros((maxX - minX, maxY - minY, 3))
@@ -593,10 +602,10 @@ class Puzzle:
                             border_img[x, y, 1] = rgb[1]
                             border_img[x, y, 2] = rgb[0]
                 cv2.imwrite(path_contour, border_img)
-                self.viewer.addImage(name_contour, path_contour, display=False)
+                st.image(path_contour, os.path.basename(path_contour))
 
         cv2.imwrite(path_colored, colored_img)
-        self.viewer.addImage(name_colored, path_colored)
+        st.image(path_colored, caption=os.path.basename(path_colored))
 
     def compute_possible_size(self, nb_piece, nb_border) -> list[tuple]:
         """

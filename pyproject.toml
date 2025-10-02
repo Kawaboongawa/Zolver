@@ -1,0 +1,20 @@
+[project]
+name = "Zolver"
+version = "1.0.0"
+authors = [
+  {name = "Cyril Cetre"},
+  {name = "Denis Castéran"},
+  {name = "Jérémy Lugand"},
+  {name = "Hugo Rybinski"},
+]
+
+requires-python = ">=3.13"
+dependencies = [
+    "numpy~=2.2",
+    "scipy==1.16.2",
+    "opencv-python==4.12.0.88",
+    "matplotlib==3.10.6",
+    "streamlit",
+    "watchdog",
+    "numba~=0.62",
+]
