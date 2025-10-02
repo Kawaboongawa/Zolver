@@ -44,10 +44,18 @@ class Extractor:
             print(self.img.shape)
             print("Resizing with factor", divFactor)
             self.img = cv2.resize(self.img, (0, 0), fx=divFactor, fy=divFactor)
-            cv2.imwrite(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "resized.png"), self.img)
-            remove_background(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "resized.png"), factor=factor)
+            cv2.imwrite(
+                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "resized.png"), self.img
+            )
+            remove_background(
+                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "resized.png"),
+                factor=factor,
+            )
             self.img_bw = cv2.imread(
-                os.path.join(os.environ["ZOLVER_TEMP_DIR"], "green_background_removed.png"), cv2.IMREAD_GRAYSCALE
+                os.path.join(
+                    os.environ["ZOLVER_TEMP_DIR"], "green_background_removed.png"
+                ),
+                cv2.IMREAD_GRAYSCALE,
             )
             # rescale self.img and self.img_bw to 640
         else:
@@ -85,7 +93,9 @@ class Extractor:
             ret, self.img_bw = cv2.threshold(
                 self.img_bw, 254, 255, cv2.THRESH_BINARY_INV
             )
-            otsu_bin_path = os.path.join(os.environ["ZOLVER_TEMP_DIR"], "otsu_binarized.png")
+            otsu_bin_path = os.path.join(
+                os.environ["ZOLVER_TEMP_DIR"], "otsu_binarized.png"
+            )
             cv2.imwrite(otsu_bin_path, self.img_bw)
             st.image(otsu_bin_path, caption="Otsu Binarized")
 
@@ -115,7 +125,9 @@ class Extractor:
         if PREPROCESS_DEBUG_MODE == 1:
             show_image(self.img_bw)
 
-        bin_thres_path = os.path.join(os.environ["ZOLVER_TEMP_DIR"], "binarized_threshold_filled.png")
+        bin_thres_path = os.path.join(
+            os.environ["ZOLVER_TEMP_DIR"], "binarized_threshold_filled.png"
+        )
         cv2.imwrite(bin_thres_path, self.img_bw)
         st.image(bin_thres_path, caption="Binarized Threshold Filled")
 

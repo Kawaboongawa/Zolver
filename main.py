@@ -9,6 +9,7 @@ from Puzzle.Puzzle import Puzzle
 
 LOGGER = get_logger(__name__)
 
+
 def run():
     IMAGE = None
     st.set_page_config(
@@ -29,7 +30,7 @@ def run():
 
     if st.button("Solve"):
         if IMAGE is None:
-            st.warning('Image is None please upload an image first', icon="⚠️")
+            st.warning("Image is None please upload an image first", icon="⚠️")
             return
         with tempfile.NamedTemporaryFile(delete_on_close=False) as fp:
             fp.write(IMAGE)
@@ -37,7 +38,10 @@ def run():
             with st.spinner("Wait for it...", show_time=True):
                 puzzle = Puzzle(fp.name, green_screen=bool(green_screen_toggle))
                 puzzle.solve_puzzle()
-                image_placeholder.image(os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored.png"))
+                image_placeholder.image(
+                    os.path.join(os.environ["ZOLVER_TEMP_DIR"], "colored.png")
+                )
+
 
 if __name__ == "__main__":
     # Create and use temporary directory
