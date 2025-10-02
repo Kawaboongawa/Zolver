@@ -20,13 +20,25 @@ def run():
     st.write("# Welcome to Zolver! 👋")
     green_screen_toggle = st.toggle("Green Screen?")
 
-    uploaded_file = st.file_uploader("Choose a file")
+    col1, col2 = st.columns(2)
+    uploaded_file = col1.file_uploader("Choose a file")
+    example = col2.selectbox(
+        "Examples:",
+        index=None,
+        placeholder="Select example...",
+        options=os.listdir("resources/jigsaw-samples"),
+    )
     image_placeholder = st.empty()
 
     if uploaded_file is not None:
         # To read file as bytes:
         IMAGE = uploaded_file.getvalue()
         image_placeholder.image(IMAGE)
+    elif example:
+        with open(os.path.join("resources/jigsaw-samples", example), "rb") as f:
+            IMAGE = f.read()
+            image_placeholder.image(IMAGE)
+
 
     if st.button("Solve"):
         if IMAGE is None:
